@@ -23,9 +23,10 @@ import re
 import sys
 
 KEYS = {"app", "version", "port", "health", "size", "region", "env", "shops", "scratch", "runs", "handler", "package",
-        "schedule", "timeout", "samples", "base", "card", "address"}
+        "schedule", "timeout", "samples", "blank", "base", "card", "address"}
 # samples: the record New app writes (tools/manifest/combine.py): each sample the app was made from, its version and the
 # hashes of what was written, so Add a sample can tell what the developer changed. The hosting order does not read it.
+# blank: the same record for an app New app made with no sample (tools/manifest/blank.py), until its first sample is added.
 # base: the version of the app on My apps this folder was downloaded as (written there); an upload names it, so one made
 # from an older version than the server's latest is refused instead of undoing a colleague's change. Not read by a host.
 # card: the App library's card, kept here so it is asked once (`ivn publish --public`; tools/ivn). address: the service's own

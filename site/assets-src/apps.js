@@ -151,6 +151,8 @@
     change: "Change", yourName: "Its name in Desk", yourNameHint: "Your first word, then one or two words of your own. Installed names never change, so choose with care.",
     make: "Make the app", nextSettings: "Next: its settings",
     noApps: "You have no apps yet.", newApp: "New app",
+    blank: "Start blank", blankHint: "No sample matches the need? Start with an empty app: its README lists each kind you can add, " +
+      "with an example and its recipe. You can add a sample to it later.", blankTitle: "My app",
     settingsLede: "Your app's own values, the same for every site. A customer's own account (their wallet) goes in the app's " +
       "settings in their Desk.",
     addresses: "Outside addresses", secrets: "Secrets your own service needs",
@@ -382,7 +384,7 @@
   var THREE_WORDS = /^[A-Z][A-Z0-9]*( [A-Z][A-Z0-9]*){0,2}$/;     // the kit's rule (rename.py), said as an expert types
   function recordsStart(prefix) { return "In Desk its records start with " + prefix + "."; }
 
-  function making(name, n) { return "Making " + name + " from " + n + " sample" + (n === 1 ? "" : "s") + "…"; }
+  function making(name, n) { return n ? "Making " + name + " from " + n + " sample" + (n === 1 ? "" : "s") + "…" : "Making " + name + ", a blank app…"; }
 
   // J2-09: an outside address or a secret, by the setting's name or its purpose
   function isAddress(s) { return /(_URL|_ADDRESS|_HOST|_ENDPOINT)$/.test(s.name) || /\baddress\b/i.test(s.purpose || ""); }
@@ -643,6 +645,16 @@
   }
   function byName(n) { return ((site.index || {}).samples || []).filter(function (s) { return s.name === n; })[0]; }
 
+  // Start blank: no sample, straight to Name your app; the hosting makes the kit's blank folder (combine with no sample)
+  function blankTile() {
+    var c = el("div", { "class": "hosting-step gallery-card gallery-blank" });
+    c.appendChild(el("h3", { text: G.blank }));
+    c.appendChild(el("p", { "class": "hint", text: G.blankHint }));
+    c.appendChild(el("p", {}, button(G.blank, startBlank)));
+    return c;
+  }
+  function startBlank() { g.ticks = []; g.blank = true; g.refused = ""; g.checking = false; screen = "name"; say(""); render(); }
+
   // the bar's refusals before Next (M01 to M03, M34, M35): the hosting's dry run, its words as given (spec rule 8)
   function dry() {
     g.refused = "";
@@ -739,6 +751,7 @@
     wrap.appendChild(crumbs);
     wrap.appendChild(el("h2", { text: g.mode === "add" ? G.addSample : G.newApp }));
     wrap.appendChild(p(g.mode === "add" ? G.addLede : g.fromNeeds && !g.every ? G.ledeNeeds : G.lede));
+    if (g.mode === "new") wrap.appendChild(blankTile());   // the first tile: a need no sample matches (J1 DEVSTART)
     if (!site.index) { wrap.appendChild(p("Reading the samples…")); return wrap; }
     var q = el("input", { type: "search", value: g.q, placeholder: "S23, till guard, or no more than 50 of one item", spellcheck: "false" });
     var timer = null;
@@ -843,7 +856,7 @@
   // J2-06, J2-07: Name your app, then Made. Any words; the door answers its name in Desk as the person types
   function vName() {
     var box = card(G.name);
-    var fallback = defaultTitle(g.ticks.map(function (n) { return sampleTitle(byName(n)); }));
+    var fallback = g.blank ? G.blankTitle : defaultTitle(g.ticks.map(function (n) { return sampleTitle(byName(n)); }));
     var name = el("input", { type: "text", maxlength: "60", value: data.newName === null || data.newName === undefined ? fallback : data.newName });
     var start = el("span", { "class": "hint", text: data.nameStart ? recordsStart(data.nameStart) : "" });
     var bad = el("p", { "class": "hosting-bad", role: "alert", text: data.nameBad || "" });
@@ -882,7 +895,7 @@
       box.appendChild(field(G.yourName, own, G.yourNameHint));
     }
     box.appendChild(bad);   // a refusal stands under the field it is about
-    box.appendChild(button("Back", function () { screen = "gallery"; data.nameBad = ""; say(""); render(); }, true));
+    box.appendChild(button("Back", function () { screen = "gallery"; g.blank = false; data.nameBad = ""; say(""); render(); }, true));
     box.appendChild(root.document.createTextNode(" "));
     var make = button(G.make, function (ev) {
       ev.target.disabled = true; clearTimeout(timer); asked++;

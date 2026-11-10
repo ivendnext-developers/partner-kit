@@ -11,7 +11,7 @@ Where an app runs, whether it is Docker, where the customer's data lives, whethe
 ## What you may rely on
 
 - You work on the person's own laptop and, when they say so, their own **sandbox** site. A customer's live site is the person's to touch, not yours: see "Ask the person before any write to a live site" below.
-- The kit runs with Python 3 and its standard library. Nothing here needs a paid service, and no assistant is required: any assistant that can read files and run commands can follow this file.
+- The kit runs with Python 3.9 or newer and its standard library, plus git for `ivn pull` and to update a clone. Nothing here needs a paid service, and no assistant is required: any assistant that can read files and run commands can follow this file.
 - Most of what follows is checked by a command, so run it instead of guessing. A green check means the kit's checkers found no refusal. It is not permission, and it does not replace the person's own review.
 
 ## The five ways in, highest first

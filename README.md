@@ -4,11 +4,12 @@ Build the app a retail chain needs (a rule at the till, a record of its own, a l
 
 **Start here: [Build your first app](site/pages/first_app.md)** ([on the site](https://developer.ivendnext.com/first_app.html)). It takes you from one of the kit's samples to your customer's App library in six steps, and it is all you need to read to build one.
 
+Nothing of iVendNext goes on your computer: your sites are ours, in the cloud. For the terminal you need git and Python 3.9 or newer, and one line (on Windows, `irm https://developer.ivendnext.com/install.ps1 | iex`):
+
 ```bash
-git clone https://github.com/ivendnext-developers/partner-kit.git
-export PATH="$PWD/partner-kit/tools/ivn:$PATH"
+curl -fsSL https://developer.ivendnext.com/install.sh | sh
 ivn login
-ivn new acme_po_approval --from s11
+ivn new acme_store_rules                    # a blank app, or: ivn new acme_po_approval --from s11
 ```
 
 **Who it is for:** iVendNext Partners, licensed customers' IT teams and the CitiXsys Consulting Team. Anyone may read the kit. To get a sandbox, [request one](https://developer.ivendnext.com/sandbox.html); to build for an iVendNext customer, [become an iVendNext Partner](https://www.ivendnext.com/partners/apply/).

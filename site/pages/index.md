@@ -2,7 +2,7 @@
 
 For iVendNext Partners, developers and licensed customers' IT teams. This guide shows how to build a customer's own behaviour on iVendNext without changing iVendNext itself. It is for anyone who builds for an iVendNext customer: an iVendNext Partner, a licensed customer's IT team, and the CitiXsys Consulting Team, our own team, which uses this same guide.
 
-**New here? [How it all works](../../guide/01a_how_it_all_works.md)**: where your app runs, where the data lives, and why customers never collide, in ten minutes.
+**New here? [Before you start](first_app.md#before-you-start)**: nothing of iVendNext goes on your computer, your sites are ours, in the cloud; what you need, and one line that gets your terminal ready. Then [How it all works](../../guide/01a_how_it_all_works.md): where your app runs, where the data lives, and why customers never collide, in ten minutes.
 
 [Build your first app](first_app.md) · [Request a sandbox](sandbox.md)
 
@@ -21,7 +21,7 @@ A customer's own behaviour, without changing iVendNext itself: the customer's ru
 ## Build your first app, in six steps
 
 1. **Sign in** with GitHub.
-2. **Make the app** from the sample nearest your customer's need.
+2. **Make the app,** blank or from the sample nearest your customer's need.
 3. **Change it.** One file, `manifest.json`, for most apps.
 4. **Check it.** The same checker your customer's install runs.
 5. **Try it on a site.** Pick a site, or add one. It asks for no key, no plan and no card.

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """ivn — make, try, publish and keep your app going from a terminal, over the same server as My apps in your browser.
 
+    ivn doctor                                what this computer has, whether it is signed in, and what to run next
     ivn login                                 sign this computer in, by a code in your browser
+    ivn new acme_store_rules                  a blank app: add what you need from its README's list
     ivn new acme_member_till --from s23 --from s22
     ivn download acme_member_till             write the server's copy into apps/acme_member_till/
     ivn check                                 the kit's check and the app's own tests
@@ -16,10 +18,11 @@
     ivn status · ivn logs                     where it stands · what its service logged
     ivn rollback 1.0.1 · ivn remove-site SITE · ivn cancel · ivn handover WORD
     ivn key SITE · ivn token new NAME [--app APP] · ivn package
+    ivn update                                bring the kit and ivn up to date
 
 It acts on the app in the current folder (any folder holding an `app.json`), or `--app <folder>`. The page and the
 command change one copy of the app on our server. Words are the ones My apps uses. Exit code: 0 done · 1 refused ·
-2 usage. Standard library only. A build server sets `IVN_TOKEN` to a token from My apps > Tokens; a person's token is kept
+2 usage. Standard library only; Python 3.9 or newer. A build server sets `IVN_TOKEN` to a token from My apps > Tokens; a person's token is kept
 in `~/.ivendnext/token`, readable by them alone. A secret is never printed unless it is what you asked for, and `.env`
 files never leave this computer.
 """
@@ -58,6 +61,13 @@ HOSTING = "https://hosting.ivendnext.app"
 SAMPLES_INDEX = "https://developer.ivendnext.com/samples/index.json"
 DOMAIN = "ivendnext.app"
 TOKEN_FILE = pathlib.Path.home() / ".ivendnext" / "token"
+WHO_FILE = pathlib.Path.home() / ".ivendnext" / "who.json"  # who signed this computer in (no secret): ivn doctor says it
+MIN_PYTHON = (3, 9)  # the oldest Python the kit's own tests pass under (a Mac's own python3 is 3.9.6)
+MIN_GIT = (2, 0)  # ivn pull's git merge-file -L
+KIT_ARCHIVE = "https://github.com/ivendnext-developers/partner-kit/archive/refs/heads/main.zip"
+KIT_COMMIT_FILE = ".kit-commit"  # the commit of a kit fetched as GitHub's archive (the installer and ivn update write it)
+KIT_FILES_FILE = ".kit-files"  # the files that archive held: an update removes only those the new one no longer has
+ON_WINDOWS = os.name == "nt"  # ivn.cmd runs py, the Windows launcher: doctor says whether it is there
 TOKEN_RE = re.compile(r"ivn_tok_[A-Za-z0-9_-]{43}")
 STATE = ".ivn-state"  # what this folder held when it last matched the server's copy (never uploaded)
 POLL_SECONDS = 5
@@ -73,6 +83,8 @@ WORDS = {
     "login_done": "Signed in as {login} for {name} ({company}).",  # J2-11
     "folder": "Folder: apps/{app}/ ({parts}). Read its README.md: what is in it and what you can change.",  # J2-12
     "next_try": "Next: ivn try",  # J2-12
+    "blank_folder": "Folder: apps/{app}/ (manifest.json, app.json, tests/). Read its README.md: what you can add, each kind "
+                    "with an example. Then: ivn check, ivn try",  # J1 DEVSTART: the blank start's last line
     "downloaded": "{version} ({state}made by {who} {how}) into apps/{app}/.",  # J11-01
     "check_green": "CHECK GREEN · {n} tests run, {n} passed",  # J3-04
     "check_red": "CHECK RED: {what}",  # J3-04
@@ -143,6 +155,35 @@ WORDS = {
     "local_other": "Failed: the app answered {status}.",
     "local_down": "Failed: the service did not answer on http://localhost:8000. Read what it printed above.",
     "no_points": "This app has no connection points to test.",
+    # J1 DEVSTART: ivn doctor and ivn update
+    "old_python": "ivn needs Python {need} or newer, and this is Python {have} ({path}). Install a newer one from "
+                  "https://www.python.org/downloads/ and run ivn again.",
+    "dr_python": "Python {have} ({path}): {ok}",
+    "dr_py": "py, the Windows launcher the kit's own ivn.cmd runs: {ok}",
+    "dr_git": "git {have}: {ok}",
+    "dr_no_git": "git: not found. ivn pull and updating a clone need it: install it from https://git-scm.com/downloads",
+    "dr_kit": "The kit: {where} ({how})",
+    "dr_signed": "Signed in as {login} for {name} ({company}).",
+    "dr_signed_token": "Signed in by IVN_TOKEN, a build server's token.",
+    "dr_signed_unknown": "Signed in on this computer.",
+    "dr_signed_out": "Not signed in yet.",
+    "dr_bad_token": "Signed out: this computer's sign-in was revoked or has expired. Run ivn login.",
+    "dr_sites": "Sites you can try on: {sites}",
+    "dr_no_sites": "Sites you can try on: none yet. Request a sandbox: https://developer.ivendnext.com/sandbox.html",
+    "dr_no_reach": "Sites you can try on: could not reach iVendNext (no connection).",
+    "dr_next": "Next: {cmd}",
+    "new_enough": "new enough",
+    "too_old": "too old: {need} or newer is needed",
+    "found": "found",
+    "missing": "not found. The installer's ivn runs with the Python above; for the kit's ivn.cmd, install Python from "
+               "https://www.python.org/downloads/ with its py launcher ticked",
+    "up_clone": "Updating the kit in {where} with git pull.",
+    "up_archive": "Updating the kit in {where} from GitHub's main.",
+    "up_moved": "The kit moved from {old} to {new}.",
+    "up_same": "The kit is up to date: {new}.",
+    "up_dirty": "Not updated: git pull stopped ({why}). If it names a file you changed in the kit, keep that change aside; "
+                "otherwise check your connection. Then run ivn update again.",
+    "up_no_git": "Not updated: the kit is a git clone and git is not on this computer. Install git, then run ivn update again.",
 }
 
 
@@ -182,6 +223,14 @@ def keep_token(token: str) -> None:
         os.fchmod(fd, 0o600)
     with os.fdopen(fd, "w") as f:
         f.write(token + "\n")
+
+
+def keep_who(who: dict) -> None:
+    try:
+        WHO_FILE.parent.mkdir(parents=True, exist_ok=True)
+        WHO_FILE.write_text(json.dumps(who) + "\n", "utf-8")
+    except OSError:  # only doctor reads it
+        pass
 
 
 def _send(method: str, url: str, data: bytes | None, headers: dict, timeout: float = 90) -> tuple[int, bytes]:
@@ -481,6 +530,7 @@ def cmd_login(a) -> int:
                 continue
             raise
         keep_token(r["token"])
+        keep_who({k: r.get(k) for k in ("login", "name", "company")})
         print(WORDS["login_done"].format(login=r.get("login"), name=r.get("name") or r.get("company"), company=r.get("company")))
         return 0
     raise Stop(WORDS["no_login"])
@@ -559,10 +609,7 @@ def check_folder(folder: pathlib.Path) -> tuple[bool, str]:
 
 
 def cmd_new(a) -> int:
-    samples = list(a.from_samples or [])
-    if not samples:
-        print("usage: ivn new <app name> --from s23 [--from s22 ...]")
-        return 2
+    samples = list(a.from_samples or [])  # none: the blank app (J1 DEVSTART), through the same door
     prefix = a.name.replace("_", " ").replace("-", " ").strip().upper()
     out = online(door, "/v1/new", {"samples": samples, "name": prefix})
     app = out["app"]
@@ -577,7 +624,7 @@ def cmd_new(a) -> int:
     print(head)
     for line in lines[1:]:
         print(line)
-    print(folder_line(target, app) + " " + WORDS["next_try"])
+    print(folder_line(target, app) + " " + WORDS["next_try"] if samples else WORDS["blank_folder"].format(app=app))
     return 0
 
 
@@ -1415,6 +1462,165 @@ def cmd_package(a) -> int:
 # ── the command line ─────────────────────────────────────────────────────────
 
 
+# ── J1 DEVSTART: doctor and update ───────────────────────────────────────────
+
+
+def platform_python() -> str:
+    return ".".join(str(n) for n in sys.version_info[:3])
+
+
+def version_of(text: str) -> tuple:
+    m = re.search(r"(\d+)\.(\d+)(?:\.(\d+))?", text or "")
+    return tuple(int(x) for x in m.groups() if x is not None) if m else ()
+
+
+def git_version() -> tuple | None:
+    if shutil.which("git") is None:
+        return None
+    try:
+        r = subprocess.run(["git", "--version"], capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return version_of(r.stdout) if r.returncode == 0 else None
+
+
+def kit_is_clone(kit: pathlib.Path = KIT) -> bool:
+    return (kit / ".git").exists()
+
+
+def kit_version(kit: pathlib.Path = KIT) -> str:
+    """The kit's commit: the clone's, else the one the installer or ivn update wrote for GitHub's archive."""
+    if kit_is_clone(kit) and has_git():
+        r = subprocess.run(["git", "-C", str(kit), "rev-parse", "--short=8", "HEAD"], capture_output=True, text=True)
+        if r.returncode == 0:
+            return r.stdout.strip()
+    try:
+        return (kit / KIT_COMMIT_FILE).read_text("utf-8").strip()[:8] or "unknown"
+    except OSError:
+        return "unknown"
+
+
+def _who() -> dict:
+    return read_json(WHO_FILE)
+
+
+def cmd_doctor(a) -> int:
+    """One screen: the Python and git found, the kit, the sign-in, the sites, and the one command to run next."""
+    need = ".".join(map(str, MIN_PYTHON))
+    print(WORDS["dr_python"].format(have=platform_python(), path=sys.executable, ok=WORDS["new_enough"]))
+    if ON_WINDOWS:
+        print(WORDS["dr_py"].format(ok=WORDS["found"] if shutil.which("py") else WORDS["missing"]))
+    gv = git_version()
+    if gv is None:
+        print(WORDS["dr_no_git"])
+    else:
+        ok = WORDS["new_enough"] if gv >= MIN_GIT else WORDS["too_old"].format(need=".".join(map(str, MIN_GIT)))
+        print(WORDS["dr_git"].format(have=".".join(map(str, gv)), ok=ok))
+    print(WORDS["dr_kit"].format(where=KIT, how=("a git clone" if kit_is_clone() else "GitHub's archive") + ", "
+                                 + kit_version()))
+    signed, said = False, None
+    try:
+        token = token_now()
+    except Stop:
+        token = None
+    if token:  # the sites answer first, so a revoked sign-in is never also called signed in
+        try:
+            out = door("/v1/sites", {}, token=token)
+            signed = True
+            sites = [x["site"] + (" (" + WORDS["one_press"] + ")" if x.get("press") else "") for x in out.get("company") or []]
+            said = WORDS["dr_sites"].format(sites=", ".join(sites)) if sites else WORDS["dr_no_sites"]
+        except Offline:
+            signed, said = True, WORDS["dr_no_reach"]
+        except Refused as e:
+            if e.status != 401:
+                raise
+    if signed and os.environ.get("IVN_TOKEN", "").strip():
+        print(WORDS["dr_signed_token"])
+    elif signed:
+        who = _who()
+        print(WORDS["dr_signed"].format(login=who["login"], name=who.get("name") or who.get("company"),
+                                        company=who.get("company")) if who.get("login") else WORDS["dr_signed_unknown"])
+    elif token or TOKEN_FILE.is_file() or os.environ.get("IVN_TOKEN", "").strip():
+        print(WORDS["dr_bad_token"])
+    else:
+        print(WORDS["dr_signed_out"])
+    if said:
+        print(said)
+    if not signed:
+        nxt = "ivn login"
+    elif (pathlib.Path.cwd() / "app.json").is_file() or len(list((pathlib.Path.cwd() / "apps").glob("*/app.json"))) == 1:
+        nxt = "ivn check, then ivn try"
+    else:
+        word = (_who().get("company") or "<yourword>").lower()   # the company's first word, once ivn login has said it
+        nxt = f"ivn new {word}_first_app (a blank app), or ivn new {word}_first_app --from s11 (from a sample)"
+    print(WORDS["dr_next"].format(cmd=nxt))
+    return 0
+
+
+def _sync_from_archive(kit: pathlib.Path, data: bytes) -> str:
+    """GitHub's archive of the kit's main, written over the kit in place: each file the archive has; a file the previous
+    archive brought and this one has not is removed, and nothing else (your own files in the kit's folder stay: an
+    editor's settings, notes, ``apps/``). Returns the archive's commit."""
+    zf = zipfile.ZipFile(io.BytesIO(data))
+    commit = (zf.comment or b"").decode("ascii", "replace").strip()
+    names = [n for n in zf.namelist() if not n.endswith("/")]
+    top = names[0].split("/", 1)[0] + "/" if names else ""
+    wanted = set()
+    for n in names:
+        rel = n[len(top):]
+        if not rel or ".." in pathlib.PurePosixPath(rel).parts:
+            continue
+        wanted.add(rel)
+        target = kit / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        body = zf.read(n)
+        if not target.is_file() or target.read_bytes() != body:
+            target.write_bytes(body)
+            mode = (zf.getinfo(n).external_attr >> 16) & 0o777
+            if mode & 0o111:
+                target.chmod(target.stat().st_mode | 0o755)
+    try:
+        before = set((kit / KIT_FILES_FILE).read_text("utf-8").splitlines())
+    except OSError:
+        before = set()  # a kit with no list: nothing is removed
+    for rel in sorted(before - wanted, reverse=True):
+        p = kit / rel
+        if ".." in pathlib.PurePosixPath(rel).parts or not p.is_file():
+            continue
+        p.unlink()
+        for d in p.parents:
+            if d == kit or any(d.iterdir()):
+                break
+            d.rmdir()
+    (kit / KIT_FILES_FILE).write_text("\n".join(sorted(wanted)) + "\n", "utf-8")
+    (kit / KIT_COMMIT_FILE).write_text(commit + "\n", "utf-8")
+    return commit
+
+
+def cmd_update(a) -> int:
+    """The kit and ivn up to date: git pull in a clone, else GitHub's main archive written over the kit in place."""
+    kit = KIT
+    old = kit_version(kit)
+    if kit_is_clone(kit):
+        if not has_git():
+            raise Stop(WORDS["up_no_git"])
+        print(WORDS["up_clone"].format(where=kit), flush=True)
+        r = subprocess.run(["git", "-C", str(kit), "pull", "--ff-only", "--quiet"], capture_output=True, text=True)
+        if r.returncode:
+            why = (r.stderr.strip().splitlines() or ["git answered " + str(r.returncode)])[-1]
+            raise Stop(WORDS["up_dirty"].format(why=why.removeprefix("fatal: ").removeprefix("error: ")))
+    else:
+        print(WORDS["up_archive"].format(where=kit), flush=True)
+        url = os.environ.get("IVN_KIT_ARCHIVE") or KIT_ARCHIVE
+        status, data = _send("GET", url, None, {}, timeout=600)
+        if status != 200 and not (status is None and url.startswith("file:")):   # a file: address is a test's stand-in
+            raise Stop(f"Not updated: GitHub answered {status}. Your kit is as it was: try again.")
+        _sync_from_archive(kit, data)
+    new = kit_version(kit)
+    print(WORDS["up_same" if new == old else "up_moved"].format(old=old, new=new))
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="ivn", description="Make, try, publish and keep your app going, over the same server as "
                                                          "My apps.")
@@ -1427,10 +1633,13 @@ def parser() -> argparse.ArgumentParser:
             p.add_argument("--app", help="the app's folder (default: the current folder)")
         return p
 
+    cmd("doctor", cmd_doctor, "what this computer has, whether it is signed in, and what to run next", in_app=False)
+    cmd("update", cmd_update, "bring the kit and ivn up to date", in_app=False)
     cmd("login", cmd_login, "sign this computer in, by a code in your browser", in_app=False)
-    p = cmd("new", cmd_new, "make an app from one sample or several", in_app=False)
+    p = cmd("new", cmd_new, "make a blank app, or an app from one sample or several", in_app=False)
     p.add_argument("name", help="the app's name, like acme_member_till: your first word, then your words")
-    p.add_argument("--from", dest="from_samples", action="append", metavar="SAMPLE", help="a sample, like s23; once per sample")
+    p.add_argument("--from", dest="from_samples", action="append", metavar="SAMPLE",
+                   help="a sample, like s23; once per sample (none: a blank app)")
     p = cmd("download", cmd_download, "write the server's copy into apps/<app>/", in_app=False)
     p.add_argument("name")
     p.add_argument("--version")
@@ -1480,6 +1689,9 @@ def parser() -> argparse.ArgumentParser:
 def main(argv=None) -> int:
     if hasattr(sys.stdout, "reconfigure"):  # a Windows build server's redirected output: the words hold ⟨ ⟩ and ·
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if sys.version_info[:2] < MIN_PYTHON:
+        print(WORDS["old_python"].format(need=".".join(map(str, MIN_PYTHON)), have=platform_python(), path=sys.executable))
+        return 1
     try:
         a = parser().parse_args(argv)
     except SystemExit as e:

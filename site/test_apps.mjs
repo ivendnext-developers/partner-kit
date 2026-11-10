@@ -79,6 +79,7 @@ check("Accept's words are said after going home, which clears the last message",
 
 // ── EASY3a: the list, New app's gallery, Name, Made, Settings, the app's page ──
 const G = a.G;
+const INSIDE_WORDS = /event feed|\bcontainer\b|byte for byte|extension point|CHECK GREEN|\bmanifest\b/i;
 check("ivn login's code survives setting up the company", src.includes("data = { deviceCode: root.sessionStorage.getItem(CODE)"));
 const index = JSON.parse(readFileSync(path.join(out, "samples/index.json"), "utf8"));
 const catalogue = JSON.parse(readFileSync(path.join(out, "catalogue.json"), "utf8"));
@@ -140,6 +141,17 @@ check("J2-05: the bar's words", a.barText([by.s23_till_guard, by.s22_customer_lo
 check("J2-06: the name and its line", G.name === "Name your app" && G.appName === "App name" && G.make === "Make the app" &&
   a.recordsStart("ACME MEMBER TILL") === "In Desk its records start with ACME MEMBER TILL." && G.change === "Change" &&
   G.yourNameHint === "Your first word, then one or two words of your own. Installed names never change, so choose with care.");
+// J1 DEVSTART: Start blank, the first tile of New app; the same Name, Made and Try a sample's app gets
+check("Start blank: its words", G.blank === "Start blank" && G.blankTitle === "My app" && !INSIDE_WORDS.test(G.blankHint) &&
+  G.blankHint === "No sample matches the need? Start with an empty app: its README lists each kind you can add, with an example and its recipe. You can add a sample to it later.");
+check("Start blank: Making says a blank app", a.making("My app", 0) === "Making My app, a blank app…");
+check("Start blank is the first tile of New app, before the search and every sample card",
+  /if \(g\.mode === "new"\) wrap\.appendChild\(blankTile\(\)\);[^\n]*\n\s*if \(!site\.index\)/.test(src) &&
+  src.indexOf("wrap.appendChild(blankTile())") < src.indexOf("wrap.appendChild(sf)") &&
+  src.indexOf("wrap.appendChild(blankTile())") < src.indexOf("wrap.appendChild(sampleCard("));
+check("Start blank goes to Name your app with no sample ticked, and Make sends the empty list the hosting makes blank from",
+  /function startBlank\(\) \{ g\.ticks = \[\]; g\.blank = true;[^}]*screen = "name";/.test(src) &&
+  src.includes("var fallback = g.blank ? G.blankTitle :") && src.includes("var body = { samples: g.ticks, title: title,"));
 check("J2-07: Making, and the next step", a.making("ACME MEMBER TILL", 2) === "Making ACME MEMBER TILL from 2 samples…" && G.nextSettings === "Next: its settings");
 check("J2-09: the settings' words", G.settingsLede === "Your app's own values, the same for every site. A customer's own account (their wallet) goes in the app's settings in their Desk." &&
   G.addresses === "Outside addresses" && G.secrets === "Secrets your own service needs" &&

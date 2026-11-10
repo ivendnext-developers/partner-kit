@@ -368,8 +368,13 @@
         found.appendChild(li);
       });
       if (!results.length) {
-        var li = el("li", "plan-empty", "No card matches. ");
-        li.appendChild(link("Tell us the need", "feedback/point_request.html"));
+        var li = el("li", "plan-empty", "No card fits? ");
+        li.appendChild(link("Start a blank app", "first_app.html#2-make-the-app-blank-or-from-a-sample"));
+        li.appendChild(doc.createTextNode(", then add what you need from the "));
+        li.appendChild(link("recipes", "recipes/index.html"));
+        li.appendChild(doc.createTextNode("; "));
+        li.appendChild(link("ask for an extension point", "feedback/point_request.html"));
+        li.appendChild(doc.createTextNode(" only when nothing in the recipes can do it."));
         found.appendChild(li);
       }
     }

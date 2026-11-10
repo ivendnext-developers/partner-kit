@@ -2,10 +2,12 @@
 
 New to it? [Build your first app](../../site/pages/first_app.md).
 
-The same steps as *My apps* in your browser (`https://developer.ivendnext.com/apps`), over the same server: the page and the command change one copy of your app. Put this folder on your `PATH`, or run `python3 tools/ivn/ivn.py` (on Windows, `py tools\ivn\ivn.py`, or `ivn.cmd` from this folder). Standard library only (Python 3.10+). It needs your copy of the kit to stay where it is, and acts on the app in the current folder (any folder holding an `app.json`), or `--app <folder>`.
+The same steps as *My apps* in your browser (`https://developer.ivendnext.com/apps`), over the same server: the page and the command change one copy of your app. Nothing of iVendNext goes on your computer: `ivn` talks to our server and to your sites in the cloud. One line gets it ready, on macOS and Linux `curl -fsSL https://developer.ivendnext.com/install.sh | sh`, on Windows `irm https://developer.ivendnext.com/install.ps1 | iex`: it puts the kit in `~/.ivendnext/kit`, a launcher in your own bin folder (`~/.local/bin`, or `%USERPROFILE%\.ivendnext\bin`) that is on your PATH for good, and runs `ivn doctor`. By hand: put this folder on your `PATH` in your shell's start file, or run `python3 tools/ivn/ivn.py` (on Windows, `py tools\ivn\ivn.py`, or `ivn.cmd` from this folder). Standard library only: Python 3.9 or newer (a Mac's own `python3` is enough), and git for `ivn pull` and to update a clone. It needs your copy of the kit to stay where it is (moved it? run the install line again), and acts on the app in the current folder (any folder holding an `app.json`), or `--app <folder>`.
 
 ```bash
+ivn doctor
 ivn login
+ivn new acme_store_rules
 ivn new acme_member_till --from s23 --from s22
 ivn try
 ivn publish --to retailer.ivendnext.com
@@ -14,8 +16,11 @@ ivn publish --public
 
 | Command | What it does |
 |---|---|
+| `ivn doctor` | One screen: the Python and git it found and whether each is new enough, whether this computer is signed in and as whom, the sites you can try on (or *none yet*, with the sandbox link), and the one command to run next. |
+| `ivn update` | Brings the kit and `ivn` up to date: `git pull` in a clone, else GitHub's latest kit written over the folder in place. It says which version it moved from and to. |
 | `ivn login` | Signs this computer in, by a code in your browser. The token is in `~/.ivendnext/token`, readable by you alone. |
 | `ivn token new <name> [--app <app>]` | A token for a build server, shown once; on the server it goes in `IVN_TOKEN`. |
+| `ivn new <app>` | Makes a blank app in `apps/<app>/` of the current repository: a `manifest.json` with your app's name and nothing else, one test, and a `README.md` listing everything you can add, each with a line to copy or the sample that brings it. `ivn add <sample>` adds a sample into it later. |
 | `ivn new <app> --from <sample> …` | Makes one app from one sample or several, in `apps/<app>/` of the current repository. |
 | `ivn download <app>` | Writes the server's copy into `apps/<app>/`. |
 | `ivn check` | The kit's check and the app's own tests, one verdict line. |
@@ -37,4 +42,4 @@ ivn publish --public
 
 Exit code: 0 done · 1 refused · 2 usage. To reach a test server, set `IVN_HOSTING_URL`.
 
-**The one `app.json`:** the app's name and version, the service's fields, its settings, `card` (the App library's card: `title`, `summary`, `what`, `pictures`, `industries`, `price`, `guide`), `base` (the version this folder is), `address` (the service's address, written when you publish) and `samples` (the record *Add a sample* reads). Leave `base`, `address` and `samples` to the tools.
+**The one `app.json`:** the app's name and version, the service's fields, its settings, `card` (the App library's card: `title`, `summary`, `what`, `pictures`, `industries`, `price`, `guide`), `base` (the version this folder is), `address` (the service's address, written when you publish) and `samples` (the record *Add a sample* reads; a blank app's is `blank` until its first sample). Leave `base`, `address`, `samples` and `blank` to the tools.

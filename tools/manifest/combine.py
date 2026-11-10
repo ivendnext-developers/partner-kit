@@ -599,7 +599,7 @@ def entries_of(manifest: dict, app_json: dict, dispatch: dict) -> dict:
             for i, x in zip(ids(section, items), items):
                 out[f"manifest:{section}:{i}"] = x
     for k, v in app_json.items():
-        if k in ("env", "samples", "version", "base", "schedule", "address", "card"):   # base, address: written for the person
+        if k in ("env", "samples", "blank", "version", "base", "schedule", "address", "card"):   # base, address: written for the person
             continue
         out[f"app.json:{k}"] = v
     for e in app_json.get("env") or []:
@@ -1016,15 +1016,9 @@ def _finish(target: pathlib.Path, staged: pathlib.Path) -> None:
         shutil.rmtree(backup, ignore_errors=True)
 
 
-def combine(samples, prefix: str, into, test: bool = False, samples_dir=None, out=None) -> pathlib.Path:
-    """New app: one app in ``<into>/apps/<app>/`` from one or more samples. Returns the folder; raises Refused."""
+def _new_target(prefix: str, into) -> tuple[str, pathlib.Path, pathlib.Path]:
+    """The new app's name, the folder it goes under and its own folder; the name's refusals, in their words."""
     import start  # noqa: E402
-    samples_dir = pathlib.Path(samples_dir) if samples_dir else KIT / "samples"
-    names = [resolve(s, samples_dir) for s in samples]
-    if not names:
-        raise Refused("Tick at least one sample.", code="none")
-    if len(set(names)) != len(names):
-        raise Refused("A sample is named twice: name each once.", code="twice")
     try:
         start.refuse_new_prefix(prefix, "")
     except start.Refused as e:      # the same refusal, with its words: the door and the command catch this module's
@@ -1034,6 +1028,86 @@ def combine(samples, prefix: str, into, test: bool = False, samples_dir=None, ou
     target = into / "apps" / app
     if target.exists():
         raise Refused(f"apps/{app} exists already: pick another name, or add a sample to it.", code="exists")
+    return app, into, target
+
+
+def _place(files: dict, into: pathlib.Path, app: str, target: pathlib.Path, test: bool) -> tuple[str, int | None]:
+    """Write the app whole in a scratch folder, check it (and run its tests), then move it into place: (verdict, tests)."""
+    (into / "apps").mkdir(parents=True, exist_ok=True)
+    staged = pathlib.Path(tempfile.mkdtemp(prefix=f".{app}.", dir=into / "apps"))
+    total = None
+    try:
+        write_folder(staged, files)
+        rc, verdict = kit_check(staged)
+        if rc:
+            raise Refused(f"Not made: the kit's check refused the app. {verdict}", code="M06")
+        if test:
+            ok, total, log = run_tests(staged)
+            if not ok:
+                raise Refused("Not made: the app's tests fail under its names:\n" + log[-2500:], code="tests")
+        _finish(target, staged)
+    finally:
+        if staged.exists():
+            shutil.rmtree(staged, ignore_errors=True)
+    return verdict, total
+
+
+BLANK_CHECKER = ("validate.py", "site_rules.py")     # the kit's checker, copied into a blank app's tests/_kit/
+
+
+def make_blank(prefix: str, into, test: bool = False, out=None) -> pathlib.Path:
+    """New app with no sample: the blank app (``blank.py``) in ``<into>/apps/<app>/``. Returns the folder; raises Refused."""
+    import blank  # noqa: E402
+    app, into, target = _new_target(prefix, into)
+    commit = kit_commit()
+    manifest = blank.manifest(prefix, app)
+    check_manifest(manifest)
+    app_json, _, _ = build_app_json([], app)
+    dispatch = {"app": app, "prefix": prefix, "mounts": {}, "schedules": {}}
+    files = {k: v for k, v in kit_files(commit).items() if k != "tests/test_app.py"}   # its one test is the checker's
+    for name in BLANK_CHECKER:
+        files[f"tests/_kit/tools/manifest/{name}"] = (HERE / name).read_bytes()
+    files["tests/test_manifest.py"] = blank.TEST.encode()
+    files["README.md"] = blank.readme(prefix, app).encode()
+    files["LICENSE"] = (TEMPLATE / "LICENSE").read_bytes()
+    files["THIRD_PARTY.md"] = blank.third_party(commit).encode()
+    files[".env.local"] = env_local(app, app_json).encode()
+    files[".gitignore"] = b".env.local\n.env\n.local/\n__pycache__/\n.ivn-state\npackage.zip\n"
+    entries = entries_of(manifest, app_json, dispatch)
+    app_json["samples"] = []
+    app_json["blank"] = {"kit_commit": commit,
+                         "files": {k: sha(v) for k, v in sorted(files.items()) if k not in UNRECORDED},
+                         "entries": {i: sha(v) for i, v in sorted(entries.items())}}
+    files["manifest.json"] = dump(manifest).encode()
+    files["app.json"] = dump(app_json).encode()
+    files["service/dispatch.json"] = dump(dispatch).encode()
+    verdict, total = _place(files, into, app, target, test)
+    if out is not None:
+        for line in blank_lines(verdict, total):
+            print(line, file=out)
+        print(f"Folder: apps/{app}/ (manifest.json, app.json, tests/). Read its README.md: what you can add, each kind with "
+              "an example.", file=out)
+    return target
+
+
+def blank_lines(verdict: str, tests: int | None) -> list[str]:
+    """What New app says of a blank app: the page's and the command's first lines."""
+    green = "CHECK GREEN" if "GREEN" in verdict.upper() else verdict
+    head = f"Made. A blank app. {green}" + (f" · {tests} tests run, {tests} passed." if tests is not None else ".")
+    return [head, "What is in it: nothing yet. Its README.md lists what you can add, each kind with an example and its "
+                  "recipe."]
+
+
+def combine(samples, prefix: str, into, test: bool = False, samples_dir=None, out=None) -> pathlib.Path:
+    """New app: one app in ``<into>/apps/<app>/`` from one or more samples, or the blank app from none. Returns the folder;
+    raises Refused."""
+    samples_dir = pathlib.Path(samples_dir) if samples_dir else KIT / "samples"
+    names = [resolve(s, samples_dir) for s in samples]
+    if not names:                   # no sample: the blank app, from the same door (Start blank, ivn new <name>)
+        return make_blank(prefix, into, test=test, out=out)
+    if len(set(names)) != len(names):
+        raise Refused("A sample is named twice: name each once.", code="twice")
+    app, into, target = _new_target(prefix, into)
     tagged = len(names) > 1
     parts = [make_part(s, prefix, app, tagged, samples_dir) for s in names]
     tags = [p.tag for p in parts]
@@ -1066,23 +1140,8 @@ def combine(samples, prefix: str, into, test: bool = False, samples_dir=None, ou
     files["manifest.json"] = dump(manifest).encode()
     files["app.json"] = dump(app_json).encode()
     files["service/dispatch.json"] = dump(dispatch).encode()
-    (into / "apps").mkdir(parents=True, exist_ok=True)
-    staged = pathlib.Path(tempfile.mkdtemp(prefix=f".{app}.", dir=into / "apps"))
-    try:
-        write_folder(staged, files)
-        rc, verdict = kit_check(staged)
-        if rc:
-            raise Refused(f"Not made: the kit's check refused the app. {verdict}", code="M06")
-        summary = summary_lines(parts, verdict, None)
-        if test:
-            ok, total, log = run_tests(staged)
-            if not ok:
-                raise Refused("Not made: the app's tests fail under its names:\n" + log[-2500:], code="tests")
-            summary = summary_lines(parts, verdict, total)
-        _finish(target, staged)
-    finally:
-        if staged.exists():
-            shutil.rmtree(staged, ignore_errors=True)
+    verdict, total = _place(files, into, app, target, test)
+    summary = summary_lines(parts, verdict, total)
     if out is not None:
         for line in summary:
             print(line, file=out)
@@ -1092,6 +1151,8 @@ def combine(samples, prefix: str, into, test: bool = False, samples_dir=None, ou
 
 
 def summary_lines(parts: list[Part], verdict: str, tests: int | None) -> list[str]:
+    if not parts:                   # the blank app: My apps' and the command's lines for it
+        return blank_lines(verdict, tests)
     green = "CHECK GREEN" if "GREEN" in verdict.upper() else verdict
     n = len(parts)
     head = f"Made. {n} sample{'s' if n != 1 else ''}, 1 app. {green}"
@@ -1201,7 +1262,8 @@ def add(sample: str, app_folder, samples_dir=None, test: bool = False, out=None)
                       "service/dispatch.json): make the app with New app first, then add a sample to it.",
                       code="not_an_app") from None
     record = cur_app.get("samples")
-    if not isinstance(record, list) or not record:
+    made_blank = cur_app.get("blank") if record == [] and isinstance(cur_app.get("blank"), dict) else None
+    if not isinstance(record, list) or not (record or made_blank):
         raise Refused("This app has no samples record in its app.json, so Add a sample cannot tell what you changed. "
                       "Make the app again with New app, then bring your changes into it.", code="no_record")
     links = links_in(app_folder)
@@ -1230,7 +1292,7 @@ def add(sample: str, app_folder, samples_dir=None, test: bool = False, out=None)
     commit = kit_commit()
     rec_files: dict = {}
     rec_entries: dict = {}
-    for r in record:
+    for r in record + ([dict(made_blank, name=name)] if made_blank else []):   # a blank app's files: its first sample's
         for path, h in r.get("files", {}).items():
             rec_files[path] = (r["name"], h)
         for i, h in r.get("entries", {}).items():
@@ -1328,7 +1390,7 @@ def add(sample: str, app_folder, samples_dir=None, test: bool = False, out=None)
         elif path.startswith((f"service/{part.tag}/", f"tests/{part.tag}/")):
             holder = name
         else:
-            holder = record[0]["name"]
+            holder = record[0]["name"] if record else name
         by_name[holder]["files"][path] = sha(data)
     for i, v in new_entries.items():
         if i in take or i in kept_entries:
@@ -1337,6 +1399,7 @@ def add(sample: str, app_folder, samples_dir=None, test: bool = False, out=None)
                 by_name[holder]["entries"][i] = sha(v)
     order = [r["name"] for r in record] + ([name] if again is None else [])
     final_app["samples"] = [by_name[n] for n in order]
+    final_app.pop("blank", None)                          # its files are the first sample's record's now
     for r in final_app["samples"]:
         r["files"], r["entries"] = dict(sorted(r["files"].items())), dict(sorted(r["entries"].items()))
     final_dispatch["mounts"][part.tag] = new_dispatch["mounts"][part.tag]
@@ -1354,7 +1417,6 @@ def add(sample: str, app_folder, samples_dir=None, test: bool = False, out=None)
                 r["entries"].pop(entry, None)
                 r["entries"].pop(f"dispatch:schedule:{short}", None)
     # README and the notices: rewritten unless the developer changed them (the same file rule)
-    first = record[0]["name"]
     ordered = [pp for n in order for pp in all_parts if pp.sample == n]
     for path, data in (("README.md", readme(ordered, app, prefix, final_manifest, final_app).encode()),
                        ("THIRD_PARTY.md", third_party(ordered, commit).encode())):
