@@ -40,7 +40,7 @@ import pathlib
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from site_rules import refusals as site_refusals  # noqa: E402
-from validate import DOCPERM_RIGHTS, REFUSED_KINDS, RIGHTS, field_prefix, validate  # noqa: E402
+from validate import DOCPERM_RIGHTS, REFUSED_KINDS, RIGHTS, app_for, field_prefix, validate  # noqa: E402, F401
 
 # What the hosting reads on the site, by record type, and only these: the configuration a person makes in Desk. The filter
 # is the site's own query (`/api/resource/<type>`); every record then comes whole, with its child rows.
@@ -97,6 +97,9 @@ WORDS = {
                "not as Administrator. Made it as Administrator? Make your own user with System Manager in Desk, sign in as "
                "it, make the set-up again, then capture.",
     "off": "it is switched off on {site}: switch it on there to capture it",
+    # the recipe's retail kinds Capture does not read yet: said on every list, so nothing is left out without a word
+    "not_read": "Not read by Capture yet: label layouts, list marks, scan sources, register books, till field rules, sale "
+                "details and Connections links. Add those to manifest.json by hand (recipes/manifest.md).",
     "field_order": "the whole order of the form's fields on that site: it would fix the customer's form to this layout. "
                    "Each captured field keeps its place by its Insert After",
 }
@@ -421,7 +424,7 @@ def _key_of(kind: str) -> tuple:
 def lines(result: dict, site: str) -> list[str]:
     """What it found, grouped by record type, then the renames and what is left out, in plain lines."""
     if not result["items"] and not result["left_out"]:
-        return [WORDS["nothing"].format(site=site)]
+        return [WORDS["nothing"].format(site=site), WORDS["not_read"]]
     out, by = [], {}
     for it in result["items"]:
         by.setdefault(it["type"], []).append(it["name"])
@@ -429,4 +432,4 @@ def lines(result: dict, site: str) -> list[str]:
         out.append(f"{t}: {', '.join(names)}")
     out += [f"Renamed: {x}" for x in result["renamed"]]
     out += [f"Left out: {x['type']} {x['name']}: {x['reason']}" for x in result["left_out"]]
-    return out
+    return out + [WORDS["not_read"]]

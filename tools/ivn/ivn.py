@@ -656,20 +656,23 @@ def cmd_capture(a) -> int:
     folder, or into a new blank app (`--new <name>`). The site is read with the key our hosting keeps for it; nothing is
     written there. `--only` and `--skip` take record types, kinds or `Type/name` ids, as the list prints them."""
     import capture  # noqa: PLC0415
+    import blank  # noqa: PLC0415
     read = online(door, "/v1/capture/read", {"site": a.site})
-    if a.new:
-        prefix = a.new.replace("_", " ").replace("-", " ").strip().upper()
-        made = online(door, "/v1/new", {"samples": [], "name": prefix})
-        folder = bring_down(made["app"], made.get("version"))
-    else:
-        folder = app_folder(a)
-    manifest = read_json(folder / "manifest.json")
+    prefix = a.new.replace("_", " ").replace("-", " ").strip().upper() if a.new else None
+    folder = None if a.new else app_folder(a)
+    # a new app is made only once the site has something to capture: never an empty app left behind
+    manifest = blank.manifest(prefix, capture.app_for(prefix)) if a.new else read_json(folder / "manifest.json")
     res = capture.capture(read.get("records") or {}, read.get("installs") or [], manifest, read["site"])
     for line in capture.lines(res, read["site"]):
         print(line)
     if not res["items"]:
-        print(WORDS["capture_nothing"].format(folder=f"apps/{folder.name}" if a.new else "this app"))
+        print(WORDS["capture_nothing"].format(folder="a new app (none was made)" if a.new else "this app"))
         return 0
+    if a.new:
+        made = online(door, "/v1/new", {"samples": [], "name": prefix})
+        folder = bring_down(made["app"], made.get("version"))
+        manifest = read_json(folder / "manifest.json")
+        res = capture.capture(read.get("records") or {}, read.get("installs") or [], manifest, read["site"])
     m, ids = capture.write(manifest, res, skip=a.skip or [], only=a.only or [])
     if not ids:
         raise Stop(WORDS["capture_none"])

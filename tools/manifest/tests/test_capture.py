@@ -184,12 +184,13 @@ class Capture(unittest.TestCase):
 
     def test_a_site_with_nothing_made_in_desk_says_so(self):
         r = C.capture({"Custom Field": [c for c in SITE["Custom Field"] if c["owner"] == "Administrator"]}, [], BASE, "x.example")
-        self.assertEqual(C.lines(r, "x.example"), [C.WORDS["nothing"].format(site="x.example")])
+        self.assertEqual(C.lines(r, "x.example"), [C.WORDS["nothing"].format(site="x.example"), C.WORDS["not_read"]])
 
     def test_the_lines_group_by_record_type(self):
         out = C.lines(self.r, "acme-test.example.com")
         self.assertIn("Workflow: PO over 5000", out)
         self.assertTrue(any(x.startswith("Left out: Client Script PO colour:") for x in out))
+        self.assertEqual(out[-1], C.WORDS["not_read"])  # what Capture does not read is named every time
 
 
 if __name__ == "__main__":

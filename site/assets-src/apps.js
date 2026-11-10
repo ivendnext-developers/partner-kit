@@ -163,7 +163,7 @@
       "out. Nothing is written to the site.",
     captureRead: "Read the site", captureTake: "Capture", reading: "Reading the site\u2026",
     renamed: "Renamed to your app", leftOut: "Left out",
-    captureNoSite: "Add the site you built it on to My sites first: its address, and a key you make there.",
+    captureNoSite: "Add the site you built it on to My sites first, with a key you make there: Capture reads with that key.",
     settingsLede: "Your app's own values, the same for every site. A customer's own account (their wallet) goes in the app's " +
       "settings in their Desk.",
     addresses: "Outside addresses", secrets: "Secrets your own service needs",
@@ -1254,7 +1254,8 @@
   // version; the company's other sites; Another site…, any iVendNext site's address, which joins the list
   // J3: Capture from a site: pick a site, read it, untick what to leave out, capture into the app's next version
   function vCapture(app) {
-    var c = data.capture, box = card(G.capture), sites = ((data.sites || {}).company || []);
+    // only a site Capture can read: one of ours granted to the company, or one added with its key (J3 critic)
+    var c = data.capture, box = card(G.capture), sites = ((data.sites || {}).company || []).filter(function (x) { return x.press; });
     box.appendChild(p(G.captureLede));
     var sel = el("select", { "aria-label": "Site" });
     sites.forEach(function (x) { sel.appendChild(el("option", { value: x.site, text: x.label ? x.label + " \u00b7 " + x.site : x.site })); });
@@ -1270,6 +1271,7 @@
     var l = c.list;
     if (!l) return box;
     if (l.words) box.appendChild(p(l.words));
+    if (l.not_read) box.appendChild(el("p", { "class": "hint", text: l.not_read }));
     captureGroups(l.items).forEach(function (grp) {
       var gb = el("div", { "class": "hosting-step" }, el("h3", { text: grp.type }));
       grp.items.forEach(function (it) {
