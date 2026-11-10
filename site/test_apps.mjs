@@ -146,6 +146,8 @@ check("Start blank: its words", G.blank === "Start blank" && G.blankTitle === "M
   G.blankHint === "No sample matches the need? Start with an empty app: its README lists each kind you can add, with an example and its recipe. You can add a sample to it later.");
 check("a blank app's What it covers says so, never an empty list", G.blankCovers === "A blank app: no sample in it yet. Its README.md lists what you can add." &&
   src.includes('(a.samples || []).length ? "Built in this app: "') && src.includes(": G.blankCovers));"));
+check("Made shows no next button until the app's row is read (never Next: its settings, then Try)",
+  /var loaded = data\.app && data\.app\.app === data\.appId;[^\n]*\n\s*if \(!loaded\) \{ box\.appendChild\(p\("Reading the app…"\)\); return box; \}/.test(src));
 check("Start blank: Making says a blank app", a.making("My app", 0) === "Making My app, a blank app…");
 check("Start blank is the first tile of New app, before the search and every sample card",
   /if \(g\.mode === "new"\) wrap\.appendChild\(blankTile\(\)\);[^\n]*\n\s*if \(!site\.index\)/.test(src) &&

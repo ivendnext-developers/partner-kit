@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 
 SITE = "https://developer.ivendnext.com"
+KIT_ON_GITHUB = "https://github.com/ivendnext-developers/partner-kit/blob/main"   # the contract pages are read there
 
 # (kind, what it is, the example under the app's names, or the sample that brings it, the recipe page)
 # The examples are checked by the kit's own checker, together and one by one (tests/test_blank.py).
@@ -76,23 +77,28 @@ KINDS = (
      {"name": "Gift wrap"}, "recipes/required_sale_details.html"),
     ("label_layouts", "the label the till prints for an item",
      {"label_name": "{P} Shelf Label", "kind": "html", "width_mm": 50, "height_mm": 30, "per_row": 1,
-      "template": "<div>{item_name}</div><div>{barcode_svg}</div>"}, "contracts/pages/label_layout.html"),
-    ("list_marks", "a coloured label on a row of a Desk list", "s14", "contracts/pages/list_mark.html"),
+      "template": "<div>{item_name}</div><div>{barcode_svg}</div>"}, "contracts/pages/label_layout.md"),
+    ("list_marks", "a coloured label on a row of a Desk list", "s14", "contracts/pages/list_mark.md"),
     ("translations", "your own words in a language",
-     {"language": "fr", "words": {"Visits": "Visites"}}, "contracts/pages/package_install.html"),
+     {"language": "fr", "words": {"Visits": "Visites"}}, "contracts/pages/package_install.md"),
     ("webhooks", "a signed call to your service when a record changes", "s2", "recipes/webhook_receiver.html"),
     ("registered_applications", "your service's event-feed registration", "s52", "recipes/event_feed.html"),
-    ("remote_keys", "a till key that calls your service", "s52", "contracts/pages/remote_till_key.html"),
+    ("remote_keys", "a till key that calls your service", "s52", "contracts/pages/remote_till_key.md"),
     ("extension_subscriptions", "your service for one extension point: a check, a page, a Desk button, a price",
      "s18", "recipes/rule_guard.html"),
     ("desk_actions", "a button on a Desk record, answered by your service", "s44", "recipes/desk_action.html"),
     ("app_user_rights", "the till rights your app's own user needs (an open check, a station ticket)", "s55",
-     "contracts/pages/package_install.html"),
+     "contracts/pages/package_install.md"),
     ("scan_sources", "a table of your customer's own unit codes the till's scan reads", "s19", "recipes/unit_codes.html"),
     ("register_books", "the books of a regulated-stock register", "s41", "recipes/regulated_register.html"),
     ("fiscal_readers", "one outside fiscal service's result on the sale", None, "guide/07_manifests.html"),
     ("extension_modules", "a certified module for the check before payment or pricing", None, "guide/07_manifests.html"),
 )
+
+
+def link(page: str) -> str:
+    """A recipe or guide page on the developer site; a contract page in the kit on GitHub (the site builds none)."""
+    return f"{KIT_ON_GITHUB}/{page}" if page.startswith("contracts/") else f"{SITE}/{page}"
 
 
 def fill(value, prefix: str, app: str):
@@ -122,7 +128,7 @@ def readme(prefix: str, app: str) -> str:
         else:
             how = "needs a service and a certificate: read its chapter"
         label = "the recipe" if page.startswith("recipes/") else "the guide" if page.startswith("guide/") else "the reference"
-        rows.append(f"| `{kind}` | {what} | {how} | [{label}]({SITE}/{page}) |")
+        rows.append(f"| `{kind}` | {what} | {how} | [{label}]({link(page)}) |")
     table = "\n".join(rows)
     return f"""# {prefix}
 
