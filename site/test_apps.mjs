@@ -407,6 +407,7 @@ check("J3: New app's tiles are Start blank, then From a site, which opens Captur
   src.includes("if (fromSite) { data.made = null; data.capture = { app: r.app }; screen = \"app\"; render(); openApp(r.app); return; }"));
 check("J3: Capture from a site reads, lists by record type with every item ticked, and captures what stays ticked",
   ["/capture/list", "/capture/take"].every((d) => src.includes('"' + d + '"')) && src.includes("cb.checked = !c.off[it.id];") &&
+  src.includes(".filter(function (x) { return x.press; });") && src.includes("if (l.not_read) box.appendChild(") &&
   src.includes("var skip = Object.keys(c.off).filter(function (k) { return c.off[k]; });") &&
   a.captureGroups([{ id: "a", type: "Workflow", name: "w" }, { id: "b", type: "Custom Field", name: "f" }, { id: "c", type: "Workflow", name: "v" }])
     .map((x) => x.type + ":" + x.items.length).join() === "Workflow:2,Custom Field:1");

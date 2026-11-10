@@ -82,6 +82,8 @@ class Stub(B.Stub):
 
     def capture_read(self, b):  # J3: the site's records a person made, as the hosting answers them
         self.captured_from = b["site"]
+        if getattr(self, "empty_site", False):
+            return {"site": "acme.sandbox.ivend.co", "installs": [], "records": {}}
         return {"site": "acme.sandbox.ivend.co", "installs": [], "records": {
             "Custom Field": [{"name": "Purchase Order-custom_gift_note", "owner": "c@acme.example", "dt": "Purchase Order",
                               "fieldname": "custom_gift_note", "fieldtype": "Data", "label": "Gift note"}],
@@ -184,6 +186,16 @@ class MySites(B.Base):
         rc, out = self.run_ivn("capture", "--site", "Acme test", "--skip", "Notification", "--skip", "Custom Field")
         self.assertEqual(rc, 1)
         self.assertIn(B.ivn.WORDS["capture_none"], out)
+
+    def test_capture_new_on_a_site_with_nothing_makes_no_app(self):  # the critic: never an empty app left behind
+        self.stub.empty_site = True
+        news = []
+        real = self.stub.ROUTES["/v1/new"]
+        self.stub.ROUTES = {**self.stub.ROUTES, "/v1/new": lambda st, b: news.append(b) or real(st, b)}
+        rc, out = self.run_ivn("capture", "--site", "Acme test", "--new", "acme_po_rules")
+        self.assertEqual((rc, news), (0, []), out)
+        self.assertIn("a new app (none was made)", out)
+        self.assertIn(B.ivn.WORDS["capture_nothing"].format(folder="a new app (none was made)"), out)
 
     def test_a_subcommand_without_its_site_says_how(self):
         rc, out = self.run_ivn("sites", "label", "shop.acme.example")
