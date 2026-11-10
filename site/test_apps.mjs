@@ -375,6 +375,11 @@ check("MYSITES: Install now's state is per site and version: words read first, o
 check("MYSITES: a refused Install now brings its button back, and a refused Add keeps what was typed",
   src.includes("function (e) { delete data.inst[k]; fail(e); }") && src.includes("data.addForm = data.addForm ||"));
 check("MYSITES: Get a sandbox is offered only until the person has one of their own", src.includes("sites.get_sandbox && !hasOwn"));
+check("MYSITES: Add a site takes a label, so a customer's live site is labelled live as it is added",
+  src.includes('label: lab.value.trim() })') && src.includes("add.appendChild(field(S.label, lab, S.labelHint))"));
+check("MYSITES walk W1: Remove from my list says the site is off the list, or that one of ours stays without the added key",
+  a.removedWords("shop.acme.example", { company: [] }) === "shop.acme.example is off your list, with the key you added for it." &&
+  a.removedWords("demo-2.x", { company: [{ site: "demo-2.x" }] }).startsWith("demo-2.x stays on your list"));
 check("no inline style on the page's elements (the policy has no unsafe-inline)", !/\bstyle:\s*"/.test(src));
 check("P-04: /hosting forwards to My apps", readFileSync(path.join(out, "hosting.html"), "utf8").includes("url=apps.html") &&
   !existsSync(path.join(out, "assets/hosting.js")));

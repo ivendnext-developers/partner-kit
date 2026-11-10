@@ -1475,7 +1475,8 @@ def cmd_sites(a) -> int:
             print(WORDS["key_where"])
             key = ask_secret(WORDS["site_key"])
             secret = ask_secret(WORDS["site_secret"]) if key else ""
-        out = online(door, "/v1/sites/add", {"site": target, **({"key": key, "secret": secret} if key else {})})
+        out = online(door, "/v1/sites/add", {"site": target, **({"key": key, "secret": secret} if key else {}),
+                                             **({"label": a.as_label} if a.as_label else {})})
     elif act == "use":
         out = online(door, "/v1/sites/default", {"site": target})
     elif act == "label":
@@ -1747,6 +1748,8 @@ def parser() -> argparse.ArgumentParser:
                         "live; remove <address>: off your list, with its key (ivn remove-site stops an app reaching a site)")
     p.add_argument("target", nargs="?", help="the site's address, or its label")
     p.add_argument("label", nargs="?", help="label: the label, such as \"Acme test\" ('' takes it off)")
+    p.add_argument("--label", dest="as_label", metavar="LABEL",
+                   help="add: its label at once, such as \"Acme live\" (a customer's live site never joins Try's list)")
     p = cmd("test", cmd_test, "test each connection point again")
     p.add_argument("--local", action="store_true", help="on this laptop, with the test secret in .env.local")
     p = cmd("publish", cmd_publish, "send it to a customer's sites, or list it for every retailer")

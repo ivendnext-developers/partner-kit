@@ -104,6 +104,10 @@ class MySites(B.Base):
         self.assertNotIn("s1", out)  # the secret is never printed
         self.assertIn("shop.acme.example  one press, with your key", out)
 
+    def test_add_takes_its_label_at_once(self):
+        rc, out = self.run_ivn("sites", "add", "live.acme.example", "--label", "Acme live")
+        self.assertEqual((rc, self.stub.added), (0, {"site": "live.acme.example", "label": "Acme live"}))
+
     def test_add_without_a_key_keeps_the_shelf_route(self):
         rc, out = self.run_ivn("sites", "add", "other.acme.example")
         self.assertEqual((rc, self.stub.added), (0, {"site": "other.acme.example"}))
