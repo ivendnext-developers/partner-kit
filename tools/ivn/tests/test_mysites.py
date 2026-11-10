@@ -30,6 +30,8 @@ class Stub(B.Stub):
         out["company"].append({"site": ACME_LIVE, "key_address": ACME_LIVE, "press": True, "route": "own",
                                "label": "Acme live", "live": True})
         out["company"][0]["route"] = "ours"
+        if getattr(self, "back", None):
+            out["company"][0]["back_words"] = self.back
         if self.default:
             out["default"] = self.default
         return out
@@ -94,6 +96,14 @@ class MySites(B.Base):
             "acme.sandbox.ivend.co  one press, with our key · ivn try uses it",
             "Acme test · shop.acme.example  its administrator installs it from the shelf key ivn try prints",
             "Acme live · retail.acme.example  a customer's live site: ivn publish sends it the production copy"]))
+
+    def test_a_pool_sandbox_names_its_owner_and_the_date_it_goes_back(self):  # the page's words, as the hosting says
+        self.stub.labels["acme.sandbox.ivend.co"] = "nw-dev's sandbox"
+        self.stub.back = "Goes back to the pool on 2027-01-09 unless someone signs in to it."
+        rc, out = self.run_ivn("sites")
+        self.assertEqual(out.splitlines()[:2], [
+            "nw-dev's sandbox · acme.sandbox.ivend.co  one press, with our key · ivn try uses it",
+            "    Goes back to the pool on 2027-01-09 unless someone signs in to it."])
 
     def test_add_reads_the_key_from_a_build_servers_variables_never_an_argument(self):
         with unittest.mock.patch.dict(os.environ, {"IVN_SITE_KEY": "k1", "IVN_SITE_SECRET": "s1"}):

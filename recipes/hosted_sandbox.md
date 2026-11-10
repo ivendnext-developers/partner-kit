@@ -1,13 +1,13 @@
 # The hosted sandbox site — what you receive, your first hour, and its limits — the recipe
 
-A sandbox site is your own iVendNext site, hosted by us and full of made-up demo data, where you build and test before you touch a customer's site. This recipe is for anyone who builds for an iVendNext customer and gets a sandbox site from us, partner or not. Every one of them receives the same site, made the same way.
+A sandbox site is your company's iVendNext site, hosted by us and full of made-up demo data, where you build and test before you touch a customer's site. This recipe is for anyone who builds for an iVendNext customer and gets a sandbox site from us, partner or not. Every one of them receives the same site, made the same way.
 
 **When to use it.** From step 2 of the path: right after you register, before you quote or build anything. It is where you try every rung of the ladder and run your tests.
 
 ## What you receive
 
-- **An address** — your own site, in your name. We tell you the address when the site is ready.
-- **An administrator login** for that site, with a one-time password. You choose your own password the first time you sign in.
+- **An address** — your company's site: every developer of your company sees it on **My sites**. We tell you the address when the site is ready.
+- **An administrator login** for that site, with a one-time password, shown once on **My sites** to the person named in the request. You choose your own password the first time you sign in.
 - **Logins for the retailer's people:** a store manager and two cashiers, each with a till sign-in ID, a password and a six-digit PIN.
 
 Nothing else. You never receive the software, a server, a container or a connection to the database. Your own code runs on your own machine or server and talks to your site over HTTPS, exactly as it will talk to a customer's site.
@@ -49,7 +49,7 @@ The e-mail addresses are made up. The site also gives every user its standard ro
 
 ## Your first hour
 
-1. **Sign in** at your address as `admin@demo-retail.example` with the one-time password we sent. Choose your own password when the site asks.
+1. **Sign in** at your address as `admin@demo-retail.example` with the one-time password **My sites** showed you. Choose your own password when the site asks.
 2. **Check your site** with the kit's sandbox check (Python 3, plus bash, curl and jq):
 
    ```bash
@@ -94,6 +94,7 @@ The e-mail addresses are made up. The site also gives every user its standard ro
 ## Reset and removal
 
 - **Reset.** Ask us and we remake your site from the template. Everything you made is lost: configuration, users, keys, installed manifests and records. Keep your manifests, configuration and test data in your own repository, so a reset costs you minutes. All keys are new after a reset; give your services the new ones.
+- **Sixty days with no sign-in.** A sandbox we hand out goes back to us if nobody signs in to it for 60 days: **My sites** and `ivn sites` show the date under it, and anyone at work on the site moves it on.
 - **Removal.** When you leave the programme, your site is removed and its address released.
 
 ## What is refused, and why

@@ -1449,7 +1449,8 @@ def cmd_rollback(a) -> int:
 
 
 def site_line(x: dict, default) -> str:
-    """One of the company's sites: its label and address, how Try installs there, and whether ivn try uses it."""
+    """One of the company's sites: its label (a sandbox of ours names its owner) and address, how Try installs there,
+    whether ivn try uses it, and, for a pool sandbox, the date it goes back unless someone signs in to it."""
     if x.get("stale"):  # the key the developer added no longer signs in: the hosting's own words
         how = x["stale"]
     elif x.get("live"):
@@ -1459,7 +1460,8 @@ def site_line(x: dict, default) -> str:
     else:
         how = WORDS["one_press" if x.get("press") else "its_admin"]
     name = f"{x['label']} · {x['site']}" if x.get("label") else x["site"]
-    return WORDS["site_row"].format(site=name, how=how) + (WORDS["your_last"] if x["site"] == default else "")
+    line = WORDS["site_row"].format(site=name, how=how) + (WORDS["your_last"] if x["site"] == default else "")
+    return line + ("\n    " + x["back_words"] if x.get("back_words") else "")  # a pool sandbox: when it goes back
 
 
 def cmd_sites(a) -> int:

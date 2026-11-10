@@ -374,7 +374,13 @@ check("MYSITES: Install now's state is per site and version: words read first, o
   a.installState({ step: "installing" }) === "wait" && a.installState({ done: true }) === "done" && a.installState({}, true) === "done");
 check("MYSITES: a refused Install now brings its button back, and a refused Add keeps what was typed",
   src.includes("function (e) { delete data.inst[k]; fail(e); }") && src.includes("data.addForm = data.addForm ||"));
-check("MYSITES: Get a sandbox is offered only until the person has one of their own", src.includes("sites.get_sandbox && !hasOwn"));
+check("SANDBOXPOLICY: Get a sandbox for one of our developers with none; Ask for another sandbox opens the request form with the hosting's words; a newcomer is offered the form",
+  src.includes('if (sites.sandbox === "get") out.appendChild(el("p", {}, button(S.getSandbox, get)));') &&
+  src.includes('if (sites.sandbox === "ask") {') && src.includes('el("a", { href: FORM, target: "_blank", rel: "noopener", "class": "site-btn", text: S.askSandbox })') &&
+  src.includes('var FORM = "https://www.ivendnext.com/developers/sandbox/";') && src.includes("box.appendChild(sandboxOffer(sites, function (ev) {") &&
+  a.S.askSandbox === "Ask for another sandbox" && src.includes('sites.sandbox === "request" && (sites.company || []).length && !sites.words') &&
+  !src.includes("sites.get_sandbox"));
+check("SANDBOXPOLICY: each pool sandbox says the date it goes back to the pool, in the hosting's words", src.includes("if (x.back_words) row.appendChild(p(x.back_words));"));
 check("MYSITES: Add a site takes a label, so a customer's live site is labelled live as it is added",
   src.includes('label: lab.value.trim() })') && src.includes("add.appendChild(field(S.label, lab, S.labelHint))"));
 check("MYSITES walk W1: Remove from my list says the site is off the list, or that one of ours stays without the added key",
