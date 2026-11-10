@@ -22,4 +22,18 @@ Short films for partners and developers on the iVendNext channel: what a partner
 - [Walkthrough: a connected app with hosting](https://youtu.be/O-dfTmFpoxQ)
 - [Walkthrough: a change made with an AI assistant, to a green check](https://youtu.be/wBCoIUKsg4Y)
 
+## Industries
+
+What iVendNext does for each kind of retail chain: a short tour of its store, then the proof from the till to the books. Each industry also has a page in the [App library](https://library.ivendnext.app/industries) with its apps in the order a store installs them.
+
+- **Hardware and DIY:** [A hardware chain's store](https://youtu.be/TCmQHOyE_to) · [From the trade counter to the books](https://youtu.be/-n4Q7Um8IME) · apps: [Hardware and DIY](https://library.ivendnext.app/industries/hardware-and-diy)
+- **Travel retail:** [A duty free store at the airport](https://youtu.be/8PovgvAboKo) · [From the boarding pass to the books](https://youtu.be/8v8mB6SMBkQ) · apps: [Travel retail](https://library.ivendnext.app/industries/travel-retail)
+- **Thrift and resale:** [A thrift chain's store](https://youtu.be/RwEMShn1T8Q) · [From the donation door to the payout](https://youtu.be/LNMBJNnKezc) · apps: [Thrift and resale](https://library.ivendnext.app/industries/thrift-and-resale)
+- **Liquor and wine:** [A wine and spirits chain's store](https://youtu.be/oh7OuFNKguA) · [From the age check to the books](https://youtu.be/LAs_nifkCbM) · apps: [Liquor and wine](https://library.ivendnext.app/industries/liquor-and-wine)
+- **Electronics and phones:** [An electronics chain's store](https://youtu.be/XA3INCPty-k) · [From the IMEI to the books](https://youtu.be/qCoxxVk1KYM) · apps: [Electronics and phones](https://library.ivendnext.app/industries/electronics-and-phones)
+- **Optical:** [An optical chain's day](https://youtu.be/3w1W30QwVFU) · [The plan's share, billed to the plan](https://youtu.be/X8nzYRgVGfc) · apps: [Optical](https://library.ivendnext.app/industries/optical)
+- **Distribution and warehousing:** [A distributor's trade counter](https://youtu.be/7Wjt3rWRsOU) · [From the case to the books](https://youtu.be/V-1voi_9nw8) · apps: [Distribution and warehousing](https://library.ivendnext.app/industries/distribution-and-warehousing)
+- **Fashion:** [A fashion chain's store](https://youtu.be/GUThOF8qfv0) · [From the size to the books](https://youtu.be/nVzRPen-AKE) · apps: [Fashion](https://library.ivendnext.app/industries/fashion)
+- **Beauty and cosmetics:** [A beauty chain's store](https://youtu.be/OrOPx7jS3M8) · [From the shelf to the books](https://youtu.be/YA2R6evbarg) · apps: [Beauty and cosmetics](https://library.ivendnext.app/industries/beauty-and-cosmetics)
+
 For the films for store teams and for the people who set iVendNext up, see [all iVendNext videos](https://www.ivendnext.com/videos/).
