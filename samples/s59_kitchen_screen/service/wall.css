@@ -62,4 +62,5 @@ html[dir="rtl"] .ivn-wall-dir .ivn-wall-icon { transform: scaleX(-1); }   /* ear
 .ivn-wall-state.is-late { background: var(--ivn-pill-red-bg); color: var(--ivn-pill-red-ink); }
 .ivn-wall-icon { inline-size: 1em; block-size: 1em; flex: none; }
 
-.ivn-wall-note[hidden], .ivn-wall-tool[hidden], .ivn-wall-strip[hidden], .ivn-wall-more[hidden] { display: none; }   /* the kit's classes set display */
+.ivn-wall-note[hidden], .ivn-wall-tool[hidden], .ivn-wall-strip[hidden], .ivn-wall-more[hidden], .ivn-wall-card[hidden], .ivn-wall-state[hidden],
+.ivn-wall-empty[hidden] { display: none; }   /* the kit's classes set display */

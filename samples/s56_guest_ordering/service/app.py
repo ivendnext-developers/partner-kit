@@ -304,11 +304,12 @@ class Service:
             self._menus[key] = (kept_at, menu, reg.get("currency") or "", prices)
         return menu, reg.get("currency") or ""
 
-    def names(self, door, site: str, store: str, lang: str, menu: list[dict]) -> dict:
+    def names(self, door, site: str, store: str, lang: str, menu: list[dict], t0: float | None = None) -> dict:
         """The store's own translation, in the guest's language, of the names on the menu: ``{item code: name}`` for the items
         the till has a translation for, read with its ``item_names`` (500 codes a call), kept ``MENU_KEEP_S`` seconds per store
         and language (read again sooner when the menu holds a dish it was not asked for). A till that refuses or is busy gives
-        none, for ``MENU_SHORT_S`` seconds: the guest reads the names as written, never an error."""
+        none, for ``MENU_SHORT_S`` seconds, and a call that has already spent the time budget asks nothing: the guest reads
+        the names as written, never an error or a late menu."""
         codes = list(dict.fromkeys(c for s in menu for d in s["dishes"] for c in
                                    [d["code"], d.get("family")] + [x["code"] for g in d["groups"] for x in g["choices"]] if c))
         key = (site, store, lang.lower())
@@ -318,6 +319,9 @@ class Service:
         shown, asked, ok = {}, set(), True
         for i in range(0, len(codes), NAME_BATCH):
             chunk = codes[i:i + NAME_BATCH]
+            if t0 is not None and self.clock() - t0 > BUDGET_S - READ_S:
+                ok = False
+                break
             try:
                 got = door.call("item_names", {"lang": lang, "items": chunk})
             except TenantError:
@@ -333,7 +337,7 @@ class Service:
         with self._lock:
             if len(self._names) >= MENU_CACHE_MAX:
                 self._names.pop(next(iter(self._names)))
-            self._names[key] = (self.clock() - (0 if ok else MENU_KEEP_S - MENU_SHORT_S), asked, shown)
+            self._names[key] = (self.clock() - (0 if ok else MENU_KEEP_S - MENU_SHORT_S), asked if ok else set(codes), shown)
         return shown
 
     def sizes(self, door, items: list[dict]) -> tuple[dict, dict]:
@@ -494,6 +498,7 @@ class Service:
         if not isinstance(body, dict) or not isinstance(body.get("s"), str):
             return 400, {"state": "unknown"}
         try:
+            t0 = self.clock()
             site, door, c, row, where, secret = self.guest(body)
             closed = _say("closed", "ask_staff", ASK_STAFF) if c["kind"] == gor.KIND_TABLE else \
                 _say("closed", "ask_staff_kiosk", ASK_STAFF_KIOSK)
@@ -504,7 +509,7 @@ class Service:
             if path == "/gor/menu":
                 lang = body.get("lang")                      # the guest's language, when the page has words for it
                 if isinstance(lang, str) and LANG.match(lang):
-                    menu = gor.translated(menu, self.names(door, site, c["store"], lang, menu))
+                    menu = gor.translated(menu, self.names(door, site, c["store"], lang, menu, t0))
                 return 200, {"state": "open", **where, "menu": menu, "currency": currency,
                              "most_lines": gor.setting(row.get("most_lines"), gor.LINES),
                              "most_qty": gor.setting(row.get("most_qty"), gor.QTY)}

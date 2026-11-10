@@ -9,6 +9,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import sys
 import time
 import unittest
@@ -408,6 +409,8 @@ class ServiceTest(unittest.TestCase):
         self.assertNotIn("<script>", page)                             # no inline script
         self.assertNotIn("style=", page)
         self.assertNotRegex(page, r"(src|href)=\"(https?:)?//")         # nothing from another site
+        for ref in re.findall(r'(?:href|src)="([^"]+)"', page):         # every file the page asks for, the service serves
+            self.assertIn("/" + ref, app.STATIC, ref)
 
     def test_e3_every_file_the_service_serves_is_in_the_hosted_package(self):   # the page's files; app.json's
         # handler and the template modules it imports are listed by hand beside them

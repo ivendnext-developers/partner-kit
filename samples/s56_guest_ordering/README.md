@@ -49,8 +49,8 @@ The hosted service reserves 10 of the account's concurrent copies, shared by eve
 
 Manifest 0.2.4. Needs POS build `2.1.0.697` or later.
 
-- The page wears the kit's guest-page look (`guest.css` on `ivn-kit.css`): the kit's buttons, size chips and tokens in place of the page's own colours, so it follows the device's light or dark setting and reads right to left, and every control is at least 44px. Nothing the guest does changes.
-- A guest whose phone is set to a language the page has words for (not English) sees the dishes', sizes' and choices' names in that language where the store has translated them, read with the till's `item_names` (one call for up to 500 items, kept 2 minutes per store and language). A name the store has not translated, or a till that does not answer, shows the name as written. The till, the kitchen ticket and the receipt show the name as written, so a translated dish reads differently on the guest's phone.
+- The page wears the kit's guest-page look (`guest.css` on `ivn-kit.css`): the kit's buttons, size chips and tokens in place of the page's own colours, so it follows the device's light or dark setting and reads right to left, and every control is at least 44px. The ordering steps are the same.
+- A guest whose phone is set to a language the page has words for (not English) sees the dishes' and choices' names (and the dish a size belongs to) in that language where the store has translated them; the size label, the section heading and a choice group's label stay as written, read with the till's `item_names` (one call for up to 500 items, kept 2 minutes per store and language). A name the store has not translated, or a till that does not answer, shows the name as written. The till, the kitchen ticket and the receipt show the name as written, so a translated dish reads differently on the guest's phone.
 
 ### 1.2.3
 

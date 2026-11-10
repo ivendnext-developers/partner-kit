@@ -5,6 +5,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import sys
 import time
 import unittest
@@ -441,9 +442,19 @@ class ServiceTest(unittest.TestCase):
             self.shop.refuse = ("CALL item_names", why)
             code, out = guest(self.svc, "/gor/menu", t, lang="es")
             self.assertEqual((code, out["state"], gor.dishes_of(out["menu"])["LATTE"]["name"]), (200, "open", "Latte"))
+            seen = len(self.shop.named)
+            guest(self.svc, "/gor/menu", t, lang="es")                                # inside the short window: not asked again
+            self.assertEqual(len(self.shop.named), seen)
             self.shop.refuse = None
             self.clock.t += app.MENU_SHORT_S                                          # asked again soon, not hammered
         self.assertEqual(gor.dishes_of(guest(self.svc, "/gor/menu", t, lang="es")[1]["menu"])["LATTE"]["name"], "Café con leche")
+
+    def test_n4b_a_menu_that_has_spent_the_time_budget_is_not_named_and_not_late(self):
+        t = made(self.shop, self.svc)
+        self.shop.slow, self.shop.tick = {"BURGER"}, self.clock                    # the price read takes the budget
+        code, out = guest(self.svc, "/gor/menu", t, lang="es")
+        self.assertEqual((code, out["state"], gor.dishes_of(out["menu"])["LATTE"]["name"]), (200, "open", "Latte"))
+        self.assertEqual(self.shop.named, [])
 
     def test_n5_a_menu_of_70_dishes_is_named_in_one_call_and_one_of_600_in_two(self):
         def menu_of(n):
@@ -460,6 +471,11 @@ class ServiceTest(unittest.TestCase):
         for path, (fname, _) in app.STATIC.items():
             self.assertEqual(self.svc.handle("GET", path, {}, b"")[0], 200, path)
             self.assertIn("samples/s56_guest_ordering/service/" + fname, pkg, fname)   # else the hosted page loses its look
+        with open(os.path.join(HERE, "..", "service", "page.html"), encoding="utf-8") as f:
+            linked = re.findall(r'(?:href|src)="([^"]+)"', f.read())
+        self.assertIn("guest.css", linked)
+        for ref in linked:
+            self.assertIn("/" + ref, app.STATIC, ref)                                   # a file the page asks for, the service serves
 
     def test_m7_a_flood_on_a_replaced_card_reads_the_retailer_once_a_copy(self):
         old = made(self.shop, self.svc)

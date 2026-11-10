@@ -232,7 +232,7 @@ def translated(menu: list[dict], names: dict) -> list[dict]:
             d2["groups"] = [dict(g, choices=[dict(c, name=names.get(c["code"], c["name"])) for c in g["choices"]])
                             for g in d["groups"]]
             dishes.append(d2)
-        out.append(dict(sec, dishes=dishes))
+        out.append(dict(sec, dishes=sorted(dishes, key=lambda d: d["name"].lower())))   # in the guest's alphabet, as menu_of does in the store's
     return out
 
 
