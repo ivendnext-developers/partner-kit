@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """ivn-kit 0.1.0 · the three page checks that sit next to the "tokens only" check (check_kit.sh runs them on every
-page you give it; the default is the kit's three templates). Run on one page: tools/check_page.py <check> page.html ...
+page you give it; the default is the kit's five templates). Run on one page: tools/check_page.py <check> page.html ...
 
   version    the kit the page loads: its stylesheet (and script, if it loads one) must be a file next to the page, not a
              remote address, and carry the same kit version as the kit being checked

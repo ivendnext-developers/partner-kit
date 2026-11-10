@@ -7,26 +7,27 @@
 <meta name="robots" content="noindex">
 <title>Kitchen screen</title>
 <link rel="stylesheet" href="ivn-kit.css">
+<link rel="stylesheet" href="wall.css">
 <link rel="stylesheet" href="page.css">
 </head>
-<body class="ivn ksc" data-size="standard">
-<header class="ksc-head">
-  <h1 id="title" class="ksc-title"></h1>
-  <p id="stations" class="ksc-sub"></p>
-  <div class="ksc-tools">
-    <button id="prev" type="button" class="ivn-btn ksc-tool ksc-dir" hidden></button>
-    <p id="more" class="ksc-more-tickets" hidden></p>
-    <button id="next" type="button" class="ivn-btn ksc-tool ksc-dir" hidden></button>
-    <button id="recall" type="button" class="ivn-btn ksc-tool" aria-pressed="false" hidden></button>
-    <button id="sold" type="button" class="ivn-btn ksc-tool" hidden></button>
-    <button id="smaller" type="button" class="ivn-btn ksc-tool" dir="ltr">A-</button>
-    <button id="bigger" type="button" class="ivn-btn ksc-tool" dir="ltr">A+</button>
-    <p id="read" class="ksc-read"></p>
+<body class="ivn ivn-wall ksc" data-size="standard">
+<header class="ivn-wall-head">
+  <h1 id="title" class="ivn-wall-title"></h1>
+  <p id="stations" class="ivn-wall-sub"></p>
+  <div class="ivn-wall-tools">
+    <button id="prev" type="button" class="ivn-btn ivn-wall-tool ivn-wall-dir" hidden></button>
+    <p id="more" class="ivn-wall-more" hidden></p>
+    <button id="next" type="button" class="ivn-btn ivn-wall-tool ivn-wall-dir" hidden></button>
+    <button id="recall" type="button" class="ivn-btn ivn-wall-tool" aria-pressed="false" hidden></button>
+    <button id="sold" type="button" class="ivn-btn ivn-wall-tool" hidden></button>
+    <button id="smaller" type="button" class="ivn-btn ivn-wall-tool" dir="ltr">A-</button>
+    <button id="bigger" type="button" class="ivn-btn ivn-wall-tool" dir="ltr">A+</button>
+    <p id="read" class="ivn-wall-read"></p>
   </div>
 </header>
-<section id="waiting" class="ksc-waiting" hidden></section>
-<p id="note" class="ivn-banner ksc-note" role="alert" hidden></p>
-<main id="board" class="ksc-board"></main>
+<section id="waiting" class="ivn-wall-strip" hidden></section>
+<p id="note" class="ivn-banner ivn-wall-note" role="alert" hidden></p>
+<main id="board" class="ivn-wall-board ksc-board"></main>
 <dialog id="sold-dialog" class="ivn-dialog ksc-dialog">
   <div class="ivn-dialog-head"><h2 id="sold-title" class="ivn-dialog-title"></h2></div>
   <div class="ivn-dialog-body"><input id="sold-find" class="ivn-input ksc-find" type="search" autocomplete="off" maxlength="60">

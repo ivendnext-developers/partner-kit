@@ -1,6 +1,6 @@
 {
  "app": "kitchen-screen",
- "version": "1.3.3",
+ "version": "1.3.4",
  "port": 8080,
  "health": "/health",
  "size": "small",
@@ -22,7 +22,8 @@
   "samples/s59_kitchen_screen/service/page.css",
   "samples/s59_kitchen_screen/service/fit.js",
   "samples/s59_kitchen_screen/service/ivn-kit.css",
-  "samples/s59_kitchen_screen/service/ivn-kit.js"
+  "samples/s59_kitchen_screen/service/ivn-kit.js",
+  "samples/s59_kitchen_screen/service/wall.css"
  ],
  "env": [
   {

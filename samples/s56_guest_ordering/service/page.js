@@ -117,6 +117,8 @@
 
   var hash = new URLSearchParams(location.hash.slice(1));
   var who = { s: hash.get("s") || "", t: hash.get("t") || "" };
+  var langTag = lang !== "en" && WORDS[lang] ? (navigator.language || "") : "";   // asks the till for the dishes' names in this language
+  function menuCall() { return call("/gor/menu", langTag ? { lang: langTag } : {}); }
   var $ = function (id) { return document.getElementById(id); };
   var menu = null, basket = [], key = null, busy = false, money = null, picked = false;   // picked: a size was tapped
   var KEPT_MS = 10 * 60 * 1000;      // an order's key kept this long in the browser, for a reload or a second scan
@@ -133,7 +135,7 @@
       if (busy) { return resetLater(ms); }
       if (lost && Date.now() - lostAt < KIOSK_IDLE_MS) { return resetLater(KIOSK_IDLE_MS - (Date.now() - lostAt)); }
       basket = []; key = null; lost = false; drawBasket(); note(""); drawMenu();   // the last guest's open choices go too
-      call("/gor/menu").then(function (a) {        // drawn only while no next guest has opened a dish's choices
+      menuCall().then(function (a) {        // drawn only while no next guest has opened a dish's choices
         if (a.state === "open" && !document.querySelector(".choose")) { menu = a; drawMenu(); }
       }).catch(function () {});
     }, ms);
@@ -177,7 +179,7 @@
     n.textContent = "";
     if (label) { n.appendChild(bdi(label)); }
     n.appendChild(document.createTextNode(text || ""));
-    n.className = done ? "note done" : "note";
+    n.className = done ? "ivn-guest-note ivn-guest-col is-done" : "ivn-guest-note ivn-guest-col";
     if ((label || text) && n.scrollIntoView) { n.scrollIntoView({ block: "nearest" }); }   // the order panel sticks to the screen: an answer must not sit below it
   }
 
@@ -196,26 +198,26 @@
   }
 
   function chooser(dish, box) {
-    var panel = el("div", "choose"), inputs = [];
+    var panel = el("div", "choose ivn-guest-choose"), inputs = [];
     dish.groups.forEach(function (g, gi) {
-      var fs = el("fieldset", "group"), lg = el("legend");
+      var fs = el("fieldset", "group ivn-guest-group"), lg = el("legend");
       lg.appendChild(own("span", null, g.label));
-      lg.appendChild(el("span", "group-rule", " (" + rule(g) + ")"));
+      lg.appendChild(el("span", "group-rule ivn-guest-rule", " (" + rule(g) + ")"));
       fs.appendChild(lg);
       g.choices.forEach(function (c) {
-        var lab = el("label", "choice"), inp = el("input");
+        var lab = el("label", "choice ivn-guest-choice"), inp = el("input");
         inp.type = g.min >= 1 && g.max === 1 ? "radio" : "checkbox";   // an optional choice can be unticked
         inp.name = dish.code + "-" + gi;
         inp.value = c.code;
         inputs.push({ input: inp, group: g, choice: c });
         lab.appendChild(inp);
         lab.appendChild(own("span", null, c.name));
-        if (c.price) { lab.appendChild(el("span", "price", "+" + price(c.price))); }
+        if (c.price) { lab.appendChild(el("span", "price ivn-guest-price", "+" + price(c.price))); }
         fs.appendChild(lab);
       });
       panel.appendChild(fs);
     });
-    var go = el("button", "add", W.addOrder);
+    var go = el("button", "add ivn-btn ivn-btn-primary", W.addOrder);
     go.type = "button";
     go.addEventListener("click", function () {
       var picked = inputs.filter(function (x) { return x.input.checked; });
@@ -240,13 +242,13 @@
   }
 
   function tile(name) {
-    var t = el("div", "tile"), ch = Array.from(String(name || "").trim())[0];
+    var t = el("div", "tile ivn-guest-tile"), ch = Array.from(String(name || "").trim())[0];
     t.setAttribute("aria-hidden", "true");
     if (ch) { t.appendChild(bdi(ch.toUpperCase())); }
     return t;
   }
   function photo(d) {              // the dish's picture where it has one; a plain tile where it has none or it does not load
-    var box = el("div", "photo");
+    var box = el("div", "photo ivn-guest-photo");
     if (!d.image) { box.appendChild(tile(d.base || d.name)); return box; }
     var img = el("img");
     img.alt = ""; img.loading = "lazy"; img.decoding = "async"; img.src = d.image;
@@ -263,21 +265,21 @@
       return pa || pb ? (pa ? 1 : 0) - (pb ? 1 : 0) : a.price - b.price;
     });
     var one = sizes.length === 1, cur = sizes[0], tabs = [];
-    var box = el("div", "dish"), row = el("div", "dish-row"), body = el("div", "dish-body"), head = el("div", "dish-head");
-    var pr = el("span", "price"), b = el("button", "add");
+    var box = el("div", "dish ivn-guest-dish"), row = el("div", "dish-row ivn-guest-dish-row"), body = el("div", "dish-body ivn-guest-dish-body"), head = el("div", "dish-head ivn-guest-dish-head");
+    var pr = el("span", "price ivn-guest-price"), b = el("button", "add ivn-btn");
     b.type = "button";
     row.appendChild(photo(cur));
-    head.appendChild(own("span", "dish-name", one ? cur.name : cur.base));
+    head.appendChild(own("span", "dish-name ivn-guest-dish-name", one ? cur.name : cur.base));
     if (one) { head.appendChild(pr); }
     body.appendChild(head);
     if (!one) {
-      var bar = el("div", "sizes");
+      var bar = el("div", "sizes ivn-guest-sizes");
       bar.setAttribute("role", "group");
       sizes.forEach(function (sz) {
-        var t = el("button", "size");
+        var t = el("button", "size ivn-chip");
         t.type = "button";
         t.appendChild(bdi(sz.size));
-        if (sz.price !== null && sz.price !== undefined) { t.appendChild(el("span", "price", price(sz.price))); }
+        if (sz.price !== null && sz.price !== undefined) { t.appendChild(el("span", "price ivn-guest-price", price(sz.price))); }
         t.addEventListener("click", function () {
           cur = sz;
           picked = true;
@@ -294,7 +296,7 @@
       pr.textContent = price(cur.price);
       tabs.forEach(function (t, i) {
         var on = sizes[i] === cur;
-        t.className = on ? "size on" : "size";
+        t.className = on ? "size ivn-chip on" : "size ivn-chip";
         t.setAttribute("aria-pressed", on ? "true" : "false");
       });
       b.textContent = cur.groups.length ? W.choose : W.add;
@@ -316,7 +318,7 @@
     picked = false;
     root.textContent = "";
     menu.menu.forEach(function (sec) {
-      if (sec.group) { root.appendChild(own("h2", null, sec.group)); }
+      if (sec.group) { root.appendChild(own("h2", "ivn-guest-section", sec.group)); }
       var done = {};
       sec.dishes.forEach(function (d) {
         if (!d.family) { card([d], root); return; }
@@ -345,9 +347,9 @@
     list.textContent = "";
     $("basket").hidden = basket.length === 0;
     basket.forEach(function (ln, i) {
-      var li = el("li", "line"), head = el("div", "line-head");
-      head.appendChild(own("span", "line-name", ln.dish.family ? ln.dish.base + " · " + ln.dish.size : ln.dish.name));
-      var q = el("span", "qty"), minus = el("button", null, "-"), plus = el("button", null, "+");
+      var li = el("li", "line ivn-guest-line"), head = el("div", "line-head ivn-guest-line-head");
+      head.appendChild(own("span", "line-name ivn-guest-line-name", ln.dish.family ? ln.dish.base + " · " + ln.dish.size : ln.dish.name));
+      var q = el("span", "qty ivn-guest-qty"), minus = el("button", "ivn-btn", "-"), plus = el("button", "ivn-btn", "+");
       minus.type = plus.type = "button";
       minus.setAttribute("aria-label", ln.qty > 1 ? W.less : W.remove);
       plus.setAttribute("aria-label", W.more);
@@ -357,9 +359,9 @@
       head.appendChild(q);
       li.appendChild(head);
       if (ln.choices.length) {
-        li.appendChild(own("div", "line-choices", ln.choices.map(function (c) { return c.name; }).join(", ")));
+        li.appendChild(own("div", "line-choices ivn-guest-line-choices", ln.choices.map(function (c) { return c.name; }).join(", ")));
       }
-      var inp = el("input");
+      var inp = el("input", "ivn-input");
       inp.maxLength = 80; inp.placeholder = W.note; inp.value = ln.note;
       inp.addEventListener("input", function () { ln.note = inp.value; key = null; });
       li.appendChild(inp);
@@ -436,7 +438,7 @@
   function priceAgain(n) {
     if (n > 3) { return; }
     setTimeout(function () {
-      call("/gor/menu").then(function (a) {
+      menuCall().then(function (a) {
         if (a.state !== "open") { return; }
         if (applyPrices(a)) {
           drawTotal();
@@ -452,7 +454,7 @@
   $("send").addEventListener("click", send);
   if (!who.s || !who.t) { note(W.unknown); return; }
   note(W.loading);
-  call("/gor/menu").then(function (a) {
+  menuCall().then(function (a) {
     if (a.state !== "open") { note(a.state === "unknown" ? W.unknown : say(a)); return; }
     menu = a;
     money = currency(a.currency);

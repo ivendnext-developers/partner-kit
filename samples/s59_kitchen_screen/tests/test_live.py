@@ -445,7 +445,7 @@ class ImageTest(unittest.TestCase):
         tools = [["tools/app_template/validate_app.py", here]]
         if os.path.exists(os.path.join(KIT, "LICENSE")):     # the hosting's own check wants the repository's licence
             tools.append(["tools/deploy_app/deploy_app.py", here, "--image",
-                          "registry.example/partner-apps/kitchen-screen-live:1.3.3", "--plan", "starter", "--partner", "acme"])
+                          "registry.example/partner-apps/kitchen-screen-live:1.3.4", "--plan", "starter", "--partner", "acme"])
         for tool in tools:
             r = subprocess.run([sys.executable, *tool], cwd=KIT, capture_output=True, text=True, timeout=60)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)

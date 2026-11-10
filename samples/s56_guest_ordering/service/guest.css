@@ -1,0 +1,66 @@
+/* ivn-kit 0.1.0 · guest page — a page a guest reads on a phone (a QR menu, a table order, a kiosk). Load it after ivn-kit.css
+ * and put class="ivn ivn-guest" on <body>. Tokens only: no colour or font of its own; logical properties only, so it reads
+ * right to left by itself. A public guest page has no signed context: take the language from the device and the look from the
+ * device's light or dark setting (the kit does that when <html> has no data-theme); a service that holds a retailer's look
+ * applies it with ivnKit.applyTheme. Built on the kit's buttons, chips and banner; this file adds only the page's layout.
+ * Phone first: a column no wider than 36rem, centred on a larger window; every control is at least 44px; works at 320px. */
+body.ivn-guest { font-size: 1.15rem; line-height: 1.45; }
+.ivn-guest-col { max-inline-size: 36rem; margin-inline: auto; padding-inline: var(--ivn-s4); }
+.ivn-guest .ivn-btn, .ivn-guest .ivn-chip { min-block-size: 44px; }
+.ivn-guest .ivn-btn { font-size: 1rem; }
+.ivn-guest .ivn-chip { font-size: 1rem; display: inline-flex; align-items: baseline; gap: var(--ivn-s2); padding-inline: var(--ivn-s3); }
+
+/* head: where the guest is, and one line of help */
+.ivn-guest-top { background: var(--ivn-surface); padding-block: var(--ivn-s4) var(--ivn-s2); }
+.ivn-guest-where { margin: 0; font-size: 1.35rem; font-weight: 700; overflow-wrap: anywhere; }
+.ivn-guest-hint { margin: 2px 0 0; color: var(--ivn-text-muted); font-size: .9rem; }
+
+/* the menu: sections of dishes */
+.ivn-guest-menu { background: var(--ivn-surface); padding-block-end: var(--ivn-s3); }
+.ivn-guest-section { margin: var(--ivn-s4) 0 var(--ivn-s2); font-size: 1.15rem; font-weight: 700; }
+.ivn-guest-dish { padding-block: var(--ivn-s3); border-block-start: 1px solid var(--ivn-border); }
+.ivn-guest-dish-row { display: flex; gap: var(--ivn-s3); align-items: flex-start; }
+.ivn-guest-photo { flex: none; inline-size: 76px; block-size: 76px; border-radius: var(--ivn-radius-lg); overflow: hidden;
+  background: var(--ivn-primary-tint); }
+.ivn-guest-photo img { display: block; inline-size: 100%; block-size: 100%; object-fit: cover; }
+.ivn-guest-tile { inline-size: 100%; block-size: 100%; display: flex; align-items: center; justify-content: center;
+  font-size: 1.75rem; font-weight: 700; color: var(--ivn-pill-blue-ink); }
+.ivn-guest-dish-body { flex: 1; min-inline-size: 0; }
+.ivn-guest-dish-head { display: flex; justify-content: space-between; gap: var(--ivn-s3); align-items: baseline; }
+.ivn-guest-dish-name { font-weight: 600; overflow-wrap: anywhere; }
+.ivn-guest-price { color: var(--ivn-text-muted); white-space: nowrap; }
+.ivn-guest-sizes { display: flex; flex-wrap: wrap; gap: var(--ivn-s2); margin-block-start: var(--ivn-s2); }
+.ivn-guest-sizes .ivn-guest-price { color: inherit; font-size: .9rem; }
+.ivn-guest-dish .ivn-btn { margin-block-start: var(--ivn-s2); }
+
+/* the choices a dish asks for */
+.ivn-guest-choose { margin-block-start: var(--ivn-s3); padding: var(--ivn-s3); background: var(--ivn-primary-tint); border-radius: var(--ivn-radius-lg); }
+.ivn-guest-group { margin: 0 0 var(--ivn-s3); padding: 0; border: 0; }
+.ivn-guest-group legend { padding: 0; font-weight: 600; }
+.ivn-guest-rule { color: var(--ivn-text-muted); font-size: .85rem; font-weight: 400; }
+.ivn-guest-choice { display: flex; gap: var(--ivn-s2); align-items: center; min-block-size: 44px; }
+.ivn-guest-choice input { inline-size: 20px; block-size: 20px; margin: 0; accent-color: var(--ivn-primary); }
+.ivn-guest-choice .ivn-guest-price { margin-inline-start: auto; }
+
+/* the order: a bar that stays at the foot of the screen */
+.ivn-guest-basket { position: sticky; inset-block-end: 0; display: flex; flex-direction: column; max-block-size: min(45vh, 18rem);
+  margin-block-start: var(--ivn-s3); padding-block: var(--ivn-s3) var(--ivn-s4); background: var(--ivn-surface);
+  border-block-start: 3px solid var(--ivn-primary); box-shadow: var(--ivn-shadow-lg); }
+.ivn-guest-basket[hidden] { display: none; }
+.ivn-guest-basket-title { margin: 0 0 var(--ivn-s2); font-size: 1.15rem; }
+.ivn-guest-lines { list-style: none; margin: 0; padding: 0; overflow-y: auto; min-block-size: 0; }
+.ivn-guest-line { padding-block: var(--ivn-s3); border-block-start: 1px solid var(--ivn-border); }
+.ivn-guest-line-head { display: flex; gap: var(--ivn-s3); align-items: center; }
+.ivn-guest-line-name { flex: 1; font-weight: 600; overflow-wrap: anywhere; }
+.ivn-guest-line-choices { color: var(--ivn-text-muted); font-size: .9rem; }
+.ivn-guest-qty { display: flex; gap: var(--ivn-s2); align-items: center; }
+.ivn-guest-qty .ivn-btn { min-inline-size: 44px; padding: 0; margin: 0; }
+.ivn-guest-line .ivn-input { margin-block-start: var(--ivn-s2); min-block-size: 44px; }
+.ivn-guest-foot { display: flex; gap: var(--ivn-s3); align-items: center; margin-block-start: var(--ivn-s3); }
+.ivn-guest-total { flex: none; margin: 0; font-size: 1.15rem; font-weight: 700; }
+.ivn-guest-total:empty { display: none; }
+.ivn-guest-foot .ivn-btn { flex: 1; margin: 0; min-block-size: 3.2rem; font-weight: 600; }
+
+/* the answer to what the guest just did: one line, a tinted box once an order is placed */
+.ivn-guest-note { min-block-size: 1.4em; margin-block: var(--ivn-s4) 40px; font-weight: 600; }
+.ivn-guest-note.is-done { padding: var(--ivn-s4); background: var(--ivn-primary-tint); border-radius: var(--ivn-radius-lg); }

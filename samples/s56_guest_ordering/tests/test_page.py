@@ -49,6 +49,12 @@ class PageTest(unittest.TestCase):
         self.assertEqual(p["dishes"][1]["price"], "$3.20")                            # never US$3.20
         self.assertEqual(p["dishes"][2]["price"], "")                                 # no price known: none shown
 
+    def test_p8_the_page_asks_for_the_dishes_names_in_a_language_it_has_words_for(self):
+        for language, langs in (("es-AR", ["es-AR"]), ("pt-BR", ["pt-BR"]), ("en-GB", [""]), ("ja-JP", [""])):
+            p = page(answers={"/gor/menu": [MENU]}, language=language)
+            self.assertEqual(p["langs"], langs * len(p["langs"]), language)           # never for English, never for a language with no words
+            self.assertTrue(p["langs"], language)
+
     def test_p3_the_total_follows_the_basket_and_waits_for_every_price(self):
         steps = [{"dish": "Cold brew", "add": 1}, {"dish": "Cold brew", "size": "Large"}, {"dish": "Cold brew", "add": 1},
                  {"dish": "Latte", "add": 1}, {"dish": "Mocha", "add": 1}]

@@ -5,7 +5,7 @@ library only).
     POST /ksc/link      the retailer's signed press of *Make link* (``desk_action/1``): each ticked screen record gets a
                         new number and its signed link                          →  200 {"message": …, "refresh": true}
     GET  /              the screen's page (its address carries #s=<the retailer's site>&t=<screen>.<number>.<signature>)
-    GET  /page.js · /fit.js · /page.css · /ivn-kit.css · /ivn-kit.js   (the kit's own two files, a pinned copy beside the page)
+    GET  /page.js · /fit.js · /page.css · /ivn-kit.css · /ivn-kit.js · /wall.css   (the kit's own three files, a pinned copy beside the page)
     POST /ksc/board     {"s", "t"}                                     →  200 {"state": "open", "kind", "view", …}
     POST /ksc/move      {"s", "t", "kitchen_order", "ticket", "state"} →  200 {"state": "moved" | "refused", …}
                         {"s", "t", "kitchen_order", "order": true}     (the expo: bump every ready ticket of the order)
@@ -80,7 +80,8 @@ CACHE_MAX = 2000                     # screens (and stores) one copy keeps
 STATIC = {"/": ("page.html", "text/html; charset=utf-8"), "/page.js": ("page.js", "text/javascript; charset=utf-8"),
           "/page.css": ("page.css", "text/css; charset=utf-8"), "/fit.js": ("fit.js", "text/javascript; charset=utf-8"),
           "/ivn-kit.css": ("ivn-kit.css", "text/css; charset=utf-8"),    # the kit's own files, copied beside the page and
-          "/ivn-kit.js": ("ivn-kit.js", "text/javascript; charset=utf-8")}   # pinned (kit/design/README.md §1)
+          "/ivn-kit.js": ("ivn-kit.js", "text/javascript; charset=utf-8"),   # pinned (kit/design/README.md §1)
+          "/wall.css": ("wall.css", "text/css; charset=utf-8")}   # the kit's wall-screen frame, copied the same way
 ROW_FIELDS = ["parent", "store", "sold_out_on", "warn_min", "late_min", "look", "accent", "language", "tables_on_board",
               "slip_size"]
 SET_UP = ("PermissionError", "DeviceRequiredError", "ProfileNotAssignedError", "AssignedProfileDisabledError",

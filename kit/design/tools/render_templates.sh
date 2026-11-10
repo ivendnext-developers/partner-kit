@@ -6,13 +6,14 @@ KIT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="${1:?usage: render_templates.sh <out-dir>}"
 CHROME="${CHROME:-/Applications/Google Chrome.app/Contents/MacOS/Google Chrome}"
 mkdir -p "$OUT"
-for t in desk_page till_sheet portal; do
-  size="1280,900"; [ "$t" = till_sheet ] && size="420,800"
+for t in desk_page till_sheet portal guest_page wall_screen; do
+  size="1280,900"; [ "$t" = till_sheet ] && size="420,800"; [ "$t" = guest_page ] && size="390,844"; [ "$t" = wall_screen ] && size="1920,1080"
   for look in light dark rtl; do
     case $look in light) qs="?theme=light";; dark) qs="?theme=dark";; rtl) qs="?theme=light&dir=rtl";; esac
     url="file://$KIT/templates/$t.html$qs"
     # Headless Chrome will not go below 500px wide: the till sheet goes through a 420x800 frame.
     [ "$t" = till_sheet ] && url="file://$KIT/tools/frame.html?t=till_sheet&w=420&h=800&${qs#?}"
+    [ "$t" = guest_page ] && url="file://$KIT/tools/frame.html?t=guest_page&w=390&h=844&${qs#?}"
     "$CHROME" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 \
       --virtual-time-budget=2000 --screenshot="$OUT/${t}_${look}.png" --window-size="$size" "$url" >/dev/null 2>&1
     echo "rendered ${t}_${look}.png ($size)"

@@ -5,6 +5,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import sys
 import time
 import unittest
@@ -404,6 +405,77 @@ class ServiceTest(unittest.TestCase):
         self.clock.t += app.MENU_SHORT_S
         self.assertIsNone(gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])["LATTE"]["price"])
         self.assertEqual(len([c for c in self.shop.calls if c == "CALL item_prices"]), asked)   # kept the full window, not asked again
+
+    def test_n1_a_guest_in_spanish_reads_the_stores_translations_and_the_rest_as_written(self):
+        t = made(self.shop, self.svc)
+        menu = guest(self.svc, "/gor/menu", t, lang="es-AR")[1]["menu"]
+        dishes = gor.dishes_of(menu)
+        self.assertEqual(len(self.shop.named), 1)                                     # every name on the menu in one read
+        self.assertEqual((dishes["LATTE"]["name"], dishes["BURGER"]["name"]), ("Café con leche", "Hamburguesa"))
+        self.assertEqual(dishes["SALAD"]["name"], "Green salad")                       # no translation: as written
+        self.assertEqual(dishes["COLD-L"]["base"], "Café frío")                        # a size shows its dish's name
+        self.assertEqual(dishes["COLD-L"]["size"], "Large")
+        self.assertEqual([c["name"] for g in dishes["LATTE"]["groups"] if g["group"] == "Milk" for c in g["choices"]],
+                         ["Oat milk", "Leche entera"])                                 # a choice the store translated
+        self.assertEqual((dishes["LATTE"]["code"], dishes["LATTE"]["price"]), ("LATTE", 3.2))   # codes and prices stay
+
+    def test_n2_no_language_or_one_the_till_does_not_take_asks_nothing(self):
+        t = made(self.shop, self.svc)
+        for extra in ({}, {"lang": "x"}, {"lang": "es; DROP"}, {"lang": ["es"]}, {"lang": "zh-Hant-TW"}):
+            self.assertEqual(gor.dishes_of(guest(self.svc, "/gor/menu", t, **extra)[1]["menu"])["LATTE"]["name"], "Latte")
+        self.assertEqual(self.shop.named, [])
+
+    def test_n3_the_names_are_kept_per_language_and_asked_again_after_two_minutes(self):
+        t = made(self.shop, self.svc)
+        guest(self.svc, "/gor/menu", t, lang="es")
+        guest(self.svc, "/gor/menu", t, lang="es")
+        self.assertEqual(len(self.shop.named), 1)
+        guest(self.svc, "/gor/menu", t, lang="fr")                                    # another language: its own read
+        self.assertEqual(len(self.shop.named), 2)
+        self.clock.t += app.MENU_KEEP_S
+        guest(self.svc, "/gor/menu", t, lang="es")
+        self.assertEqual(len(self.shop.named), 3)
+
+    def test_n4_a_till_that_refuses_or_is_busy_leaves_the_names_as_written_and_the_menu_loads(self):
+        t = made(self.shop, self.svc)
+        for why in (417, 429):                                                        # an older till, then a busy one
+            self.shop.refuse = ("CALL item_names", why)
+            code, out = guest(self.svc, "/gor/menu", t, lang="es")
+            self.assertEqual((code, out["state"], gor.dishes_of(out["menu"])["LATTE"]["name"]), (200, "open", "Latte"))
+            seen = len(self.shop.named)
+            guest(self.svc, "/gor/menu", t, lang="es")                                # inside the short window: not asked again
+            self.assertEqual(len(self.shop.named), seen)
+            self.shop.refuse = None
+            self.clock.t += app.MENU_SHORT_S                                          # asked again soon, not hammered
+        self.assertEqual(gor.dishes_of(guest(self.svc, "/gor/menu", t, lang="es")[1]["menu"])["LATTE"]["name"], "Café con leche")
+
+    def test_n4b_a_menu_that_has_spent_the_time_budget_is_not_named_and_not_late(self):
+        t = made(self.shop, self.svc)
+        self.shop.slow, self.shop.tick = {"BURGER"}, self.clock                    # the price read takes the budget
+        code, out = guest(self.svc, "/gor/menu", t, lang="es")
+        self.assertEqual((code, out["state"], gor.dishes_of(out["menu"])["LATTE"]["name"]), (200, "open", "Latte"))
+        self.assertEqual(self.shop.named, [])
+
+    def test_n5_a_menu_of_70_dishes_is_named_in_one_call_and_one_of_600_in_two(self):
+        def menu_of(n):
+            return [{"group": "G", "dishes": [{"code": f"D{i}", "name": f"Dish {i}", "price": 1.0, "groups": []} for i in range(n)]}]
+        self.svc.names(self.shop, F.SITE, F.STORE, "es", menu_of(70))
+        self.assertEqual([len(r["items"]) for r in self.shop.named], [70])
+        self.shop.named.clear()
+        self.svc.names(self.shop, F.SITE, F.STORE, "fr", menu_of(600))
+        self.assertEqual([len(r["items"]) for r in self.shop.named], [500, 100])
+
+    def test_n6_every_file_the_service_serves_is_in_the_apps_package(self):
+        with open(os.path.join(os.path.dirname(HERE), "app.json"), encoding="utf-8") as f:
+            pkg = json.load(f)["package"]
+        for path, (fname, _) in app.STATIC.items():
+            self.assertEqual(self.svc.handle("GET", path, {}, b"")[0], 200, path)
+            self.assertIn("samples/s56_guest_ordering/service/" + fname, pkg, fname)   # else the hosted page loses its look
+        with open(os.path.join(HERE, "..", "service", "page.html"), encoding="utf-8") as f:
+            linked = re.findall(r'(?:href|src)="([^"]+)"', f.read())
+        self.assertIn("guest.css", linked)
+        for ref in linked:
+            self.assertIn("/" + ref, app.STATIC, ref)                                   # a file the page asks for, the service serves
 
     def test_m7_a_flood_on_a_replaced_card_reads_the_retailer_once_a_copy(self):
         old = made(self.shop, self.svc)

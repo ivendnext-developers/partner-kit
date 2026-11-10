@@ -38,6 +38,12 @@ sed -i.bak 's|<link rel="stylesheet" href="../ivn-kit.css">|<!-- <link rel="styl
 page quoted_style   ../ivn-kit.css '' '<p style='"'"'color:var(--ivn-border);background:var(--ivn-surface)'"'"'>Open claims</p>'
 page fine_buttons   ../ivn-kit.css '.go{background:var(--ivn-primary-strong)} .go span{color:var(--ivn-on-primary)} .clear{background:var(--ivn-control-border)} .clear2{color:var(--ivn-text);background:var(--ivn-surface)}' '<h1 class="ivn-title">Claims</h1><button class="go"><span>Save</span></button><i class="clear clear2">x</i>'
 page ltr_island     ../ivn-kit.css '.keys{display:flex;gap:8px}.keys b{margin-left:30px}' '<h1 class="ivn-title">Claims</h1><div dir="ltr" class="keys"><b>1</b><b>2</b><b>3</b></div>'
+# a page whose own linked stylesheet carries a colour literal: check_kit.sh's "tokens only" section reads it (a guest.css or wall.css of
+# your own, or a sample's page.css), and a stylesheet that sticks to the tokens passes
+printf '.note { color: #ff0000; }\n' > "$T/page/own_hex.css"
+printf '.note { color: var(--ivn-text); background: var(--ivn-surface); }\n' > "$T/page/own_tokens.css"
+page css_hex   ../ivn-kit.css '' "$BODY"; sed -i.bak 's|</head>|<link rel="stylesheet" href="own_hex.css"></head>|' "$T/page/css_hex.html"
+page css_clean ../ivn-kit.css '' "$BODY"; sed -i.bak 's|</head>|<link rel="stylesheet" href="own_tokens.css"></head>|' "$T/page/css_clean.html"
 
 FAILS=0
 expect() {   # expect <check> <page> <exit> <text the output must carry>
@@ -69,10 +75,11 @@ expect rtl inline_margin    1 "keep a physical margin or padding"
 expect rtl pinned_text      1 "text pinned to a physical side"
 expect rtl scrolls_sideways 1 "run past the window's edge"
 echo "== the whole check refuses a planted page, and passes the good one =="
-for p in good old_version low_contrast not_mirrored; do
+for p in good css_clean old_version low_contrast not_mirrored css_hex; do
   "$KIT/tools/check_kit.sh" "$T/page/$p.html" > "$T/out_$p.txt" 2>&1; rc=$?
-  want=1; [ "$p" = good ] && want=0
-  if [ "$rc" -eq "$want" ]; then echo "ok    check_kit.sh · $p → exit $rc · $(grep '^CHECK:' "$T/out_$p.txt")"
+  want=1; { [ "$p" = good ] || [ "$p" = css_clean ]; } && want=0
+  if [ "$p" = css_hex ] && ! grep -q "^FAIL .*own_hex.css:1 hex colour" "$T/out_$p.txt"; then echo "BAD   check_kit.sh · $p → refused, but not for the hex colour in its own stylesheet"; FAILS=$((FAILS+1))
+  elif [ "$rc" -eq "$want" ]; then echo "ok    check_kit.sh · $p → exit $rc · $(grep '^CHECK:' "$T/out_$p.txt")"
   else echo "BAD   check_kit.sh · $p → exit $rc (wanted $want)"; tail -15 "$T/out_$p.txt" | sed 's/^/        /'; FAILS=$((FAILS+1)); fi
 done
 echo; [ "$FAILS" -eq 0 ] && echo "PAGE CHECKS: every planted defect caught, good page passes" || echo "PAGE CHECKS: $FAILS failure(s)"

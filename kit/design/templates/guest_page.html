@@ -1,0 +1,79 @@
+<!doctype html>
+<!-- ivn-kit 0.1.0 template · a guest page: a page a guest reads on a phone (a QR menu, a table order, a kiosk). Phone first,
+     one column, every control at least 44px, a basket bar that stays at the foot of the screen. The language comes from the
+     device and the look from its light or dark setting; a service that holds a retailer's look applies it with
+     ivnKit.applyTheme. Try ?theme=dark and ?dir=rtl. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Order</title>
+<link rel="stylesheet" href="../ivn-kit.css">
+<link rel="stylesheet" href="../guest.css">
+<script src="../ivn-kit.js"></script>
+<script>
+  var q = new URLSearchParams(location.search);
+  if (q.get("theme")) ivnKit.applyTheme({ mode: q.get("theme") });
+  if (q.get("dir") === "rtl") ivnKit.applyDir("ar");
+</script>
+</head>
+<body class="ivn ivn-guest">
+<header class="ivn-guest-top ivn-guest-col">
+  <h1 class="ivn-guest-where">Table 12</h1>
+  <p class="ivn-guest-hint">Prices before any offer: your bill is priced when you pay.</p>
+</header>
+<main class="ivn-guest-menu ivn-guest-col">
+  <h2 class="ivn-guest-section">Pizza</h2>
+  <div class="ivn-guest-dish">
+    <div class="ivn-guest-dish-row">
+      <div class="ivn-guest-photo"><div class="ivn-guest-tile" aria-hidden="true">M</div></div>
+      <div class="ivn-guest-dish-body">
+        <div class="ivn-guest-dish-head"><span class="ivn-guest-dish-name">Margherita</span></div>
+        <div class="ivn-guest-sizes" role="group">
+          <button class="ivn-chip" type="button" aria-pressed="true">Small <span class="ivn-guest-price">$8.00</span></button>
+          <button class="ivn-chip" type="button" aria-pressed="false">Large <span class="ivn-guest-price">$11.50</span></button>
+        </div>
+        <button class="ivn-btn" type="button">Choose</button>
+        <div class="ivn-guest-choose">
+          <fieldset class="ivn-guest-group">
+            <legend>Crust <span class="ivn-guest-rule">(choose 1)</span></legend>
+            <label class="ivn-guest-choice"><input type="radio" name="crust" checked><span>Thin</span></label>
+            <label class="ivn-guest-choice"><input type="radio" name="crust"><span>Deep</span><span class="ivn-guest-price">+$1.00</span></label>
+          </fieldset>
+          <button class="ivn-btn ivn-btn-primary" type="button">Add to order</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <h2 class="ivn-guest-section">Drinks</h2>
+  <div class="ivn-guest-dish">
+    <div class="ivn-guest-dish-row">
+      <div class="ivn-guest-photo"><div class="ivn-guest-tile" aria-hidden="true">L</div></div>
+      <div class="ivn-guest-dish-body">
+        <div class="ivn-guest-dish-head"><span class="ivn-guest-dish-name">Lemonade</span><span class="ivn-guest-price">$3.20</span></div>
+        <button class="ivn-btn" type="button">Add</button>
+      </div>
+    </div>
+  </div>
+</main>
+<section class="ivn-guest-basket ivn-guest-col" aria-labelledby="gb">
+  <h2 class="ivn-guest-basket-title" id="gb">Your order</h2>
+  <ul class="ivn-guest-lines">
+    <li class="ivn-guest-line">
+      <div class="ivn-guest-line-head">
+        <span class="ivn-guest-line-name">Margherita<br><span class="ivn-guest-line-choices">Thin</span></span>
+        <span class="ivn-guest-qty">
+          <button class="ivn-btn" type="button" aria-label="One less">-</button><span>1</span><button class="ivn-btn" type="button" aria-label="One more">+</button>
+        </span>
+      </div>
+      <input class="ivn-input" type="text" placeholder="Note for the kitchen (optional)" aria-label="Note for the kitchen">
+    </li>
+  </ul>
+  <div class="ivn-guest-foot">
+    <p class="ivn-guest-total">Total $8.00</p>
+    <button class="ivn-btn ivn-btn-primary" type="button">Send order</button>
+  </div>
+</section>
+<p class="ivn-guest-note ivn-guest-col" role="status" aria-live="polite"></p>
+</body>
+</html>

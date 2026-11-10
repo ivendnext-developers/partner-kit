@@ -5,8 +5,8 @@ library only).
     POST /gor/code      the retailer's signed press of *Make code* (``desk_action/1``): each ticked code record gets a
                         new number, its signed link and its QR picture        →  200 {"message": …, "refresh": true}
     GET  /              the guest's page (its address carries #s=<the retailer's site>&t=<code>.<number>.<signature>)
-    GET  /page.js · /page.css
-    POST /gor/menu      {"s", "t"}                                  →  200 {"state": "open", "where", "menu", …}
+    GET  /page.js · /page.css · /ivn-kit.css · /guest.css   (the kit's own two files, a pinned copy beside the page)
+    POST /gor/menu      {"s", "t", "lang"?}                         →  200 {"state": "open", "where", "menu", …}
     POST /gor/order     {"s", "t", "key", "lines"}                  →  200 {"state": "sent" | "refused", …}
     GET  /health        200 {"ok": 1}
     POST /ivendnext/connect · /ivendnext/disconnect   many retailers: the app template's handshake (shops.py)
@@ -67,6 +67,8 @@ STALE = "TimestampMismatchError"     # the shop's refusal of a write whose ``mod
 BUDGET_S = 7.0                       # a press, or a guest's call: the shop waits 10 seconds for a press
 READ_S = 4.0                         # one read, within the budget
 PRICE_BATCH = 500                    # item codes in one item_prices call: the most the till answers
+NAME_BATCH = 500                     # item codes in one item_names call: the most the till answers
+LANG = re.compile(r"^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})?$")   # the till's own check of a language (item_names_request)
 MENU_KEEP_S = 120                    # a store's menu is read again after this
 MENU_CACHE_MAX = 200                 # stores whose menu one copy keeps
 MENU_SHORT_S = 2                     # a menu some of whose prices the pricer did not give in time is kept only this long
@@ -75,7 +77,9 @@ LATE = object()                      # a price the time budget skipped: asked ag
 CODE_KEEP_S = 15                     # a verified code and its store's row, kept so a flood of calls on one code reads
                                      # the retailer once per copy this often (a code made again stops within this time)
 STATIC = {"/": ("page.html", "text/html; charset=utf-8"), "/page.js": ("page.js", "text/javascript; charset=utf-8"),
-          "/page.css": ("page.css", "text/css; charset=utf-8")}
+          "/page.css": ("page.css", "text/css; charset=utf-8"),
+          "/ivn-kit.css": ("ivn-kit.css", "text/css; charset=utf-8"),      # the kit's own files, copied beside the page and
+          "/guest.css": ("guest.css", "text/css; charset=utf-8")}          # pinned (kit/design/README.md §1)
 CODE_FIELDS = ["name", "kind", "store", "place", "kiosk_name", "number", "modified"]
 ROW_FIELDS = ["parent", "store", "register", "tables_on", "kiosk_on", "course", "most_lines", "most_qty"]
 UNASSIGNED = ("ProfileNotAssignedError", "AssignedProfileDisabledError", "DuplicateStoreAssignmentError",
@@ -223,6 +227,7 @@ class Service:
             self.secret = one["IVN_CODE_SECRET"]
             self.tenant = tenant or tenant_of(one["IVN_SHOP_URL"], one["IVN_SHOP_KEY"])
         self._menus: dict[tuple, tuple] = {}
+        self._names: dict[tuple, tuple] = {}          # (site, store, language) → (read at, codes asked, translated names)
         self._codes: dict[tuple, tuple] = {}
         self._lock = threading.Lock()
 
@@ -298,6 +303,42 @@ class Service:
             kept_at = self.clock() - (MENU_KEEP_S - MENU_SHORT_S if late else 0)
             self._menus[key] = (kept_at, menu, reg.get("currency") or "", prices)
         return menu, reg.get("currency") or ""
+
+    def names(self, door, site: str, store: str, lang: str, menu: list[dict], t0: float | None = None) -> dict:
+        """The store's own translation, in the guest's language, of the names on the menu: ``{item code: name}`` for the items
+        the till has a translation for, read with its ``item_names`` (500 codes a call), kept ``MENU_KEEP_S`` seconds per store
+        and language (read again sooner when the menu holds a dish it was not asked for). A till that refuses or is busy gives
+        none, for ``MENU_SHORT_S`` seconds, and a call that has already spent the time budget asks nothing: the guest reads
+        the names as written, never an error or a late menu."""
+        codes = list(dict.fromkeys(c for s in menu for d in s["dishes"] for c in
+                                   [d["code"], d.get("family")] + [x["code"] for g in d["groups"] for x in g["choices"]] if c))
+        key = (site, store, lang.lower())
+        kept = self._names.get(key)
+        if kept and self.clock() - kept[0] < MENU_KEEP_S and set(codes) <= kept[1]:
+            return kept[2]
+        shown, asked, ok = {}, set(), True
+        for i in range(0, len(codes), NAME_BATCH):
+            chunk = codes[i:i + NAME_BATCH]
+            if t0 is not None and self.clock() - t0 > BUDGET_S - READ_S:
+                ok = False
+                break
+            try:
+                got = door.call("item_names", {"lang": lang, "items": chunk})
+            except TenantError:
+                ok = False
+                break
+            asked.update(chunk)
+            rows = got.get("items") if isinstance(got, dict) else None
+            for r in rows if isinstance(rows, list) else []:
+                name = r.get("display_name") if isinstance(r, dict) else None
+                if isinstance(r, dict) and r.get("translated") is True and isinstance(name, str) and name.strip() \
+                        and isinstance(r.get("item_code"), str):
+                    shown[r["item_code"]] = name
+        with self._lock:
+            if len(self._names) >= MENU_CACHE_MAX:
+                self._names.pop(next(iter(self._names)))
+            self._names[key] = (self.clock() - (0 if ok else MENU_KEEP_S - MENU_SHORT_S), asked if ok else set(codes), shown)
+        return shown
 
     def sizes(self, door, items: list[dict]) -> tuple[dict, dict]:
         """The dishes' templates (their name and picture) and each size's label, for a dish sold in sizes. A retailer that
@@ -457,6 +498,7 @@ class Service:
         if not isinstance(body, dict) or not isinstance(body.get("s"), str):
             return 400, {"state": "unknown"}
         try:
+            t0 = self.clock()
             site, door, c, row, where, secret = self.guest(body)
             closed = _say("closed", "ask_staff", ASK_STAFF) if c["kind"] == gor.KIND_TABLE else \
                 _say("closed", "ask_staff_kiosk", ASK_STAFF_KIOSK)
@@ -465,6 +507,9 @@ class Service:
             except gor.Refused:
                 return 200, closed
             if path == "/gor/menu":
+                lang = body.get("lang")                      # the guest's language, when the page has words for it
+                if isinstance(lang, str) and LANG.match(lang):
+                    menu = gor.translated(menu, self.names(door, site, c["store"], lang, menu, t0))
                 return 200, {"state": "open", **where, "menu": menu, "currency": currency,
                              "most_lines": gor.setting(row.get("most_lines"), gor.LINES),
                              "most_qty": gor.setting(row.get("most_qty"), gor.QTY)}

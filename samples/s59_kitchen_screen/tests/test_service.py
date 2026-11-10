@@ -9,6 +9,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import sys
 import time
 import unittest
@@ -398,7 +399,7 @@ class ServiceTest(unittest.TestCase):
 
     # ── every call ──
     def test_e1_the_page_is_served_with_a_strict_policy_and_the_kits_files(self):
-        for path in ("/", "/page.js", "/fit.js", "/page.css", "/ivn-kit.css", "/ivn-kit.js"):
+        for path in ("/", "/page.js", "/fit.js", "/page.css", "/ivn-kit.css", "/ivn-kit.js", "/wall.css"):
             code, body, hdrs = self.svc.handle("GET", path, {}, None)
             self.assertEqual(code, 200, path)
             policy = dict(p.strip().split(" ", 1) for p in hdrs["Content-Security-Policy"].split(";"))
@@ -408,6 +409,8 @@ class ServiceTest(unittest.TestCase):
         self.assertNotIn("<script>", page)                             # no inline script
         self.assertNotIn("style=", page)
         self.assertNotRegex(page, r"(src|href)=\"(https?:)?//")         # nothing from another site
+        for ref in re.findall(r'(?:href|src)="([^"]+)"', page):         # every file the page asks for, the service serves
+            self.assertIn("/" + ref, app.STATIC, ref)
 
     def test_e3_every_file_the_service_serves_is_in_the_hosted_package(self):   # the page's files; app.json's
         # handler and the template modules it imports are listed by hand beside them

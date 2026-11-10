@@ -47,6 +47,7 @@ jobs:
         run: |
           test -x "$CHROME"
           bash kit/design/tools/check_kit.sh
+          bash kit/design/tools/check_kit.sh samples/s56_guest_ordering/service/page.html samples/s59_kitchen_screen/service/page.html   # their own stylesheets too
           bash kit/design/tools/test_page_checks.sh
 
   ivn-windows:

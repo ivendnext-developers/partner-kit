@@ -16,7 +16,7 @@ ivn new acme_kitchen --from s59
 
 What a partner usually changes:
 
-- **The ticket's look and languages:** `service/page.css` and the `WORDS` table in `service/page.js`.
+- **The ticket's look and languages:** `service/page.css` (the kitchen's own parts: tickets, the expo, the serving board; the screen's frame is the kit's `wall.css`) and the `WORDS` table in `service/page.js`.
 - **The timers:** *Warn after* and *Late after* (8 and 15 minutes unless set), *Ticket size*, *Board shows tables* and *Sold out from the screens* on each row of `PP KSC Store` in `manifest.json`.
 - **The screens:** `PP KSC Screen` (kind *Station*, *Expo* or *Board*, its store and its stations) in `manifest.json`.
 - **Hearing a ticket within a second:** the always-on service in `live/` (`live/live.py`, `live/app.json`), reached through `KSC_LIVE_URL` on the service. Without it each screen reads every 3 seconds.
@@ -40,6 +40,12 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.3.4
+
+Needs POS build 2.1.0.682 or later. Manifest 0.3.3.
+
+- The screen's frame (header and tools, the board's grid and its empty and note lines, a card, and the timer chip that shows an icon, a word and a colour) is the kit's `wall.css`, the kit's wall-screen template, copied beside the page; `service/page.css` keeps only the kitchen's parts. The screen reads as before: the same sizes and states; the expo's cards keep no shadow.
 
 ### 1.3.3
 
