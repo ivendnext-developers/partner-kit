@@ -131,7 +131,8 @@ class Doctor(Base):
     def test_no_site_yet_gives_the_sandbox_link(self):
         with unittest.mock.patch.dict(Stub.ROUTES, {"/v1/sites": lambda s, b: {"company": [], "default": None}}):
             _, out = self.run_ivn("doctor")
-        self.assertIn("Sites you can try on: none yet. Request a sandbox: https://developer.ivendnext.com/sandbox.html", out)
+        self.assertIn("Sites you can try on: none yet. Add one you administer with ivn sites add <address>, or request a "
+                      "sandbox: https://developer.ivendnext.com/sandbox.html", out)
 
     def test_offline_still_says_everything_it_can(self):
         with unittest.mock.patch.dict(os.environ, {"IVN_HOSTING_URL": "http://127.0.0.1:9"}):

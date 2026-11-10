@@ -181,7 +181,8 @@ WORDS = {
     "dr_signed_out": "Not signed in yet.",
     "dr_bad_token": "Signed out: this computer's sign-in was revoked or has expired. Run ivn login.",
     "dr_sites": "Sites you can try on: {sites}",
-    "dr_no_sites": "Sites you can try on: none yet. Request a sandbox: https://developer.ivendnext.com/sandbox.html",
+    "dr_no_sites": "Sites you can try on: none yet. Add one you administer with ivn sites add <address>, or request a "
+                   "sandbox: https://developer.ivendnext.com/sandbox.html",
     "dr_no_reach": "Sites you can try on: could not reach iVendNext (no connection).",
     "dr_next": "Next: {cmd}",
     "new_enough": "new enough",
@@ -1608,7 +1609,8 @@ def cmd_doctor(a) -> int:
         try:
             out = door("/v1/sites", {}, token=token)
             signed = True
-            sites = [x["site"] + (" (" + WORDS["one_press"] + ")" if x.get("press") else "") for x in out.get("company") or []]
+            sites = [x["site"] + (" (" + WORDS["one_press"] + ")" if x.get("press") else "") for x in out.get("company") or []
+                     if not x.get("live")]  # a customer's live site is Publish's, never tried on
             said = WORDS["dr_sites"].format(sites=", ".join(sites)) if sites else WORDS["dr_no_sites"]
         except Offline:
             signed, said = True, WORDS["dr_no_reach"]
