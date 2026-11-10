@@ -310,6 +310,8 @@ SKIP = {
                       "not yet fetched into this reference",
     "Retail Option Group": "the option groups a dish or item offers at the till (a sample's role reads them to answer a menu); "
                            "not yet fetched into this reference",
+    "Retail Kitchen Station": "a station of a restaurant's kitchen (Kitchen Stations in Desk), which the kitchen screen's manager role selects "
+                              "to make a screen; not yet fetched into this reference",
     "Role Permission for Page and Report": "a Desk tool that gives a role a report; a setup step, not a business record",
 }
 
