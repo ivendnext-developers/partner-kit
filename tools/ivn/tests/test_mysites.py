@@ -85,7 +85,7 @@ class Stub(B.Stub):
         return {"site": "acme.sandbox.ivend.co", "installs": [], "records": {
             "Custom Field": [{"name": "Purchase Order-custom_gift_note", "owner": "c@acme.example", "dt": "Purchase Order",
                               "fieldname": "custom_gift_note", "fieldtype": "Data", "label": "Gift note"}],
-            "Notification": [{"name": "Gift note set", "owner": "c@acme.example", "document_type": "Purchase Order",
+            "Notification": [{"name": "Gift note set", "owner": "c@acme.example", "enabled": 1, "document_type": "Purchase Order",
                               "event": "Save", "channel": "System Notification", "subject": "Gift note",
                               "message": "{{ doc.custom_gift_note }}", "recipients": [{"receiver_by_role": "Purchase User"}]}],
             "Client Script": [{"name": "PO colour", "owner": "c@acme.example"}]}}

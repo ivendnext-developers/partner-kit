@@ -87,6 +87,8 @@ WORDS = {
                          "ivn try --site.",
     "capture_none": "Nothing is left to write: --only and --skip left out everything the site had.",
     "captured": "Captured {n} from {site} into {folder}/manifest.json:",
+    "capture_red": "Nothing written, the folder is as it was: {verdict}",
+    "capture_nothing": "Nothing written to {folder}.",
     "capture_next": "Next: ivn try --site <another site> installs it there, and it behaves the same.",
     "blank_folder": "Folder: apps/{app}/ (manifest.json, app.json, tests/). Read its README.md: what you can add, each kind "
                     "with an example. Then: ivn check, ivn try",  # J1 DEVSTART: the blank start's last line
@@ -666,12 +668,17 @@ def cmd_capture(a) -> int:
     for line in capture.lines(res, read["site"]):
         print(line)
     if not res["items"]:
+        print(WORDS["capture_nothing"].format(folder=f"apps/{folder.name}" if a.new else "this app"))
         return 0
     m, ids = capture.write(manifest, res, skip=a.skip or [], only=a.only or [])
     if not ids:
         raise Stop(WORDS["capture_none"])
+    before = (folder / "manifest.json").read_text("utf-8")
     (folder / "manifest.json").write_text(json.dumps(m, indent=1, ensure_ascii=False) + "\n", "utf-8")
     ok, verdict = check_folder(folder)
+    if not ok:  # the folder stays as it was: nothing half-written
+        (folder / "manifest.json").write_text(before, "utf-8")
+        raise Stop(WORDS["capture_red"].format(verdict=verdict))
     where = f"apps/{folder.name}" if folder.parent.name == "apps" else str(folder)
     print(WORDS["captured"].format(n=len(ids), site=read["site"], folder=where) + " " + verdict)
     if ok:

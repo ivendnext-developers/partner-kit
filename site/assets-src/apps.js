@@ -163,6 +163,7 @@
       "out. Nothing is written to the site.",
     captureRead: "Read the site", captureTake: "Capture", reading: "Reading the site\u2026",
     renamed: "Renamed to your app", leftOut: "Left out",
+    captureNoSite: "Add the site you built it on to My sites first: its address, and a key you make there.",
     settingsLede: "Your app's own values, the same for every site. A customer's own account (their wallet) goes in the app's " +
       "settings in their Desk.",
     addresses: "Outside addresses", secrets: "Secrets your own service needs",
@@ -995,7 +996,7 @@
       box.appendChild(field(G.yourName, own, G.yourNameHint));
     }
     box.appendChild(bad);   // a refusal stands under the field it is about
-    box.appendChild(button("Back", function () { screen = "gallery"; g.blank = false; data.nameBad = ""; say(""); render(); }, true));
+    box.appendChild(button("Back", function () { screen = "gallery"; g.blank = false; g.fromSite = false; data.nameBad = ""; say(""); render(); }, true));
     box.appendChild(root.document.createTextNode(" "));
     var make = button(G.make, function (ev) {
       ev.target.disabled = true; clearTimeout(timer); asked++;
@@ -1263,8 +1264,8 @@
       call("POST", "/capture/list", { app: app, site: c.site }).then(function (r) {
         c.reading = false; c.list = r; c.off = {}; render();
       }, function (e) { c.reading = false; fail(e); });
-    }, !!c.list)));
-    if (!sites.length) box.appendChild(p(G.addSite));
+    }, !!c.list || !sites.length)));
+    if (!sites.length) box.appendChild(el("p", {}, G.captureNoSite + " ", button(S.open, function () { go("sites"); }, true)));
     if (c.reading) box.appendChild(p(G.reading));
     var l = c.list;
     if (!l) return box;
