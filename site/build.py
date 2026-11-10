@@ -903,8 +903,10 @@ def catalogue_pages(cards: list, titles: dict) -> list[GenPage]:
            "or browse by area (each grouped by topic), by verdict or by door. "
            "Each card's verdict is one of four words: **Ready** · **Ready, with limits** (tell the customer each limit) · "
            "**Not yet** (it needs a new extension point or product work: the card says what to ask for) · **Not possible** "
-           "(it breaks one of the four rules: the card says what to do instead). A need with no card: "
-           f"[ask us](../feedback/point_request.md). At a terminal, `python3 tools/needs/needs.py search <words>` finds a card "
+           "(it breaks one of the four rules: the card says what to do instead). No card fits? "
+           f"[Start a blank app](../site/pages/first_app.md#2-make-the-app-blank-or-from-a-sample), then add what you need from the "
+           f"[recipes](../recipes/); [ask for an extension point](../feedback/point_request.md) only when nothing in "
+           f"the recipes can do it. At a terminal, `python3 tools/needs/needs.py search <words>` finds a card "
            "by its words, and the site's `catalogue.json` holds every card for an assistant.", "",
            "**Download:** [Needs at a glance](https://developer.ivendnext.com/downloads/needs_at_a_glance.pdf) (PDF: every need "
            "with its verdict and door, by area, to take into a customer meeting).", "",
@@ -1882,6 +1884,8 @@ def build(out_dir: pathlib.Path) -> int:
     # ── sitemap, robots.txt, llms.txt ──
     write("sitemap.xml", seo.sitemap({canonical(o): m.modified for o, m in metas.items()}))
     write("robots.txt", f"User-agent: *\nAllow: /\n\nSitemap: https://{DOMAIN}/sitemap.xml\n")
+    for name in ("install.sh", "install.ps1"):   # the one-line installers, at the site's root (first_app.md, Before you start)
+        write(name, (SITE / name).read_text("utf-8"))
 
     START = ["index.html", "learn.html", "first_app.html", "plan.html", "sandbox.html", "security.html", "map.html", "api.html",
              "apps.html", "publish.html", "feedback.html"]

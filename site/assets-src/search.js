@@ -190,7 +190,11 @@
       if (top.length) {
         option(searchUrl(base, q), "All " + results.length + " results for “" + q + "”", "");
         option(base + "feedback/point_request.html", "Not what the customer needs?", "Tell us the need: we read every request");
-      } else option(base + "feedback/point_request.html", "Nothing matches “" + q + "”", "Tell us the need: we read every request");
+      } else {
+        option(base + "first_app.html#2-make-the-app-blank-or-from-a-sample", "No card fits? Start a blank app",
+               "then add what you need from the recipes");
+        option(base + "feedback/point_request.html", "Ask for an extension point", "only when nothing in the recipes can do it");
+      }
       pop.hidden = false;
       input.setAttribute("aria-expanded", "true");
       said.textContent = results.length ? results.length + " results, " + top.length + " shown" : "No result";
@@ -287,8 +291,10 @@
         g[k].slice(0, cap[k]).forEach(function (r) { ul.appendChild(item(r)); });
         out.appendChild(ul);
       });
-      out.appendChild(para([["Not what the customer needs? "], ["Tell us the need", base + "feedback/point_request.html"],
-                            [": a need with no card is how we learn what to build next."]]));
+      out.appendChild(para([["No card fits? "], ["Start a blank app", base + "first_app.html#2-make-the-app-blank-or-from-a-sample"],
+                            [", then add what you need from the "], ["recipes", base + "recipes/index.html"],
+                            ["; "], ["ask for an extension point", base + "feedback/point_request.html"],
+                            [" only when nothing in the recipes can do it."]]));
     }
     var counted = null;
     function go(push) {

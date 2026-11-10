@@ -8,16 +8,37 @@ From one of the kit's samples to your customer's App library in six steps. This 
 
 ## Before you start
 
+**Nothing of iVendNext goes on your computer: your sites are ours, in the cloud.** You build on a site we host, and your app is a folder of files you try there. There is no server, no container and no database to install.
+
 - **A GitHub account.** You sign in with it. No account? Make a free one in two minutes with any e-mail.
-- **A sandbox site** to try your app on: your own iVendNext site, full of made-up demo data. [Request a sandbox](sandbox.md). It is ready for you when it arrives: there is no key to paste. It needs iVendNext POS 2.1.0.679 or later, and so does your customer's site: an earlier build refuses a workflow on the customer's own record type, and `ivn try` says so. [Ask us](feedback.md#open-a-form) to move your sandbox.
-- **For the `ivn` command,** also your copy of the kit and Python 3.10 or newer:
+- **For the terminal, git and Python 3.9 or newer.** A Mac has both once you run `xcode-select --install`; on Windows, [python.org](https://www.python.org/downloads/) (tick *py launcher*) and [git](https://git-scm.com/downloads); on Linux, your system's `python3` and `git` packages. **Or none of that:** [My apps](https://developer.ivendnext.com/apps) does every step below in your browser. For step 3 it gives you the folder to download, and takes it back with **Upload a new version**.
+- **One line gets the terminal ready.** It puts the kit in `~/.ivendnext/kit`, puts `ivn` on your PATH for good, and runs `ivn doctor`. It asks nothing and needs no administrator rights. Run it again to update.
+
+  macOS and Linux:
 
   ```bash
-  git clone https://github.com/ivendnext-developers/partner-kit.git
-  export PATH="$PWD/partner-kit/tools/ivn:$PATH"
+  curl -fsSL https://developer.ivendnext.com/install.sh | sh
   ```
 
-  On Windows, add `partner-kit\tools\ivn` to your `Path`; `ivn` then runs `ivn.cmd`. If you would rather not use a terminal, [My apps](https://developer.ivendnext.com/apps) does every step below in your browser. For step 3 it gives you the folder to download, and takes it back with **Upload a new version**.
+  Windows (PowerShell):
+
+  ```powershell
+  irm https://developer.ivendnext.com/install.ps1 | iex
+  ```
+
+- **`ivn doctor`** says on one screen which Python and git it found and whether they are new enough, whether this computer is signed in and as whom, the sites you can try on, and the one command to run next. `ivn update` brings the kit and `ivn` up to date.
+- **A site** to try your app on: an iVendNext site of your own, full of made-up demo data, which we host for you. That is a sandbox. [Request a sandbox](sandbox.md). It is ready for you when it arrives: there is no key to paste. It needs iVendNext POS 2.1.0.679 or later, and so does your customer's site: an earlier build refuses a workflow on the customer's own record type, and `ivn try` says so. [Ask us](feedback.md#open-a-form) to move your sandbox.
+
+  Any other iVendNext site works too, a second sandbox or a customer's test site: `ivn sites` and **Change** on My apps list your company's sites, and Try adds one by its address.
+
+**Rather do it by hand?** Clone the kit and put `ivn` on your PATH for good (zsh shown; for bash write to `~/.bashrc`), then open a new terminal window:
+
+```bash
+git clone https://github.com/ivendnext-developers/partner-kit.git ~/.ivendnext/kit
+echo 'export PATH="$HOME/.ivendnext/kit/tools/ivn:$PATH"' >> ~/.zshrc
+```
+
+On Windows, add `%USERPROFILE%\.ivendnext\kit\tools\ivn` to your user `Path` (*Edit environment variables for your account*); `ivn` then runs `ivn.cmd`. To update a clone, `ivn update` (it runs `git pull` there).
 
 ## The six steps
 
@@ -31,9 +52,18 @@ ivn login
 
 It opens your browser. The first time only, set up your company: press **Set up my company**, give its name as retailers will see it, take the first word we suggest for your apps (for example `acme`), tick the Hosting Schedule and press **Continue**. Then press **Sign the command in**.
 
-### 2. Make the app from a sample
+### 2. Make the app: blank, or from a sample
 
-Start from the [sample](../../samples/) nearest your customer's need. Here it is [S11](../../samples/s11_approvals/README.md), the Purchase Order approval. On My apps: **New app**, tick the sample, **Next**, **Make the app**. In a terminal, from any folder:
+There are two ways to start, side by side:
+
+| | On My apps | In a terminal |
+|---|---|---|
+| **Blank**, when no sample matches the need | **New app**, **Start blank**, **Make the app** | `ivn new acme_store_rules` |
+| **From a sample**, the nearest to the need | **New app**, tick the sample, **Next**, **Make the app** | `ivn new acme_po_approval --from s11` |
+
+A blank app is a folder with a `manifest.json` that has your app's name and no entries yet, its `app.json`, one test that runs the kit's checker, and a `README.md`. The README lists everything you can add (fields, notifications, workflows, print formats and the rest), each with a line to copy in your app's own names, or the sample that brings it, and where to read more. It shows a field and a notification first. Copy what you need into `manifest.json`, then go on at step 4; `ivn add s11` adds a sample into it later. The rest of this page builds from a sample.
+
+Start from the [sample](../../samples/) nearest your customer's need. Here it is [S11](../../samples/s11_approvals/README.md), the Purchase Order approval. In a terminal, from any folder:
 
 ```bash
 ivn new acme_po_approval --from s11
@@ -46,7 +76,7 @@ You now have a folder with `manifest.json` (your app), `app.json` (its name, its
 
 ### 3. Change it
 
-Open `manifest.json`. This is the part that matters in S11:
+Made a blank app? Its README has the lines to copy; read on for what a workflow's fields mean. Open `manifest.json`. This is the part that matters in S11:
 
 ```json
 "workflows": [{
@@ -124,7 +154,7 @@ Publishing S11 is free. It puts the version on your customer's shelf and prints 
 
 Your customer's administrator, in iVendNext Desk:
 
-1. Opens **App library** and presses **Open your shelf** at the foot of the page.
+1. Opens **App library** and presses **Open your shelf** at the top of the page.
 2. Pastes the key from your message and presses **Open your shelf** again.
 3. Presses **Install** on your app, reads what it will change, ticks **I agree** and presses **Install**.
 

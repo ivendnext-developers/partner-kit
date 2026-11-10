@@ -59,7 +59,7 @@ class Stub:
                       "asks_pay": True}
         self.listed = False
         self.message = ("Acme has sent you an app, ACME MEMBER TILL 1.0.0.\n\n1. In iVendNext Desk open App library and press "
-                        "Open your shelf at the foot of the page.\n2. Paste this key:\n\nIVNS1-the-key\n\n3. Press Install. You will "
+                        "Open your shelf at the top of the page.\n2. Paste this key:\n\nIVNS1-the-key\n\n3. Press Install. You will "
                         "see what it changes before anything is installed.")  # the library's own shape
 
     # ── the app's folders ──
@@ -109,6 +109,8 @@ class Stub:
                 raise Refuse(e.code or "refused", e.text) from None
             app = folder.name
             self.keep(app, "1.0.0", self.with_version(folder, "1.0.0"), "acme-dev", "ivn_cmd", f"made from {len(samples)} samples")
+        if not samples:  # the blank app: the hosting's lines are the kit's (kitrun.command_lines)
+            return {"app": app, "version": "1.0.0", "lines": combine.summary_lines([], "CHECK GREEN", None)}
         return {"app": app, "version": "1.0.0", "lines": [f"Made. {len(samples)} sample{'s' if len(samples) > 1 else ''}, 1 app. CHECK GREEN.",
                                                           "What is in it: Till guard rules (tgr): a check at Pay, a capture on scan. One service, one feed, one app user."]}
 

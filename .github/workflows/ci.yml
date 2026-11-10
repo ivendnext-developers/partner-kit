@@ -51,7 +51,7 @@ jobs:
           bash kit/design/tools/test_page_checks.sh
 
   ivn-windows:
-    name: ivn on Windows (new, check, push)
+    name: ivn on Windows (new, check, push, the installer, doctor)
     runs-on: windows-latest
     timeout-minutes: 15
     steps:
@@ -61,6 +61,70 @@ jobs:
           python-version: "3.12"
       - name: The commands a Windows developer types, through ivn.cmd, against the test doors
         run: python tools/ivn/tests/windows_smoke.py
+      - name: The one-line installer (irm … | iex) into a temporary profile, twice, then ivn doctor through its launcher
+        shell: pwsh
+        run: |
+          $env:USERPROFILE = Join-Path $env:RUNNER_TEMP 'profile'
+          New-Item -ItemType Directory -Force -Path $env:USERPROFILE | Out-Null
+          $env:IVN_KIT_REPO = 'file:///' + ($env:GITHUB_WORKSPACE -replace '\\', '/')
+          $env:IVN_HOSTING_URL = 'http://127.0.0.1:9'
+          Get-Content site/install.ps1 -Raw | Invoke-Expression
+          Get-Content site/install.ps1 -Raw | Invoke-Expression
+          $launcher = Join-Path $env:USERPROFILE '.ivendnext\bin\ivn.cmd'
+          if (-not (Test-Path $launcher)) { throw 'the installer wrote no launcher' }
+          $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+          if (($userPath.Split(';') | Where-Object { $_ -eq (Split-Path $launcher) }).Count -ne 1) { throw "the user Path holds the folder other than once: $userPath" }
+          $out = (& $launcher doctor) -join "`n"
+          Write-Host $out
+          foreach ($want in @("py, the Windows launcher the kit's own ivn.cmd runs: found", 'Not signed in yet.', 'Next: ivn login')) {
+            if (-not $out.Contains($want)) { throw "ivn doctor did not say: $want" }
+          }
+      - name: The installer in Windows PowerShell 5.1 with no git (GitHub's archive, served here), twice, then ivn doctor
+        shell: powershell
+        run: |
+          $env:USERPROFILE = Join-Path $env:RUNNER_TEMP 'profile51'
+          $www = Join-Path $env:RUNNER_TEMP 'www'
+          New-Item -ItemType Directory -Force -Path $env:USERPROFILE, $www | Out-Null
+          git archive --format=zip --prefix=partner-kit-main/ -o (Join-Path $www 'main.zip') HEAD
+          Copy-Item site/install.ps1 (Join-Path $www 'install.ps1')
+          $head = (git rev-parse HEAD).Trim()
+          # every file answered as application/octet-stream, the plainest type a web host may give a .ps1
+          $serve = Join-Path $env:RUNNER_TEMP 'serve.py'
+          Set-Content -Path $serve -Encoding ASCII -Value "import functools, http.server`nclass H(http.server.SimpleHTTPRequestHandler):`n    def guess_type(self, path): return 'application/octet-stream'`nhttp.server.ThreadingHTTPServer(('127.0.0.1', 8765), functools.partial(H, directory=r'$www')).serve_forever()"
+          $srv = Start-Process py -ArgumentList $serve -PassThru -WindowStyle Hidden
+          Start-Sleep -Seconds 3
+          $env:IVN_KIT_ARCHIVE = 'http://127.0.0.1:8765/main.zip'
+          $env:IVN_HOSTING_URL = 'http://127.0.0.1:9'
+          $env:Path = ($env:Path -split ';' | Where-Object { $_ -notmatch '\\Git\\' }) -join ';'
+          if (Get-Command git -ErrorAction SilentlyContinue) { throw 'git is still on the Path' }
+          irm http://127.0.0.1:8765/install.ps1 | iex
+          New-Item -ItemType Directory -Force -Path (Join-Path $env:USERPROFILE '.ivendnext\kit\.vscode') | Out-Null
+          Set-Content -Path (Join-Path $env:USERPROFILE '.ivendnext\kit\.vscode\settings.json') -Value '{}'
+          irm http://127.0.0.1:8765/install.ps1 | iex
+          if (-not (Test-Path (Join-Path $env:USERPROFILE '.ivendnext\kit\.vscode\settings.json'))) { throw 'the update removed a file of the developer' }
+          $kit = Join-Path $env:USERPROFILE '.ivendnext\kit'
+          if (Test-Path (Join-Path $kit '.git')) { throw 'a git clone, with no git on the Path' }
+          if (-not (Get-Content (Join-Path $kit '.kit-commit')).StartsWith($head)) { throw 'the kit is not the archive of this commit' }
+          $out = (& (Join-Path $env:USERPROFILE '.ivendnext\bin\ivn.cmd') doctor) -join "`n"
+          Write-Host $out
+          foreach ($want in @('git: not found', "GitHub's archive", 'Next: ivn login')) {
+            if (-not $out.Contains($want)) { throw "ivn doctor did not say: $want" }
+          }
+          Stop-Process -Id $srv.Id
+
+  ivn-oldest-python:
+    name: ivn on Python 3.9, the oldest it runs on (a Mac's own python3)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065   # v5
+        with:
+          python-version: "3.9"
+      - name: ivn's tests, the installer's and the blank app's, on Python 3.9
+        run: |
+          python -m unittest discover -s tools/ivn/tests
+          python -m unittest discover -s tools/manifest/tests -p test_blank.py
 
   secrets:
     name: Secrets scan

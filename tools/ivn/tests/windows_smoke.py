@@ -44,6 +44,13 @@ def main():
         out = ivn(folder, env, "push")
         if "/v1/draft/keep" not in stub.calls:
             raise SystemExit(f"nothing reached the doors: {stub.calls}")
+        made = ivn(work, env, "new", "acme_blank")                      # the blank start (J1 DEVSTART)
+        if "Made. A blank app." not in made:
+            raise SystemExit("ivn new with no sample made no blank app")
+        ivn(work / "apps" / "acme_blank", env, "check")
+        doctor = ivn(work, env, "doctor")
+        if "Next: ivn" not in doctor or (os.name == "nt" and "ivn.cmd runs: found" not in doctor):
+            raise SystemExit("ivn doctor did not say what it found and what to run next")
         srv.shutdown()
     print("WINDOWS SMOKE GREEN" if os.name == "nt" else "SMOKE GREEN")
     return out
