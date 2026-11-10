@@ -24,7 +24,7 @@ Short films for partners and developers on the iVendNext channel: what a partner
 
 ## Industries
 
-What iVendNext does for each kind of retail chain: a short tour of its store, then the proof from the till to the books. Each industry also has a page in the [App library](https://library.ivendnext.app/industries) with its apps in the order a store installs them.
+What iVendNext does for each kind of chain: a short tour of its store, then the proof from the till to the books (restaurants, cafés and bars have a film for each kind). Each industry also has a page in the [App library](https://library.ivendnext.app/industries) with its apps in the order a store installs them.
 
 - **Pharmacy:** [A pharmacy chain's store](https://youtu.be/JAGi9MOgvug) · [From the prescription to the register](https://youtu.be/U9RsXshKZFU) · apps: [Pharmacy](https://library.ivendnext.app/industries/pharmacy)
 - **Hardware and DIY:** [A hardware chain's store](https://youtu.be/TCmQHOyE_to) · [From the trade counter to the books](https://youtu.be/-n4Q7Um8IME) · apps: [Hardware and DIY](https://library.ivendnext.app/industries/hardware-and-diy)
