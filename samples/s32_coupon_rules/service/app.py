@@ -62,7 +62,7 @@ import testcall  # noqa: E402
 KEY, ROUTE = "coupons", "/cpn/check"   # the subscription's key in the manifest; its secret is "<app>:sub:<key>"
 RULES_TTL, READ_TIMEOUT = 60, 0.9      # two steps at most (the rules, then both counts at once) inside the check's 3 s
 GET_COUNT = "/api/method/ivendnext_mpos.api.v1.get_count"
-KEY_REFUSED = "Coupon rules cannot read your shop: it refused the app's user. Remove the coupon, or ask your administrator to check the app's setup."
+KEY_REFUSED = "Coupon rules cannot read your site: it refused the app's user. Remove the coupon, or ask your administrator to check the app's setup."
 # what counts as having bought before: a submitted sale that is not a return, at the till or in the back office
 # (a consolidated Sales Invoice is the till's sales a second time, so it is left out, as the till's own customer history does)
 SALES = (("POS Invoice", [["docstatus", "=", 1], ["is_return", "=", 0]]),

@@ -46,6 +46,10 @@ ivn try
 
 ## Versions
 
+### 1.3.1
+
+- A sale with a total and nothing paid on it (an order placed for another store: it takes no payment at the till) earns no cash back; the sale record that takes the payment earns it. No change to a sale paid in any tender, a gift card included.
+
 ### 1.3.0
 
 - The tiers' customer groups and plans, the programme's default settings and the role's rights beyond the feed's reads move into the manifest (`records`, `role_rights`), so the install makes them; `apply_config.py` keeps only what differs per retailer, each tier's promotion, the receipt check and the switches. The install gives the feed's user its reads, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later.

@@ -3,7 +3,7 @@
  "app": "pp_cpn",
  "prefix": "PP CPN",
  "title": "Coupon rules",
- "version": "0.3.0",
+ "version": "0.3.1",
  "publisher": "Partner Programme sample",
  "description": "Rules the retailer adds to its own coupons, checked at Pay. A check before payment: when the cashier presses Pay on a sale carrying a coupon the retailer wrote a rule for, iVendNext sends its priced basket and the service refuses the coupon if the rule says only for one customer group and the sale's customer is not in it, or first purchase only and the sale has no customer or the customer already has a submitted sale (counted with iVendNext's own count over POS Invoice and Sales Invoice, never a return), or the coupons on a sale need more of its total than it has (Sale needed for each use). The cashier removes the coupon and presses Pay again. One record of PP CPN Rule per coupon; a coupon with no rule is never refused, and a sale with no coupon is allowed without reading iVendNext. The service reads the rules and the count with the app's integration user and writes nothing. The install makes the role PP CPN Integration; the install gives it to the app's own user and, from role_rights, read on POS Invoice and Sales Invoice. The check is on from the install. When the service is down the sale goes on and is flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": ["https://host.docker.internal:8125/cpn/check"],
@@ -36,7 +36,7 @@
    "value": "https://developer.ivendnext.com/recipes/coupon_rules.html#rules"}
  ],
  "registered_applications": [
-  {"name": "PP CPN Rules", "description": "the coupon rules service reads the shop's rule records and counts a customer's sales", "events": ["PP CPN Rule"]}
+  {"name": "PP CPN Rules", "description": "the coupon rules service reads your rule records and counts a customer's sales", "events": ["PP CPN Rule"]}
  ],
  "extension_subscriptions": [
   {"key": "coupons", "point": "check", "label": "Coupon rules", "endpoint_url": "https://host.docker.internal:8125/cpn/check",

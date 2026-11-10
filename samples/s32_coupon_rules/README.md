@@ -40,6 +40,10 @@ ivn try
 
 ## Versions
 
+### 1.2.1
+
+- The refusal says *cannot read your site*, and the manifest's Registered Application line says *your rule records*, where both said *shop*. No logic changed.
+
 ### 1.2.0
 
 - The role's rights beyond the feed's reads move into the manifest (`role_rights`): the install gives the feed's user its reads and the manifest the rest, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later.

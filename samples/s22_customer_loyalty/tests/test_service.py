@@ -49,6 +49,16 @@ class Earning(unittest.TestCase):
         self.assertEqual(loyalty.credit_due(self.t, self.s, "2026-10-15"), [])
         self.assertEqual(loyalty.credit_due(self.t, self.s, "2026-10-16"), ["POS Invoice:S1:earn"])
 
+    def test_an_order_nothing_was_paid_on_earns_nothing_until_it_is_paid(self):
+        self.t.put("POS Invoice", "O1", customer="C1", grand_total="34.84", paid_amount="0.0", posting_date="2026-10-01",
+                   is_return=0, docstatus=1)
+        self.assertEqual(loyalty.on_sale(self.t, self.s, "O1", "2026-10-01")["result"], "not paid yet")
+        self.assertEqual(rows(self.t), [])
+        self.t.put("POS Invoice", "D1", customer="C1", grand_total="34.84", paid_amount="34.84", posting_date="2026-10-03",
+                   is_return=0, docstatus=1)                       # the delivery's own sale record, paid
+        self.assertEqual(loyalty.on_sale(self.t, self.s, "D1", "2026-10-03")["result"], "earned")
+        self.assertEqual(len(rows(self.t)), 1)
+
     def test_a_sale_of_nothing_or_less_writes_no_earn_row(self):
         for name, total in (("S0", "0"), ("SN", "-5.00")):
             sale(self.t, name, "C1", total)
