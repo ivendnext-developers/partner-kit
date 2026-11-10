@@ -960,7 +960,9 @@
     var w = data.made.words || [];
     if (w[0]) box.appendChild(el("p", { "class": "hosting-ok", text: w[0] }));
     w.slice(1).forEach(function (x) { box.appendChild(p(x)); });
-    var none = data.app && data.app.app === data.appId && !(data.app.settings || []).length;   // nothing to fill: straight to Try
+    var loaded = data.app && data.app.app === data.appId;   // its settings are known once its row is read: no button before
+    if (!loaded) { box.appendChild(p("Reading the app…")); return box; }
+    var none = !(data.app.settings || []).length;   // nothing to fill: straight to Try
     var def = (data.sites || {}).default;
     box.appendChild(none ? button(data.sites ? tryLabel(def) : G.tryIt, function () { data.made = null; if (def) openTry(data.appId, def); else { data.pick = data.appId; go("app"); } })
       : button(G.nextSettings, function () { data.made = null; go("settings"); }));

@@ -5,7 +5,7 @@
 
 It DISCOVERS the folders (any `tests/` directly under `samples/<name>/` or `tools/<name>/`), so a later change that adds a
 sample or a tool with tests needs no edit here or in the CI workflow. The two checks that are not unittest folders are
-listed in EXTRA. Needs only Python 3.10+ and the standard library (S29's template tests also use jinja2, which CI installs and which they skip without); no network, no secret. A test that needs a private
+listed in EXTRA. Needs only Python 3.9 or newer and the standard library (S29's template tests also use jinja2, which CI installs and which they skip without); no network, no secret. A test that needs a private
 stand-in or a recorded bench run skips itself and says so; the skip count is printed so a rise is visible.
 
 Each folder runs through `test_counts.py run`, which is `unittest discover` with a count of each test file's tests; once

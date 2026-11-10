@@ -74,8 +74,15 @@ class TheBlankApp(unittest.TestCase):
         text = (self.folder / "README.md").read_text("utf-8")
         listed = re.findall(r"^\| `([a-z_]+)` \|", text, re.M)
         self.assertEqual(sorted(listed), sorted(set(validate.KINDS) | {"app_user_rights"}))
-        for kind, _, _, page in blank.KINDS:
-            self.assertTrue((KIT / page.replace(".html", ".md")).is_file(), f"{kind}: {page} has no page in the kit")
+        for kind, _, _, page in blank.KINDS:   # each link is a page the site builds (recipes, guide) or a kit file on GitHub
+            url = blank.link(page)
+            if url.startswith(blank.SITE + "/"):
+                self.assertRegex(page, r"^(recipes|guide)/[a-z0-9_]+\.html$", kind)
+                self.assertTrue((KIT / page.replace(".html", ".md")).is_file(), f"{kind}: {page} has no page in the kit")
+            else:
+                self.assertTrue(url.startswith(blank.KIT_ON_GITHUB + "/contracts/pages/"), kind)
+                self.assertTrue((KIT / page).is_file(), f"{kind}: {page} is not in the kit")
+            self.assertIn(f"]({url})", text)
 
     def test_the_readme_lists_every_kind_of_the_manifest_recipes_table(self):
         recipe = (KIT / "recipes" / "manifest.md").read_text("utf-8")
