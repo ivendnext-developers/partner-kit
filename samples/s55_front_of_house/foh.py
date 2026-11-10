@@ -11,7 +11,7 @@ Five Desk buttons send one signed POST per press each (the Desk action extension
 
 ``verify`` checks the signature the shop puts on every call; ``records_of`` takes a press's record; ``span`` and
 ``clashes`` are the double-booking guard; ``seat_request`` builds the one call that opens a check; ``place_busy`` reads
-the floor. ⛔ No answer writes anything: the service writes through its own API key and its own rights, BEFORE it
+the floor; ``next_hold`` is what the floor shows on a booked table. ⛔ No answer writes anything: the service writes through its own API key and its own rights, BEFORE it
 answers. ⛔ The guest's name, phone, customer and notes are never read here: the app's user cannot read them.
 """
 
@@ -138,6 +138,28 @@ def clashes(mine: tuple, others: list[dict], rows_by_store: dict, exclude: str =
         if s < end and start < e:
             out.append(dict(o, _start=s, _end=e))
     return sorted(out, key=lambda o: (o["_start"], o.get("name") or ""))
+
+
+def next_hold(bookings: list[dict], rows_by_store: dict, now: datetime.datetime | None) -> dict:
+    """What the till's floor shows on a table: its next *Booked* booking not yet over at ``now`` (the site's clock), as
+    the place's ``held_from`` and ``held_to`` (``YYYY-MM-DD HH:MM:SS``, the site's time), or both empty when it has none.
+    The till reads the table booked from the start of ``held_from``'s day until ``held_to``, when the hold lapses by
+    itself. Only times: every app at the store reads the place, so never a guest or a party."""
+    best = None
+    for o in bookings:
+        if o.get("status") not in HOLDING:
+            continue
+        s = moment(o.get("booking_date"), o.get("booking_time"))
+        if s is None:
+            continue
+        e = s + datetime.timedelta(minutes=minutes_of(o, rows_by_store.get(o.get("store")) or {}))
+        if now is not None and e <= now:
+            continue
+        if best is None or (s, o.get("name") or "") < best[:2]:
+            best = (s, o.get("name") or "", e)
+    if best is None:
+        return {"held_from": "", "held_to": ""}
+    return {"held_from": f"{best[0]:%Y-%m-%d %H:%M:%S}", "held_to": f"{best[2]:%Y-%m-%d %H:%M:%S}"}
 
 
 def clash_words(o: dict, place_label: str) -> str:
