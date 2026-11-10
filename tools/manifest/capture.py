@@ -20,8 +20,11 @@ company); nothing is written to it, and our server keeps none of its records pas
 2. **Into the manifest's kinds** (`to_entries`), each as the recipe's table has it (`recipes/manifest.md`).
 3. **Renamed to your app** (`rename_to`). A field made in Desk is named `custom_…`; the checker wants your app's prefix on a
    field you add to a customer's record type, so `custom_gift_wrap` becomes `acme_rules_gift_wrap` everywhere it is named:
-   in a workflow's condition, a notification's message, a print format, a property setter, a list's columns. A role made in
-   Desk takes the prefix too (`Store Approver` becomes `ACME RULES Store Approver`), as a role an app brings must.
+   in a workflow's condition, a notification's message, a print format, a property setter, a list's columns, a list mark,
+   a till field rule. A role made in Desk takes the prefix too (`Store Approver` becomes `ACME RULES Store Approver`), as a
+   role an app brings must. A name the site also uses for another record type's field (the product's own, or another
+   app's) is left as it is in the entries about that record type; a name past 64 characters is shortened; and a field or
+   role you untick keeps its own name wherever the entries you keep name it.
 4. **Left out, with the checker's reason** (`capture`). The shop's own checker (`validate.py`) and the install's own stops
    (`site_rules.py`) run on the result; an entry they refuse is left out, in their words, and so is everything the manifest
    cannot carry (a client or server script, a query or script report, a right for one of the customer's own roles).
@@ -66,15 +69,41 @@ READ_TYPES = {
     "Server Script": [],
     "Web Page": [],
     "Web Template": [],
+    # the retail kinds a person makes in Desk (J3b)
+    "Retail Label Layout": [],
+    "Retail List Mark": [],
+    "Retail Scan Source": [],
+    "Retail Register Book": [["source_app", "is", "not set"]],  # a book an app brought names its app
+    "Retail Save Rule": [],
+    "Sale Attribute": [],
+    "Retail POS Theme Field": [],  # a till theme's field rules: rows of the theme, read as rows
+    "DocType Link": [["custom", "=", 1]],  # a Connections link made in Customize Form
+    "DocType Action": [["custom", "=", 1]],  # Customize Form's own buttons and document states: no kind carries them
+    "DocType State": [["custom", "=", 1]],
 }
+# a child row is read through its parent: the record door asks for the parent's type (`parent=`)
+PARENT = {"Retail POS Theme Field": "Retail POS Theme", "DocType Link": "Customize Form", "DocType Action": "Customize Form",
+          "DocType State": "Customize Form"}
+# rows a person adds to a record the product made: a row takes its parent's owner, so the install records alone judge them
+# (a new site's till themes carry no field rules)
+ANY_OWNER = {"Retail POS Theme Field"}
 # the types whose records come one by one, with their child rows; the rest come whole from the list
-WITH_CHILDREN = {"Workflow", "Notification", "DocType", "Report", "Workspace", "Dashboard", "Document Naming Rule"}
+WITH_CHILDREN = {"Workflow", "Notification", "DocType", "Report", "Workspace", "Dashboard", "Document Naming Rule",
+                 "Retail List Mark", "Retail Save Rule"}
 # the types whose `module` marks an app's record: Desk itself sets the module of a person's print format, report and record
 # type (from the record type it is for), so those are judged by their standard mark and the install records alone
 MODULE_MARKS = {"Custom Field", "Property Setter", "Notification", "Workspace", "Number Card", "Dashboard Chart",
                 "Dashboard", "List View Settings", "Document Naming Rule", "Webhook", "Translation", "Role"}
 # a person's own records only: the hosting asks the site for these alone (`owner` set and not Administrator)
 PERSON_FILTER = [["owner", "is", "set"], ["owner", "!=", "Administrator"]]
+FIELD_MAX = 64  # a field's name, as a column of the record type's table: *"Fieldname is limited to 64 characters"*
+
+
+def reads() -> list[dict]:
+    """What the hosting asks the site for, one list call each: ``{"doctype", "filters", "parent", "whole"}``. ``whole``:
+    each record is then read one by one, with its child rows (the list gives no child rows)."""
+    return [{"doctype": dt, "filters": [*flt, *([] if dt in ANY_OWNER else PERSON_FILTER)], "parent": PARENT.get(dt),
+             "whole": dt in WITH_CHILDREN} for dt, flt in READ_TYPES.items()]
 INSTALL = "Retail Extension Install"  # each installed app's record: `items`, every record it made, by kind and name
 
 # the install record's kinds, as the record types they made
@@ -82,7 +111,10 @@ ITEM_TYPES = {"custom_field": "Custom Field", "property_setter": "Property Sette
               "notification": "Notification", "print_format": "Print Format", "naming_rule": "Document Naming Rule",
               "list_settings": "List View Settings", "doctype": "DocType", "workspace": "Workspace", "report": "Report",
               "number_card": "Number Card", "dashboard_chart": "Dashboard Chart", "dashboard": "Dashboard",
-              "webhook": "Webhook", "role": "Role", "docperm": "Custom DocPerm", "translation": "Translation"}
+              "webhook": "Webhook", "role": "Role", "docperm": "Custom DocPerm", "translation": "Translation",
+              "label_layout": "Retail Label Layout", "list_mark": "Retail List Mark", "scan_source": "Retail Scan Source",
+              "register_book": "Retail Register Book", "save_rule": "Retail Save Rule", "sale_attribute": "Sale Attribute",
+              "field_rule": "Retail POS Theme Field", "doctype_link": "DocType Link"}
 
 # the words for what the manifest cannot carry (the rest are the checker's own)
 WORDS = {
@@ -97,9 +129,13 @@ WORDS = {
                "not as Administrator. Made it as Administrator? Make your own user with System Manager in Desk, sign in as "
                "it, make the set-up again, then capture.",
     "off": "it is switched off on {site}: switch it on there to capture it",
-    # the recipe's retail kinds Capture does not read yet: said on every list, so nothing is left out without a word
-    "not_read": "Not read by Capture yet: label layouts, list marks, scan sources, register books, till field rules, sale "
-                "details and Connections links. Add those to manifest.json by hand (recipes/manifest.md).",
+    "row_setter": "a change to one of {dt}'s own {rows} (a row of that site's, by its own row name): the manifest changes a "
+                  "record type or a field, so make it again in Customize Form on the customer's site",
+    "row_order": "the order of {dt}'s {rows} on that site, by that site's own row names: the links an app adds keep Desk's "
+                 "own order",
+    "child_link": "a Connections link to a child table's rows: the manifest's links list records of a record type; make it "
+                  "in Customize Form on the customer's site",
+    "no_kind": "a Customize Form {what}: the manifest carries none. Make it there again on the customer's site{instead}",
     "field_order": "the whole order of the form's fields on that site: it would fix the customer's form to this layout. "
                    "Each captured field keeps its place by its Insert After",
 }
@@ -112,7 +148,8 @@ KEEP = {  # the fields each kind carries, in the recipe's terms (the rest of a s
     "property_setters": ("doc_type", "field_name", "property", "property_type", "value"),
     "print_formats": ("name", "doc_type", "html", "css", "print_format_type", "default_print_language"),
     "notifications": ("name", "document_type", "event", "channel", "subject", "message", "condition", "days_in_advance",
-                      "date_changed", "value_changed", "send_to_all_assignees", "attach_print", "print_format"),
+                      "date_changed", "value_changed", "send_to_all_assignees", "attach_print", "print_format",
+                      "set_property_after_alert"),
     "naming_rules": ("document_type", "prefix", "prefix_digits", "priority"),
     "doctypes": ("name", "description", "autoname", "naming_rule", "istable", "issingle", "is_submittable",
                  "title_field", "search_fields", "show_title_field_in_link", "sort_field", "sort_order",
@@ -120,7 +157,25 @@ KEEP = {  # the fields each kind carries, in the recipe's terms (the rest of a s
     "number_cards": ("name", "document_type", "function", "aggregate_function_based_on", "color", "is_public"),
     "dashboard_charts": ("name", "document_type", "chart_type", "based_on", "value_based_on", "group_by_type",
                          "group_by_based_on", "timespan", "time_interval", "type", "color", "is_public"),
+    # the retail kinds, as the POS install writes them back (`manifest_install.py`)
+    "label_layouts": ("label_name", "kind", "width_mm", "height_mm", "per_row", "template"),
+    "list_marks": ("record_type", "label", "colour", "sequence"),
+    "scan_sources": ("source_name", "record_type", "barcode_field", "sequence", "capture_as", "item_from", "batch_from",
+                     "serial_from", "status_field", "warehouse_field"),
+    "register_books": ("book", "title", "data_set", "cite", "medium", "numbering", "balance", "correction",
+                       "retention_years", "period_months", "return_due_days", "count_role", "count_witness",
+                       "loss_count_hours"),
+    "save_rules": ("rule_name", "record_type", "child_table", "kind", "field", "mode", "sequence", "message",
+                   "pattern_class", "pattern", "min_length", "max_length", "formula", "source_table", "source",
+                   "source_b", "factor", "offset", "decimals", "operator", "judge_on_change", "value_from_type",
+                   "value_from_name", "value_field", "roles_field", "action", "scope_field", "day_field", "cap"),
+    "field_rules": ("surface", "field", "action", "label", "language", "sequence"),
 }
+# a register book's declarations, kept on the record as JSON text (`register_book.record_of`), and its `items` as item_scope
+BOOK_JSON = {"item_scope": "items", "class_source": "class_source", "conditions": "conditions", "required": "required",
+             "columns": "columns", "details": "details", "authority": "authority", "columns_from": "columns_from"}
+# a save rule's lists, kept on the record one per line (`manifest_install._apply_v2`)
+RULE_LINES = ("bypass_roles", "states", "locked_fields", "scope_fields")
 FIELD_KEEP = KEEP["custom_fields"][1:] + ("permlevel", "columns", "in_global_search", "search_index", "no_copy")
 CHILD_KEEP = {
     "states": ("state", "doc_status", "allow_edit", "update_field", "update_value", "is_optional_state", "message"),
@@ -137,7 +192,16 @@ def _kept(rec: dict, keys) -> dict:
 
 
 def _rows(rec: dict, key: str, kind: str) -> list:
-    return [_kept(r, CHILD_KEEP[kind]) for r in rec.get(key) or [] if isinstance(r, dict)]
+    return [{**_kept(r, CHILD_KEEP[kind]), **({"value": r["value"]} if kind == "conditions" and r.get("value") is not None
+                                              else {})}
+            for r in rec.get(key) or [] if isinstance(r, dict)]
+
+
+def _conditions(rec: dict) -> list:
+    """A list mark's or a save rule's conditions (Retail Save Rule Condition): field, operator, and the value as it is."""
+    return [{"field": r.get("field"), "operator": r.get("operator") or "=",
+             **({"value": r["value"]} if r.get("value") is not None else {})}
+            for r in rec.get("conditions") or [] if isinstance(r, dict) and r.get("field")]
 
 
 def _json(v, default):
@@ -171,8 +235,8 @@ def made_by_person(records: dict, installs: list) -> dict:
     for dt, rows in (records or {}).items():
         keep = []
         for r in rows or []:
-            if not isinstance(r, dict) or r.get("owner") in (None, "", "Administrator") \
-                    or (dt in MODULE_MARKS and r.get("module")):
+            if not isinstance(r, dict) or (dt not in ANY_OWNER and r.get("owner") in (None, "", "Administrator")) \
+                    or (dt in MODULE_MARKS and r.get("module")) or (dt == "Retail Register Book" and r.get("source_app")):
                 continue
             if (dt, r.get("name")) in by_apps:
                 continue
@@ -233,9 +297,19 @@ def to_entries(records: dict, site: str = "") -> tuple[dict, list]:
         if (r.get("dt"), r.get("fieldname")) in states and r.get("options") == "Workflow State":
             continue
         add("custom_fields", _kept(r, KEEP["custom_fields"]), ("Custom Field", r["name"]))
+    rows_of = {"DocType Link": "Connections links", "DocType Action": "form buttons", "DocType State": "document states"}
     for r in records.get("Property Setter", []):
         if r.get("property") == "field_order":
             out.append({"type": "Property Setter", "name": r["name"], "reason": WORDS["field_order"]})
+            continue
+        if r.get("row_name") or r.get("doctype_or_field") in rows_of:  # Customize Form's change to a link, button or state
+            out.append({"type": "Property Setter", "name": r["name"], "reason": WORDS["row_setter"].format(
+                dt=r.get("doc_type"), rows=rows_of.get(r.get("doctype_or_field"), "Connections links, buttons or states"))})
+            continue
+        if r.get("property") in ("links_order", "actions_order", "states_order"):
+            out.append({"type": "Property Setter", "name": r["name"], "reason": WORDS["row_order"].format(
+                dt=r.get("doc_type"), rows={"links_order": "Connections links", "actions_order": "form buttons",
+                                            "states_order": "document states"}[r["property"]])})
             continue
         add("property_setters", _kept(r, KEEP["property_setters"]) | {"value": r.get("value")}, ("Property Setter", r["name"]))
     for r in records.get("Workflow", []):
@@ -244,6 +318,7 @@ def to_entries(records: dict, site: str = "") -> tuple[dict, list]:
             continue
         add("workflows", {"name": r["name"], "document_type": r.get("document_type"),
                           **({"send_email_alert": 1} if r.get("send_email_alert") else {}),
+                          **({"override_status": 1} if r.get("override_status") else {}),
                           "states": _rows(r, "states", "states"),
                           # every step says whether its raiser may take it: a silent one takes Desk's own default (1)
                           "transitions": [{**t, "allow_self_approval": 1 if src.get("allow_self_approval") else 0}
@@ -254,6 +329,8 @@ def to_entries(records: dict, site: str = "") -> tuple[dict, list]:
             out.append({"type": "Notification", "name": r["name"], "reason": WORDS["off"].format(site=site or "the site")})
             continue
         n = _kept(r, KEEP["notifications"])
+        if r.get("set_property_after_alert"):  # the value it sets, as it is ("0" is a value)
+            n["property_value"] = r.get("property_value") or ""
         n["recipients"] = _rows(r, "recipients", "recipients")
         add("notifications", n, ("Notification", r["name"]))
     for r in records.get("Print Format", []):
@@ -312,46 +389,152 @@ def to_entries(records: dict, site: str = "") -> tuple[dict, list]:
                      ("Web Template", "web_templates")):
         for r in records.get(dt, []):
             out.append({"type": dt, "name": r["name"], "reason": REFUSED_KINDS[kind]})
+    _retail(records, add, out, site)
     return e, out
+
+
+def _retail(records: dict, add, out: list, site: str) -> None:
+    """The retail kinds a person makes in Desk, each as the POS install writes it, read back into the manifest's shape."""
+    def off(dt, r, name):
+        out.append({"type": dt, "name": name, "reason": WORDS["off"].format(site=site or "the site")})
+
+    for r in records.get("Retail Label Layout", []):
+        if not r.get("enabled"):
+            off("Retail Label Layout", r, r["name"]); continue
+        add("label_layouts", _kept(r, KEEP["label_layouts"]), ("Retail Label Layout", r["name"]))
+    for r in records.get("Retail List Mark", []):
+        if not r.get("enabled"):
+            off("Retail List Mark", r, r.get("label") or r["name"]); continue
+        add("list_marks", {**_kept(r, KEEP["list_marks"]), "conditions": _conditions(r)}, ("Retail List Mark", r["name"]))
+    for r in records.get("Retail Scan Source", []):
+        if not r.get("enabled"):
+            off("Retail Scan Source", r, r["name"]); continue
+        values = [x.strip() for x in str(r.get("available_values") or "").splitlines() if x.strip()]
+        add("scan_sources", {**_kept(r, KEEP["scan_sources"]), **({"available_values": values} if values else {})},
+            ("Retail Scan Source", r["name"]))
+    for r in records.get("Retail Register Book", []):  # installed on or off as it declares, so a book off is still a book
+        b = _kept(r, KEEP["register_books"])
+        b["enabled"], b["certified"] = int(bool(r.get("enabled"))), int(bool(r.get("certified")))
+        for field, key in BOOK_JSON.items():
+            v = _json(r.get(field), None)
+            if v not in (None, "", [], {}):
+                b[key] = v
+        add("register_books", b, ("Retail Register Book", r["name"]))  # its register stores are the shop's own setup
+    for r in records.get("Retail Save Rule", []):
+        if not r.get("enabled"):
+            off("Retail Save Rule", r, r["name"]); continue
+        rule = _kept(r, KEEP["save_rules"])
+        if r.get("value") not in (None, ""):  # a threshold of 0 is a threshold
+            rule["value"] = r["value"]
+        for k in RULE_LINES:
+            lines = [x.strip() for x in str(r.get(k) or "").splitlines() if x.strip()]
+            if lines:
+                rule[k] = lines
+        if r.get("conditions"):
+            rule["conditions"] = _conditions(r)
+        add("save_rules", rule, ("Retail Save Rule", r["name"]))
+    for r in records.get("Sale Attribute", []):
+        if not r.get("active"):
+            off("Sale Attribute", r, r["name"]); continue
+        a = {"name": r.get("attribute_name") or r["name"], **_kept(r, ("sequence", "required"))}
+        if r.get("validation_type") == "DocType" and r.get("doctype_name"):
+            a.update(validation_type="DocType", doctype_name=r["doctype_name"])
+        add("sale_attributes", a, ("Sale Attribute", r["name"]))  # a required one: the checker says why it cannot be
+    for r in records.get("Retail POS Theme Field", []):
+        rule = {"theme": r.get("parent"), **_kept(r, KEEP["field_rules"])}
+        add("field_rules", rule, ("Retail POS Theme Field",
+                                  f"{r.get('parent')}: {r.get('action')} {r.get('field')} on {r.get('surface')}"))
+    for r in records.get("DocType Link", []):
+        name = f"{r.get('parent')}: {r.get('link_doctype')}"
+        if r.get("is_child_table") or r.get("table_fieldname"):
+            out.append({"type": "DocType Link", "name": name, "reason": WORDS["child_link"]}); continue
+        add("links", {"doctype": r.get("parent"), "link_doctype": r.get("link_doctype"),
+                      "link_fieldname": r.get("link_fieldname"), **_kept(r, ("group",))}, ("DocType Link", name))
+    for dt, what, instead in (("DocType Action", "form button", ""),
+                              ("DocType State", "document state", ", or show it with a list mark (list_marks)")):
+        for r in records.get(dt, []):
+            out.append({"type": dt, "name": f"{r.get('parent')}: {r.get('label') or r.get('title') or r['name']}",
+                        "reason": WORDS["no_kind"].format(what=what, instead=instead)})
 
 
 # ── 3. renamed to your app ──
 
-def rename_to(entries: dict, prefix: str) -> tuple[dict, list]:
+# the record type each entry is about, by its kind: a name the site also uses for a field of another record type (the
+# product's own, or another app's) is left as it is in the entries about that record type
+DT_KEY = {"custom_fields": "dt", "property_setters": "doc_type", "print_formats": "doc_type", "notifications": "document_type",
+          "workflows": "document_type", "naming_rules": "document_type", "list_settings": "doctype", "reports": "ref_doctype",
+          "number_cards": "document_type", "dashboard_charts": "document_type", "list_marks": "record_type",
+          "scan_sources": "record_type", "save_rules": "record_type", "role_rights": "doctype", "links": "link_doctype"}
+# a till field rule names a field of the record the till screen shows; a label layout's `{item.<field>}` an Item's
+SURFACE_DT = {"customer_create": "Customer", "customer_card": "Customer", "item_result": "Item", "cart_line": "POS Invoice Item",
+              "sale_details": "POS Invoice", "receipt_preview": "POS Invoice", "totals": "POS Invoice"}
+
+
+def _about(kind: str, entry: dict):
+    if kind == "field_rules":
+        return SURFACE_DT.get(entry.get("surface"))
+    if kind == "label_layouts":
+        return "Item"
+    return entry.get(DT_KEY[kind]) if kind in DT_KEY else None
+
+
+def _short(name: str, taken: set) -> str:
+    """``name`` within FIELD_MAX characters, and not one of ``taken``."""
+    if len(name) <= FIELD_MAX and name not in taken:
+        return name
+    base, n = name[:FIELD_MAX].rstrip("_"), 1
+    while base in taken:
+        n += 1
+        base = name[:FIELD_MAX - len(str(n)) - 1].rstrip("_") + f"_{n}"
+    return base
+
+
+def rename_to(entries: dict, prefix: str, others=None, keep=()) -> tuple[dict, list]:
     """The entries with each field made in Desk (`custom_…`, or any name without the app's prefix on a customer's record
-    type) and each role made in Desk under the app's prefix, wherever a string names them; and one line per rename."""
-    fp, own = field_prefix(prefix), {d.get("name") for d in entries.get("doctypes") or []}
+    type) and each role made in Desk under the app's prefix, wherever a string names them; and one line per rename.
+    ``others``: {field name: the record types where the site has a field of that name a person did not make}; in an entry
+    about one of those record types the name is the other field's, so it stays. ``keep``: names that stay as they are
+    everywhere (a field or role you unticked, or the checker left out: the site you install on keeps its own)."""
+    fp, own, others, keep = field_prefix(prefix), {d.get("name") for d in entries.get("doctypes") or []}, others or {}, set(keep)
     fields, lines = {}, []
+    taken = {c.get("fieldname") for c in entries.get("custom_fields") or []}
     for c in entries.get("custom_fields") or []:
         fn = c.get("fieldname") or ""
-        if c.get("dt") in own or fn.startswith(fp):
+        if c.get("dt") in own or fn.startswith(fp) or fn in keep or fn in fields:
             continue
-        new = fp + re.sub(r"^custom_", "", fn)
+        new = _short(fp + re.sub(r"^custom_", "", fn), taken | set(fields.values()))
         fields[fn] = new
-        lines.append(f"{c.get('dt')}: {fn} is {new}")
+        lines.append(f"{c.get('dt')}: {fn} is {new}" + (f" (shortened to {FIELD_MAX} characters)"
+                                                         if len(fp + re.sub(r'^custom_', '', fn)) > FIELD_MAX else ""))
     roles = {}
     for r in entries.get("role_rights") or []:
         old = r.get("role") or ""
-        if old and not old.startswith(prefix + " ") and old not in roles:
+        if old and old not in keep and not old.startswith(prefix + " ") and old not in roles:
             roles[old] = f"{prefix} {old}"
             lines.append(f"the role {old} is {roles[old]}")
     if not fields and not roles:
         return entries, lines
-    field_re = re.compile(r"(?<![A-Za-z0-9_])(" + "|".join(re.escape(f) for f in sorted(fields, key=len, reverse=True))
-                          + r")(?![A-Za-z0-9_])") if fields else None
+    cache = {}
 
-    def one(s: str) -> str:
-        if s in roles:  # a role is named by the whole value (a state's allow_edit, a recipient's role, a permission's role)
-            return roles[s]
-        return field_re.sub(lambda m: fields[m.group(1)], s) if field_re else s
+    def pattern(dt):
+        names = tuple(sorted((f for f in fields if not (dt and dt in others.get(f, ()))), key=len, reverse=True))
+        if names not in cache:
+            cache[names] = re.compile(r"(?<![A-Za-z0-9_])(" + "|".join(re.escape(f) for f in names)
+                                      + r")(?![A-Za-z0-9_])") if names else None
+        return cache[names]
 
-    def walk(o):
+    def walk(o, rx):
         if isinstance(o, dict):
-            return {k: (v if k == "_from" else walk(v)) for k, v in o.items()}
+            return {k: (v if k == "_from" else walk(v, rx)) for k, v in o.items()}
         if isinstance(o, list):
-            return [walk(v) for v in o]
-        return one(o) if isinstance(o, str) else o
-    return walk(copy.deepcopy(entries)), lines
+            return [walk(v, rx) for v in o]
+        if not isinstance(o, str):
+            return o
+        if o in roles:  # a role is named by the whole value (a state's allow_edit, a recipient's role, a permission's role)
+            return roles[o]
+        return rx.sub(lambda m: fields[m.group(1)], o) if rx else o
+    return {kind: [walk(e, pattern(_about(kind, e))) for e in copy.deepcopy(rows)] if isinstance(rows, list) else rows
+            for kind, rows in entries.items()}, lines
 
 
 # ── 4. checked, and left out with the checker's reason ──
@@ -370,12 +553,14 @@ def _manifest(base: dict, entries: dict) -> dict:
     return m
 
 
-def capture(records: dict, installs: list, base: dict, site: str = "") -> dict:
+def capture(records: dict, installs: list, base: dict, site: str = "", others=None) -> dict:
     """Everything a person made on the site, as entries for the app whose manifest is ``base``:
     ``{"entries": {kind: [...]}, "items": [{"id", "kind", "type", "name"}], "left_out": [...], "renamed": [...]}``.
-    Each entry and item carries an ``id`` (``Type/name``) to untick by."""
-    entries, left = to_entries(made_by_person(records, installs), site)
-    entries, renamed = rename_to(entries, base["prefix"])
+    Each entry and item carries an ``id`` (``Type/name``) to untick by. ``others``: the site's fields named like a person's
+    (``others_of``), so a name the product or another app also uses stays theirs where it is theirs."""
+    raw, left = to_entries(made_by_person(records, installs), site)
+    others = others_of(others, records)
+    entries, renamed = rename_to(raw, base["prefix"], others)
     for _ in range(50):  # each pass leaves out what the checker or the install refuses, in their words
         m = _manifest(base, entries)
         bad = [*validate(m), *site_refusals(m)]
@@ -396,17 +581,52 @@ def capture(records: dict, installs: list, base: dict, site: str = "") -> dict:
         entries = {k: v for k, v in entries.items() if v}
     items = [{"id": f"{e['_from'][0]}/{e['_from'][1]}", "kind": kind, "type": e["_from"][0], "name": e["_from"][1]}
              for kind, rows in entries.items() for e in rows]
-    return {"entries": entries, "items": items, "left_out": left, "renamed": renamed}
+    return {"entries": entries, "items": items, "left_out": left, "renamed": renamed, "_raw": raw, "_others": others}
+
+
+def peek(records: dict, installs: list, site: str = "", others=None) -> dict:
+    """What a site holds to capture before the app it goes into has a name (My apps' *From a site* reads first, as
+    `ivn capture --new` does, so a site with nothing never leaves an empty app): the list, and what is left out. The
+    renames are said once the app is named, at *Capture*."""
+    r = capture(records, installs, {"manifest_version": 2, "app": "your_app", "prefix": "YOUR APP", "version": "1.0.0"},
+                site, others)
+    return {"items": r["items"], "left_out": r["left_out"]}
+
+
+def others_of(fields, records: dict) -> dict:
+    """{field name: record types} from the site's answer ``fields`` ([record type, field name] of every Custom Field named
+    like one a person made), less the person's own fields."""
+    mine = {(r.get("dt"), r.get("fieldname")) for r in records.get("Custom Field") or [] if isinstance(r, dict)}
+    out = {}
+    for f in fields or []:
+        if isinstance(f, (list, tuple)) and len(f) == 2 and tuple(f) not in mine:
+            out.setdefault(f[1], set()).add(f[0])
+    return out
+
+
+def person_fieldnames(records: dict) -> list:
+    """The names of the fields a person made: the hosting asks the site which other record types use them too."""
+    return sorted({r.get("fieldname") for r in records.get("Custom Field") or [] if isinstance(r, dict) and r.get("fieldname")})
 
 
 def write(base: dict, result: dict, skip=(), only=()) -> tuple[dict, list]:
     """``base`` with the captured entries added (an entry already there by the same key is replaced), less ``skip`` (ids,
-    kinds or record types) and, when ``only`` names some, only those; and the ids written."""
+    kinds or record types) and, when ``only`` names some, only those; and the ids written. A field or role not written
+    (unticked, or left out by the checker) keeps its own name wherever a written entry names it, and ``result["renamed"]``
+    then says only the renames written."""
     def wanted(kind, e):
         keys = {f"{e['_from'][0]}/{e['_from'][1]}", kind, e["_from"][0], e["_from"][1]}
         return not (keys & set(skip)) and (not only or keys & set(only))
     chosen = {k: [e for e in rows if wanted(k, e)] for k, rows in result["entries"].items()}
     chosen = {k: v for k, v in chosen.items() if v}
+    if "_raw" in result:  # renamed again from the site's names, with what is not written keeping its own
+        ids = {e["_from"] for rows in chosen.values() for e in rows}
+        raw = {k: [e for e in rows if e["_from"] in ids] for k, rows in result["_raw"].items()}
+        keep = {e.get("fieldname") for e in result["_raw"].get("custom_fields") or [] if e["_from"] not in ids} \
+            | {e.get("role") for e in result["_raw"].get("role_rights") or [] if e["_from"] not in ids}
+        renamed, result["renamed"] = rename_to({k: v for k, v in raw.items() if v}, base["prefix"],
+                                               result.get("_others"), keep - {None})
+        chosen = renamed
     m = copy.deepcopy(base)
     for kind, rows in chosen.items():
         key = _key_of(kind)
@@ -418,13 +638,14 @@ def write(base: dict, result: dict, skip=(), only=()) -> tuple[dict, list]:
 
 def _key_of(kind: str) -> tuple:
     from validate import KEYED  # noqa: PLC0415
-    return {"property_setters": ("doc_type", "field_name", "property")}.get(kind) or KEYED.get(kind, ("name",))[:2]
+    return {"property_setters": ("doc_type", "field_name", "property"),
+            "field_rules": ("theme", "surface", "field", "action")}.get(kind) or KEYED.get(kind, ("name",))[:2]
 
 
 def lines(result: dict, site: str) -> list[str]:
     """What it found, grouped by record type, then the renames and what is left out, in plain lines."""
     if not result["items"] and not result["left_out"]:
-        return [WORDS["nothing"].format(site=site), WORDS["not_read"]]
+        return [WORDS["nothing"].format(site=site)]
     out, by = [], {}
     for it in result["items"]:
         by.setdefault(it["type"], []).append(it["name"])
@@ -432,4 +653,4 @@ def lines(result: dict, site: str) -> list[str]:
         out.append(f"{t}: {', '.join(names)}")
     out += [f"Renamed: {x}" for x in result["renamed"]]
     out += [f"Left out: {x['type']} {x['name']}: {x['reason']}" for x in result["left_out"]]
-    return out + [WORDS["not_read"]]
+    return out
