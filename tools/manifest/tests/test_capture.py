@@ -51,8 +51,8 @@ SITE = {
          "print_format_type": "Jinja", "html": "<h2>{{ doc.name }}</h2><p>{{ doc.custom_approval_note }}</p>"},
         {"name": "PO built", "owner": ME, "standard": "No", "doc_type": "Purchase Order", "print_format_builder": 1,
          "format_data": "[]"},
-        {"name": "PO with a query", "owner": ME, "standard": "No", "doc_type": "Purchase Order", "custom_format": 1,
-         "print_format_type": "Jinja", "html": "{{ frappe.db.sql('select 1') }}"},
+        {"name": "PO with a script", "owner": ME, "standard": "No", "doc_type": "Purchase Order", "custom_format": 1,
+         "print_format_type": "Jinja", "html": "<p>{{ doc.name }}</p><script>alert(1)</script>"},
     ],
     "Role": [{"name": "Store Approver", "owner": ME, "is_custom": 1}],
     "Custom DocPerm": [
@@ -67,7 +67,7 @@ SITE = {
                              "order_by": "`tabPurchase Order`.`modified` desc"}), "roles": [{"role": "Store Approver"}]},
         {"name": "PO sums", "owner": ME, "is_standard": "No", "report_type": "Query Report", "ref_doctype": "Purchase Order"},
     ],
-    "Client Script": [{"name": "PO colour", "owner": ME, "dt": "Purchase Order", "script": "frappe.ui.form.on(...)"}],
+    "Client Script": [{"name": "PO colour", "owner": ME, "dt": "Purchase Order", "script": "// colours the form"}],
 }
 INSTALLS = [{"name": "acme_old", "status": "installed", "items": json.dumps(
     [{"kind": "custom_field", "name": "Stock Entry-acme_old_app_field"}])}]
@@ -110,10 +110,10 @@ class Capture(unittest.TestCase):
         self.assertIn("runs code on the site", left[("Report", "PO sums")])
         self.assertEqual(left[("Print Format", "PO built")], C.WORDS["builder_print"])
         self.assertIn("Role Permissions Manager", left[("Custom DocPerm", "Purchase Order: Purchase User")])
-        self.assertIn(("Print Format", "PO with a query"), left)  # the checker's own refusal, in its words
+        self.assertIn(("Print Format", "PO with a script"), left)  # the checker's own refusal, in its words
         refused = [b["reason"] for b in validate(dict(BASE, print_formats=[{"name": "q", "doc_type": "Purchase Order",
-                                                                              "html": "{{ frappe.db.sql('select 1') }}"}]))]
-        self.assertIn(left[("Print Format", "PO with a query")], refused)
+                                                                              "html": "<p>{{ doc.name }}</p><script>alert(1)</script>"}]))]
+        self.assertIn(left[("Print Format", "PO with a script")], refused)
 
     def test_what_is_written_passes_the_checker_and_an_untick_leaves_it_out(self):
         m, ids = C.write(BASE, self.r, skip=["Notification/PO waiting"])

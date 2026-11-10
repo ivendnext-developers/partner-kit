@@ -8,6 +8,8 @@ Most of what a retailer asks for is already in iVendNext as a setting. This chap
 
 **Reference implementation:** [Setting iVendNext up with no code](../recipes/configure_no_code.md) with the sample [`../samples/s5_config_pack/`](../samples/s5_config_pack/) (coded reasons, IMEI tracking, one more detail per line, member pricing), and [A receipt laid out for your market](../recipes/receipt_format.md) with [`../samples/s4_receipt_pack/`](../samples/s4_receipt_pack/).
 
+**Made it in Desk already?** Fields, a workflow, a notification or a print format a consultant set up in Desk on a test site become an app in one step: **Capture from a site** on My apps, or `ivn capture --site <the site>` ([Build your first app](../site/pages/first_app.md), step 2). The app then installs the same set-up on the customer's live site, and on the next customer's.
+
 ## When to use it
 
 Always first: rung 1 of the ladder (chapter 3, which lists everything that is configuration). Check this chapter and the [needs catalogue](../needs/README.md) before you propose an app. This chapter teaches the five set-ups the kit has built and tested, in steps below; the four last rows are settings the kit has looked at on a sandbox; each card says which parts were run and which were not.
