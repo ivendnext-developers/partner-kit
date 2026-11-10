@@ -113,7 +113,7 @@ class Doctor(Base):
         with unittest.mock.patch("pathlib.Path.cwd", return_value=self.tmp):
             rc, out = self.run_ivn("doctor")
         self.assertEqual(out.strip().splitlines()[-1],
-                         "Next: cd apps/acme_gift_wrap, then ivn check and ivn try (your apps here: acme_gift_wrap, acme_rules)")
+                         "Next: ivn check, then ivn try, in apps/acme_gift_wrap (your apps here: acme_gift_wrap, acme_rules)")
         with unittest.mock.patch.object(ivn, "_company_apps", return_value=["acme_rules"]):
             rc, out = self.run_ivn("doctor")  # none on this computer, one on our server
         self.assertEqual(out.strip().splitlines()[-1], "Next: ivn download acme_rules")

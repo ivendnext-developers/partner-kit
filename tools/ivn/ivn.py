@@ -1656,7 +1656,7 @@ def cmd_doctor(a) -> int:
     elif (pathlib.Path.cwd() / "app.json").is_file() or len(here) == 1:
         nxt = "ivn check, then ivn try"
     elif here:  # J6f F10: apps made already: work on one of them, never a new one
-        nxt = f"cd apps/{here[0]}, then ivn check and ivn try" + (f" (your apps here: {', '.join(here)})" if len(here) > 1 else "")
+        nxt = f"ivn check, then ivn try, in apps/{here[0]}" + (f" (your apps here: {', '.join(here)})" if len(here) > 1 else "")
     elif theirs := _company_apps():
         nxt = f"ivn download {theirs[0]}" + (f" (your company's apps: {', '.join(theirs)})" if len(theirs) > 1 else "")
     else:
