@@ -319,25 +319,40 @@ class ServiceTest(unittest.TestCase):
         t = made(self.shop, self.svc)
         self.assertNotIn("GIFT", gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"]))
 
-    def test_m5_a_menu_the_time_budget_cut_prices_only_what_it_missed_soon_after(self):
+    def test_m5_a_menu_is_priced_in_one_call_and_asks_nothing_again_inside_the_cache_window(self):
         t = made(self.shop, self.svc)
-        self.shop.slow, self.shop.tick = {"BURGER"}, self.clock     # the first price (by name) takes the budget
-        real, app.PRICERS = app.PRICERS, 1
+        dishes = gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])
+        asked = [c for c in self.shop.calls if c == "CALL item_prices"]
+        self.assertEqual(len(asked), 1)                               # every dish and choice in one read
+        self.assertNotIn("CALL get_item_details", self.shop.calls)
+        self.assertEqual((dishes["LATTE"]["price"], dishes["BURGER"]["price"], dishes["COLD-L"]["price"]), (3.2, 11.0, 4.5))
+        guest(self.svc, "/gor/menu", t)
+        self.assertEqual(len([c for c in self.shop.calls if c == "CALL item_prices"]), 1)
+
+    def test_m6_a_list_of_more_than_500_codes_is_read_in_two_calls_and_an_item_left_out_is_blank(self):
+        codes = ["LATTE", "GHOST-1"] + [f"X{i}" for i in range(598)]
+        got = self.svc.prices(self.shop, F.REG, codes, self.clock())
+        self.assertEqual(len([c for c in self.shop.calls if c == "CALL item_prices"]), 2)
+        self.assertEqual((got["LATTE"], got["GHOST-1"], got["X7"], len(got)), (3.2, None, 0.0, 600))
+
+    def test_m5b_a_menu_the_time_budget_cut_prices_only_what_it_missed_soon_after(self):
+        t = made(self.shop, self.svc)
+        self.shop.slow, self.shop.tick = {"BURGER"}, self.clock     # the first batch takes the budget
+        real, app.PRICE_BATCH = app.PRICE_BATCH, 2
         try:
             first = gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])
             self.assertEqual((first["BURGER"]["price"], first["SALAD"]["price"]), (11.0, None))
             self.shop.slow = set()
-            asked = len([c for c in self.shop.calls if c == "CALL get_item_details"])
+            asked = len([c for c in self.shop.calls if c == "CALL item_prices"])
             self.clock.t += app.MENU_SHORT_S
             second = gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])
         finally:
-            app.PRICERS = real
+            app.PRICE_BATCH = real
         self.assertEqual((second["BURGER"]["price"], second["SALAD"]["price"]), (11.0, 7.5))
-        again = len([c for c in self.shop.calls if c == "CALL get_item_details"]) - asked
-        self.assertEqual(again, 6)                                    # SALAD, LATTE, COW, SHOT and the two sizes: never BURGER again
+        self.assertEqual(len([c for c in self.shop.calls if c == "CALL item_prices"]) - asked, 3)   # the batches it missed: never the first again
         self.clock.t += app.MENU_SHORT_S
         guest(self.svc, "/gor/menu", t)
-        self.assertEqual(len([c for c in self.shop.calls if c == "CALL get_item_details"]) - asked, 6)   # full: 2 minutes
+        self.assertEqual(len([c for c in self.shop.calls if c == "CALL item_prices"]) - asked, 3)   # full: 2 minutes
 
     def test_s1_a_dish_sold_in_sizes_is_one_family_with_its_picture(self):
         t = made(self.shop, self.svc)
@@ -359,29 +374,36 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertEqual((dishes["COLD-R"]["name"], "family" in dishes["COLD-R"]), ("Cold brew / Regular", False))
 
-    def test_s3_a_busy_shop_leaves_a_price_to_the_next_read(self):
+    def test_s3_a_busy_shop_leaves_the_prices_to_the_next_read(self):
         t = made(self.shop, self.svc)
-        self.shop.refuse = ("CALL get_item_details", 429)
+        self.shop.refuse = ("CALL item_prices", 429)
         first = gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])
         self.assertIsNone(first["LATTE"]["price"])
         self.shop.refuse = None
         self.clock.t += app.MENU_SHORT_S
         self.assertEqual(gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])["LATTE"]["price"], 3.2)
 
-    def test_s4_the_pages_second_read_three_seconds_later_prices_what_the_first_ran_out_of_time_for(self):
+    def test_s3b_a_lost_answer_is_asked_again_like_a_busy_store(self):
         t = made(self.shop, self.svc)
-        self.shop.slow, self.shop.tick = {"BURGER"}, self.clock
-        real, app.PRICERS = app.PRICERS, 1
-        try:
-            first = gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])
-            self.shop.slow = set()
-            self.clock.t += 3                                              # the page's own wait before it asks again (page.js)
-            second = gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])
-        finally:
-            app.PRICERS = real
-        self.assertIsNone(first["SALAD"]["price"])
-        self.assertEqual(second["SALAD"]["price"], 7.5)                    # the late menu was kept less than those 3 seconds
-        self.assertLess(app.MENU_SHORT_S, 3)
+        self.shop.lose_price = True
+        first = gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])
+        self.assertIsNone(first["LATTE"]["price"])
+        self.shop.lose_price = False
+        self.clock.t += app.MENU_SHORT_S
+        self.assertEqual(gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])["LATTE"]["price"], 3.2)
+        self.assertLess(app.MENU_SHORT_S, 3)                          # the page asks again after 3 (page.js): the late menu is gone by then
+
+    def test_s4_a_till_that_refuses_the_read_shows_no_prices_and_the_menu_still_loads(self):
+        t = made(self.shop, self.svc)
+        self.shop.refuse = ("CALL item_prices", 417)                  # a till before POS 2.1.0.697 does not know the verb
+        code, out = guest(self.svc, "/gor/menu", t)
+        self.assertEqual(code, 200)
+        self.assertIsNone(gor.dishes_of(out["menu"])["LATTE"]["price"])
+        asked = len([c for c in self.shop.calls if c == "CALL item_prices"])
+        self.shop.refuse = None
+        self.clock.t += app.MENU_SHORT_S
+        self.assertIsNone(gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])["LATTE"]["price"])
+        self.assertEqual(len([c for c in self.shop.calls if c == "CALL item_prices"]), asked)   # kept the full window, not asked again
 
     def test_m7_a_flood_on_a_replaced_card_reads_the_retailer_once_a_copy(self):
         old = made(self.shop, self.svc)
