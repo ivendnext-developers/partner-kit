@@ -121,6 +121,17 @@ WORDS = {
     "one_press": "one press",
     "its_admin": "its administrator installs it from the shelf key ivn try prints",
     "your_last": " · ivn try uses it",  # the person's last site, else the first: true for a first-timer too
+    # MYSITES (J2): the company's own list of sites
+    "how_ours": "one press, with our key",
+    "how_own": "one press, with your key",
+    "how_live": "a customer's live site: ivn publish sends it the production copy",
+    "site_key": "API key (Enter for none: its administrator then installs from the shelf key):",
+    "site_secret": "API secret:",
+    "key_where": "Make the key on that site under your own user: User, API Access, Generate Keys (not on Administrator).",
+    "sites_usage": "ivn sites [add <address> | use <address or label> | label <address> \"<label>\" | remove <address>]",
+    "removed_mine": "{site} is off your list, with the key you added for it. (ivn remove-site stops an app reaching a site.)",
+    "installing_on": "Installing {version} on {site}…",
+    "no_key_install": "{site}: we hold no key there, so its administrator installs it from the message above.",
     "sign_in": "Sign in first: ivn login (a build server: a token from My apps > Tokens, in IVN_TOKEN).",
     "bad_token": "This token is not one My apps made. Run ivn login again, or make a new token on My apps > Tokens.",
     "no_reach": "Could not reach iVendNext: no connection. Nothing was changed. Try again.",
@@ -1309,9 +1320,32 @@ def cmd_publish(a) -> int:
             if len(ready) > 1:
                 print(f"{x.get('site')}:")
             print(x.get("message") or "")
+    if a.install:
+        install_now(app, done)
     if behind:
         print(WORDS["behind"].format(version=shipped))
     return 0
+
+
+def install_now(app: str, done: dict) -> None:
+    """`--install`: on each customer's site where the company holds its key, the site's own install words, then the
+    install (the flag is the yes, as ivn try installs after its words), until it is installed."""
+    for x in done.get("install_now") or []:
+        if x.get("installed"):
+            continue
+        words = online(door, "/v1/publish/install", {"app": app, "site": x["site"]})
+        print(WORDS["installing_on"].format(version=words.get("version"), site=x["site"]))
+        for sec in words.get("sections") or []:
+            print(f"  {sec['title']}")
+            for line in sec.get("lines") or []:
+                print(f"    {line}")
+        out = online(door, "/v1/publish/install", {"app": app, "site": x["site"], "sha": words.get("sha")})
+        for _ in range(100):
+            if out.get("step") != "installing":
+                break
+            time.sleep(3)
+            out = online(door, "/v1/publish/install", {"app": app, "site": x["site"], "sha": words.get("sha")})
+        print(out.get("words") or "")
 
 
 # ── status, logs, keep it going ──────────────────────────────────────────────
@@ -1402,14 +1436,49 @@ def cmd_rollback(a) -> int:
     return 0
 
 
+def site_line(x: dict, default) -> str:
+    """One of the company's sites: its label and address, how Try installs there, and whether ivn try uses it."""
+    if x.get("stale"):  # the key the developer added no longer signs in: the hosting's own words
+        how = x["stale"]
+    elif x.get("live"):
+        how = WORDS["how_live"]
+    elif x.get("route") in ("ours", "own"):
+        how = WORDS["how_" + x["route"]]
+    else:
+        how = WORDS["one_press" if x.get("press") else "its_admin"]
+    name = f"{x['label']} · {x['site']}" if x.get("label") else x["site"]
+    return WORDS["site_row"].format(site=name, how=how) + (WORDS["your_last"] if x["site"] == default else "")
+
+
 def cmd_sites(a) -> int:
-    """The company's sites, from the same door as the page's list: each one, and how Try installs there."""
-    out = online(door, "/v1/sites", {})
-    if not out.get("company"):
+    """The company's sites, from the same door as the page's list (*My sites*): each one, its label, and how Try installs
+    there. `add`, `use`, `label` and `remove` change the list, as the page's buttons do."""
+    act, target = a.action, a.target
+    if act and not target or act == "label" and a.label is None:
+        raise Stop(WORDS["sites_usage"])
+    if act == "add":
+        key = os.environ.get("IVN_SITE_KEY", "")
+        secret = os.environ.get("IVN_SITE_SECRET", "")
+        if not key and sys.stdin.isatty():  # read without echo; a build server sets the two variables
+            print(WORDS["key_where"])
+            key = ask_secret(WORDS["site_key"])
+            secret = ask_secret(WORDS["site_secret"]) if key else ""
+        out = online(door, "/v1/sites/add", {"site": target, **({"key": key, "secret": secret} if key else {})})
+    elif act == "use":
+        out = online(door, "/v1/sites/default", {"site": target})
+    elif act == "label":
+        out = online(door, "/v1/sites/label", {"site": target, "label": a.label})
+    elif act == "remove":
+        out = online(door, "/v1/sites/remove", {"site": target, "mine": True})
+        out["words"] = WORDS["removed_mine"].format(site=target)
+    else:
+        out = online(door, "/v1/sites", {})
+    if out.get("words") and act:
+        print(out["words"])
+    if not out.get("company") and not act:
         print(out.get("words") or WORDS["m31"])
     for x in out.get("company") or []:
-        print(WORDS["site_row"].format(site=x["site"], how=WORDS["one_press" if x.get("press") else "its_admin"])
-              + (WORDS["your_last"] if x["site"] == out.get("default") else ""))
+        print(site_line(x, out.get("default")))
     return 0
 
 
@@ -1655,13 +1724,21 @@ def parser() -> argparse.ArgumentParser:
     p = cmd("secrets", cmd_secrets, "print each connection point's secret on a site")
     p.add_argument("--site", help="the site's address (default: the site you last tried on)")
     p = cmd("try", cmd_try, "install the latest draft on a site and test it")
-    p.add_argument("--site", help="any iVendNext site's address (default: the site you last tried on)")
+    p.add_argument("--site", help="any iVendNext site's address, or a label (default: your default site)")
     p.add_argument("--show-wording", action="store_true", help="print the exact wording the install shows")
-    cmd("sites", cmd_sites, "your company's sites, any one of which Try installs on", in_app=False)
+    p = cmd("sites", cmd_sites, "your company's sites (My sites): list, add, use, label or remove one", in_app=False)
+    p.add_argument("action", nargs="?", choices=("add", "use", "label", "remove"),
+                   help="add <address>: with a key you made there (asked without echo, or IVN_SITE_KEY and IVN_SITE_SECRET); "
+                        "use <address or label>: your default; label <address> \"<label>\": a customer's name and test or "
+                        "live; remove <address>: off your list, with its key (ivn remove-site stops an app reaching a site)")
+    p.add_argument("target", nargs="?", help="the site's address, or its label")
+    p.add_argument("label", nargs="?", help="label: the label, such as \"Acme test\" ('' takes it off)")
     p = cmd("test", cmd_test, "test each connection point again")
     p.add_argument("--local", action="store_true", help="on this laptop, with the test secret in .env.local")
     p = cmd("publish", cmd_publish, "send it to a customer's sites, or list it for every retailer")
-    p.add_argument("--to", action="append", metavar="SITE", help="a customer's site address; once per site")
+    p.add_argument("--to", action="append", metavar="SITE", help="a customer's site address or its label; once per site")
+    p.add_argument("--install", action="store_true",
+                   help="where you hold the customer site's key (ivn sites add), install it there now, after its words")
     p.add_argument("--public", action="store_true", help="list it for every retailer")
     p.add_argument("--own", action="store_true", help="these sites are your own company's")
     p.add_argument("--plan", choices=("starter", "standard", "managed"))
