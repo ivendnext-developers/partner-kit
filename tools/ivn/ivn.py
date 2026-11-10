@@ -83,6 +83,8 @@ WORDS = {
     "login_done": "Signed in as {login} for {name} ({company}).",  # J2-11
     "folder": "Folder: apps/{app}/ ({parts}). Read its README.md: what is in it and what you can change.",  # J2-12
     "next_try": "Next: ivn try",  # J2-12
+    "get_sandbox_first": "Get a sandbox of your own, in one press: My sites on My apps. Until then, try on a site by name: "
+                         "ivn try --site.",
     "blank_folder": "Folder: apps/{app}/ (manifest.json, app.json, tests/). Read its README.md: what you can add, each kind "
                     "with an example. Then: ivn check, ivn try",  # J1 DEVSTART: the blank start's last line
     "downloaded": "{version} ({state}made by {who} {how}) into apps/{app}/.",  # J11-01
@@ -1501,6 +1503,8 @@ def cmd_sites(a) -> int:
         out = online(door, "/v1/sites", {})
     if out.get("words") and act:
         print(out["words"])
+    if out.get("sandbox") == "get" and not act:  # J6 F15: one of our developers with no sandbox of their own: first
+        print(WORDS["get_sandbox_first"])
     if not out.get("company") and not act:
         print(out.get("words") or WORDS["m31"])
     for x in out.get("company") or []:

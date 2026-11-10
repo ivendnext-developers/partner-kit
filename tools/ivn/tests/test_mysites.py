@@ -30,6 +30,8 @@ class Stub(B.Stub):
         out["company"].append({"site": ACME_LIVE, "key_address": ACME_LIVE, "press": True, "route": "own",
                                "label": "Acme live", "live": True})
         out["company"][0]["route"] = "ours"
+        if getattr(self, "sandbox", None):
+            out["sandbox"] = self.sandbox
         if getattr(self, "back", None):
             out["company"][0]["back_words"] = self.back
         if self.default:
@@ -97,6 +99,11 @@ class MySites(B.Base):
             "acme.sandbox.ivend.co  one press, with our key · ivn try uses it",
             "Acme test · shop.acme.example  its administrator installs it from the shelf key ivn try prints",
             "Acme live · retail.acme.example  a customer's live site: ivn publish sends it the production copy"]))
+
+    def test_one_of_our_developers_with_no_sandbox_reads_get_a_sandbox_first(self):  # J6 F15
+        self.stub.sandbox = "get"
+        rc, out = self.run_ivn("sites")
+        self.assertEqual(out.splitlines()[0], B.ivn.WORDS["get_sandbox_first"])
 
     def test_a_pool_sandbox_names_its_owner_and_the_date_it_goes_back(self):  # the page's words, as the hosting says
         self.stub.labels["acme.sandbox.ivend.co"] = "nw-dev's sandbox"
