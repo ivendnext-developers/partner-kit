@@ -43,6 +43,8 @@
       "s60_project_quotes"
     ],
     "Hospitality": [
+      "s22_customer_loyalty",
+      "s35_call_centre_orders",
       "s37_age_check",
       "s45_restaurant_back_office",
       "s55_front_of_house",

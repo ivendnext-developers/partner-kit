@@ -4,7 +4,7 @@ A customer phones the call centre; the agent enters the order once, in Desk, and
 
 ![The app's card in the App library](screenshots/01_app_library_card.png)
 
-**Industries:** Pharmacy
+**Industries:** Hospitality, Pharmacy
 
 **When to use it:** you want a press in Desk to decide something about the record from data iVendNext already holds, and write the answer back onto it.
 
