@@ -26,6 +26,7 @@ Short films for partners and developers on the iVendNext channel: what a partner
 
 What iVendNext does for each kind of retail chain: a short tour of its store, then the proof from the till to the books. Each industry also has a page in the [App library](https://library.ivendnext.app/industries) with its apps in the order a store installs them.
 
+- **Pharmacy:** [A pharmacy chain's store](https://youtu.be/JAGi9MOgvug) · [From the prescription to the register](https://youtu.be/U9RsXshKZFU) · apps: [Pharmacy](https://library.ivendnext.app/industries/pharmacy)
 - **Hardware and DIY:** [A hardware chain's store](https://youtu.be/TCmQHOyE_to) · [From the trade counter to the books](https://youtu.be/-n4Q7Um8IME) · apps: [Hardware and DIY](https://library.ivendnext.app/industries/hardware-and-diy)
 - **Travel retail:** [A duty free store at the airport](https://youtu.be/8PovgvAboKo) · [From the boarding pass to the books](https://youtu.be/8v8mB6SMBkQ) · apps: [Travel retail](https://library.ivendnext.app/industries/travel-retail)
 - **Thrift and resale:** [A thrift chain's store](https://youtu.be/RwEMShn1T8Q) · [From the donation door to the payout](https://youtu.be/LNMBJNnKezc) · apps: [Thrift and resale](https://library.ivendnext.app/industries/thrift-and-resale)
@@ -35,5 +36,6 @@ What iVendNext does for each kind of retail chain: a short tour of its store, th
 - **Distribution and warehousing:** [A distributor's trade counter](https://youtu.be/7Wjt3rWRsOU) · [From the case to the books](https://youtu.be/V-1voi_9nw8) · apps: [Distribution and warehousing](https://library.ivendnext.app/industries/distribution-and-warehousing)
 - **Fashion:** [A fashion chain's store](https://youtu.be/GUThOF8qfv0) · [From the size to the books](https://youtu.be/nVzRPen-AKE) · apps: [Fashion](https://library.ivendnext.app/industries/fashion)
 - **Beauty and cosmetics:** [A beauty chain's store](https://youtu.be/OrOPx7jS3M8) · [From the shelf to the books](https://youtu.be/YA2R6evbarg) · apps: [Beauty and cosmetics](https://library.ivendnext.app/industries/beauty-and-cosmetics)
+- **Hospitality:** [A restaurant on one till: quick service and café](https://youtu.be/Fr4v_8FzSuw) · [Quick service: one counter, one kitchen](https://youtu.be/LU0KbbXFLWA) · [Café: the drink, the table and the guest's phone](https://youtu.be/Dkhotl3T5ZA) · [Full service, from the booking to the tip](https://youtu.be/sVvX__eil2Y) · [The bar: tabs, rounds and the close](https://youtu.be/VsUVk87GR5w) · apps: [Hospitality](https://library.ivendnext.app/industries/hospitality)
 
 For the films for store teams and for the people who set iVendNext up, see [all iVendNext videos](https://www.ivendnext.com/videos/).
