@@ -3,9 +3,9 @@
  "app": "pp_ksc",
  "prefix": "PP KSC",
  "title": "Kitchen screen",
- "version": "0.3.1",
+ "version": "0.3.2",
  "publisher": "Partner Programme sample",
- "description": "A kitchen screen for each station, an expo screen at the pass and a Now serving board, on the till's own station tickets (the station-ticket door): each screen reads its store's board every few seconds through the app's service. A cook taps a ticket started, ready and bumped; a void ticket shows its dishes struck through; the expo shows every station's tickets of one order together, what is still waiting, and bumps an order when every station's part is ready; the board shows the call numbers preparing and ready. A ticket shows the sale's service mode (To go). When the store's row allows it, a cook marks any dish sold out at the screen's own store, found by name before anyone orders it, and the tills stop selling it; when the till keeps a cleared dish sold out, the screen says why (an app's line on an open check is refused when the check is paid). Make link, on a PP KSC Screen record, writes the screen's signed link; pressing it again replaces a link that leaked (the old one stops). The app never voids, comps, changes a line or touches money, and keeps no guest data. The install makes the roles PP KSC Manager and PP KSC Integration and the app's own user; from role_rights it gives PP KSC Integration read on POS Profile and Item and PP KSC Manager select on Warehouse and Retail Kitchen Station; the retailer gives that user its stores and the right May Work a Kitchen Screen; the feed PP KSC Kitchen screen feed is on from the install. allowed_urls is the programme bench's address; a partner writes their own service's address.",
+ "description": "A kitchen screen for each station, an expo screen at the pass and a Now serving board, on the till's own station tickets (the station-ticket door): each screen reads its store's board every few seconds through the app's service. A cook taps a ticket started, ready and bumped; a void ticket shows its dishes struck through; the expo shows every station's tickets of one order together, what is still waiting, and bumps an order when every station's part is ready; the board shows the call numbers preparing and ready. A ticket shows the sale's service mode (To go). When the store's row allows it, a cook marks any dish sold out at the screen's own store, found by name before anyone orders it, and the tills stop selling it; when the till keeps a cleared dish sold out, the screen says why (an app's line on an open check is refused when the check is paid). Make link, on a PP KSC Screen record, writes the screen's signed link; pressing it again replaces a link that leaked (the old one stops). The app never voids, comps, changes a line or touches money, and keeps no guest data. The install makes the roles PP KSC Manager and PP KSC Integration and the app's own user; from role_rights it gives PP KSC Integration read on POS Profile and Item and PP KSC Manager select on Warehouse and Retail Kitchen Station; from app_user_rights, the install gives that user its own Retail Permission with only May Work a Kitchen Screen, Is POS User, a row at every store and a Shift Profile; the feed PP KSC Kitchen screen feed is on from the install. allowed_urls is the programme bench's address; a partner writes their own service's address.",
  "allowed_urls": [
   "https://host.docker.internal:8159/ksc/link"
  ],
@@ -344,5 +344,6 @@
   {"doctype": "Item", "role": "PP KSC Integration", "rights": ["read"]},
   {"doctype": "Warehouse", "role": "PP KSC Manager", "rights": ["select"]},
   {"doctype": "Retail Kitchen Station", "role": "PP KSC Manager", "rights": ["select"]}
- ]
+ ],
+ "app_user_rights": ["custom_mpos_station_ticket"]
 }

@@ -26,7 +26,7 @@ Keep the rule that a guest's lines wait unsent: an app given *send to the kitche
 
 More: the [recipe](../../recipes/guest_ordering.md).
 
-**The customer sets:** the register with **Table Service** ticked, its item groups and price list; the tables as the till's own floor; one `PP GOR Settings` record for the company with a row per store (*Orders from the tables*, *Orders from the kiosk*); the role **PP GOR Manager** for whoever makes the codes; and one *PP GOR Code* for each table and kiosk, made with **Make code** and printed. The app's user needs a Retail Permission with only *open a check*, *add to a check* and *see the checks*.
+**The customer sets:** the register with **Table Service** ticked, its item groups and price list; the tables as the till's own floor; one `PP GOR Settings` record for the company with a row per store (*Orders from the tables*, *Orders from the kiosk*); the role **PP GOR Manager** for whoever makes the codes; and one *PP GOR Code* for each table and kiosk, made with **Make code** and printed. Nothing for the app's user: the install makes it (the manifest's `app_user_rights`): its own Retail Permission with only *open a check*, *add to a check* and *see the checks*, **Is POS User**, a row for every store (on its Table Service register if it has one), and a Shift Profile.
 
 ## Run it
 
@@ -44,6 +44,12 @@ ivn try
 The hosted service reserves 10 of the account's concurrent copies, shared by every store that installs it; a menu read is kept two minutes per copy, so a busy evening's guests read the store once a copy rather than once a guest.
 
 ## Versions
+
+### 1.2.2
+
+Needs POS build 2.1.0.682 or later. Manifest 0.2.2.
+
+- The manifest's `app_user_rights` make the app's own user at the install: its own Retail Permission with only *open a check*, *add to a check* and *see the checks*, **Is POS User**, a row for every store (on its Table Service register if it has one), and a Shift Profile, so the administrator sets nothing up by hand (a user already set up by hand stays as it is).
 
 ### 1.2.1
 

@@ -36,21 +36,28 @@
       .catch(function () { return { state: "unavailable" }; });
   }
 
+  // The retailer's words (its name, the question, the answers) go in a <bdi> inside a block of the page's own direction,
+  // so each reads in its own order and the block keeps one reading edge on an Arabic page (S59's rule); the guest's own
+  // comment is typed text and keeps dir="auto".
+  function put(el, text) {
+    el.textContent = "";
+    if (text) { var b = document.createElement("bdi"); b.textContent = String(text); el.appendChild(b); }
+  }
+
   function ready() { $("send").disabled = chosen === null && !$("stop").checked; }
 
   function show(v) {
     var card = $("card");
     card.classList.remove("done", "stopped");
-    $("name").textContent = v.name || "";
+    put($("name"), v.name);
     $("date").textContent = v.date || "";
-    $("question").textContent = v.question || "";
+    put($("question"), v.question);
     var box = $("answers");
     box.textContent = "";
     (v.answers || []).forEach(function (text, i) {
       var b = document.createElement("button");
       b.type = "button";
-      b.textContent = text;
-      b.dir = "auto";                                  // the retailer's words keep their own direction on an Arabic page
+      put(b, text);                                    // the retailer's words keep their own direction on an Arabic page
       b.setAttribute("aria-pressed", chosen === i ? "true" : "false");
       b.addEventListener("click", function () { chosen = i; show(v); });
       box.appendChild(b);

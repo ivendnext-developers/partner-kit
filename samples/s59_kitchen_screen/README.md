@@ -24,7 +24,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/kitchen_screen.md).
 
-**The customer sets:** the stations as the till's own *Kitchen Stations*, each station listed on the register that sends (under *Kitchen Printers*, with its printer, or with none for a screen only), one `PP KSC Settings` record for the company with a row per store, the role **PP KSC Manager** (the install gives it *Select* on *Warehouse* and *Kitchen Station*) for whoever makes the screens, and one `PP KSC Screen` for each screen, with **Make link** pressed and the link opened full screen on its browser. The manifest's `role_rights` give **PP KSC Integration** *Read* on *POS Profile* and *Item* (a ticket in the store's usual service mode shows no pill; a cook finds any dish by name). Only for sold out, give it *Read*, *Write* and *Create* on *Retail Item Availability*. The app's user needs a Retail Permission with only **May Work a Kitchen Screen**.
+**The customer sets:** the stations as the till's own *Kitchen Stations*, each station listed on the register that sends (under *Kitchen Printers*, with its printer, or with none for a screen only), one `PP KSC Settings` record for the company with a row per store, the role **PP KSC Manager** (the install gives it *Select* on *Warehouse* and *Kitchen Station*) for whoever makes the screens, and one `PP KSC Screen` for each screen, with **Make link** pressed and the link opened full screen on its browser. The manifest's `role_rights` give **PP KSC Integration** *Read* on *POS Profile* and *Item* (a ticket in the store's usual service mode shows no pill; a cook finds any dish by name). Only for sold out, give it *Read*, *Write* and *Create* on *Retail Item Availability*. Nothing for the app's user: the install makes it (the manifest's `app_user_rights`): its own Retail Permission with only **May Work a Kitchen Screen**, **Is POS User**, a row for every store, and a Shift Profile.
 
 ## Run it
 
@@ -40,6 +40,12 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.3.3
+
+Needs POS build 2.1.0.682 or later. Manifest 0.3.2.
+
+- The manifest's `app_user_rights` make the app's own user at the install: its own Retail Permission with only **May Work a Kitchen Screen**, **Is POS User**, a row for every store and a Shift Profile, so the administrator sets nothing up by hand (a user already set up by hand stays as it is).
 
 ### 1.3.2
 

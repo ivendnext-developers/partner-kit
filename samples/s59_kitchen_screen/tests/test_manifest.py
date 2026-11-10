@@ -68,6 +68,7 @@ class ManifestTest(unittest.TestCase):
         self.assertIn("only the screen's own store", f["description"])
 
     def test_r1_the_install_gives_the_human_roles_and_the_services_user_their_rights(self):  # HOSP-KIT1: no Role Permissions step
+        self.assertEqual(self.m["app_user_rights"], ["custom_mpos_station_ticket"])   # the install makes the app's own user from this list (the right names are Retail Permission fields)
         have = {(r["doctype"], r["role"], tuple(r["rights"])) for r in self.m["role_rights"]}
         for doctype, role, rights in [
             ('POS Profile', 'PP KSC Integration', ['read']),
