@@ -153,6 +153,7 @@
     noApps: "You have no apps yet.", newApp: "New app",
     blank: "Start blank", blankHint: "No sample matches the need? Start with an empty app: its README lists each kind you can add, " +
       "with an example and its recipe. You can add a sample to it later.", blankTitle: "My app",
+    blankCovers: "A blank app: no sample in it yet. Its README.md lists what you can add.",
     settingsLede: "Your app's own values, the same for every site. A customer's own account (their wallet) goes in the app's " +
       "settings in their Desk.",
     addresses: "Outside addresses", secrets: "Secrets your own service needs",
@@ -1068,7 +1069,7 @@
     var fill = function () {
       var cv = covers(a, site.catalogue), made = day((vs[0] || {}).at);
       if (!cv.built.length && !cv.tobuild.length && !cv.desk.length && !cv.cannot.length) {
-        cb.appendChild(p("Built in this app: " + (a.samples || []).map(function (n) { var s = byName(n); return s ? sampleLabel(s) : n; }).join(", ") + "."));
+        cb.appendChild(p((a.samples || []).length ? "Built in this app: " + a.samples.map(function (n) { var s = byName(n); return s ? sampleLabel(s) : n; }).join(", ") + "." : G.blankCovers));
         return;
       }
       cv.built.forEach(function (c) {
