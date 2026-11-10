@@ -360,10 +360,17 @@ check("MYSITES: the key's line says where it is made, never on Administrator, an
 check("MYSITES: the page's doors, a secret box that does not echo, one press for a sandbox, and logins kept on this screen only",
   ["/sites/add", "/sites/label", "/sites/default", "/sandbox/get", "/sandbox/logins", "/publish/install"].every((d) => src.includes('"' + d + '"')) &&
   src.includes('el("input", { type: "password", autocomplete: "off", "aria-label": S.secret })') && src.includes("ev.target.disabled = true;   // one press, one sandbox") &&
-  src.includes("data.shownLogins = null; go(\"home\")"));
+  src.includes("data.shownLogins = null; data.addForm = null; go(\"home\")"));
 check("MYSITES: home opens My sites, and Try's Change list opens it too", src.includes('button(S.open, function () { go("sites"); }, true)') &&
   src.includes('button(S.open, function () { data.pick = null; go("sites"); }, true)'));
 check("MYSITES: Install now shows the site's own words before the press", src.includes("consentSections(inst).forEach") && src.includes("ask({ sha: inst.sha })"));
+check("MYSITES: Install now's state is per site and version: words read first, one press, then installing, then done",
+  a.instKey("s", "1.0.1") !== a.instKey("s", "1.0.0") && a.installState(undefined, false) === "read" &&
+  a.installState({ reading: true }) === "wait" && a.installState({ sha: "a", sections: [] }) === "ask" &&
+  a.installState({ step: "installing" }) === "wait" && a.installState({ done: true }) === "done" && a.installState({}, true) === "done");
+check("MYSITES: a refused Install now brings its button back, and a refused Add keeps what was typed",
+  src.includes("function (e) { delete data.inst[k]; fail(e); }") && src.includes("data.addForm = data.addForm ||"));
+check("MYSITES: Get a sandbox is offered only until the person has one of their own", src.includes("sites.get_sandbox && !hasOwn"));
 check("no inline style on the page's elements (the policy has no unsafe-inline)", !/\bstyle:\s*"/.test(src));
 check("P-04: /hosting forwards to My apps", readFileSync(path.join(out, "hosting.html"), "utf8").includes("url=apps.html") &&
   !existsSync(path.join(out, "assets/hosting.js")));

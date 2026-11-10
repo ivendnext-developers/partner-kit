@@ -929,7 +929,7 @@ class Try(Base):
     def test_no_sandbox_is_m31(self):  # ⭐ UX-138 (J8-29)
         self.stub.sandbox = None
         rc, out = self.run_ivn("try")
-        self.assertEqual((rc, out.strip()), (1, "Add a site: any iVendNext site's address, with ivn try --site <address>. "
+        self.assertEqual((rc, out.strip()), (1, "Add a site: any iVendNext site's address, with ivn sites add <address>. "
                                                 "No site yet? Request one: https://developer.ivendnext.com/sandbox.html"))
 
     def test_a_changed_folder_uploads_first_and_says_so(self):  # ⭐ UX-32 (J3-07)

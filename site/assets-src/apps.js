@@ -184,8 +184,8 @@
     title: "My sites", open: "My sites",
     why: "The sites you try your apps on, and your customers' sites. Add any iVendNext site you administer, and label it with the customer's name and test or live.",
     add: "Add a site", address: "Its address", key: "API key", secret: "API secret", addBtn: "Add",
-    keyHint: "Optional. Make the key on that site under your own user: User, API Access, Generate Keys (not on Administrator: making keys there replaces its secret). With a key, Try installs there in one press; without one, its administrator installs from the shelf key Try shows.",
-    label: "Label", labelHint: "A customer's name and test or live, like Acme test. A label with live (or prod) puts the site on Publish's list, not Try's.",
+    keyHint: "Optional. Make the key on that site under your own user, one with System Manager: User, API Access, Generate Keys (not on Administrator: making keys there replaces its secret). With a key, Try installs there in one press; without one, its administrator installs from the shelf key Try shows.",
+    label: "Label", labelHint: "A customer's name and test or live, like Acme test. A label with live, prod or production puts the site on Publish's list, not Try's.",
     save: "Save", makeDefault: "Make default", isDefault: "your default", remove: "Remove from my list",
     how: { ours: "Try installs in one press, with our key", own: "Try installs in one press, with your key",
            shelf: "its administrator installs from the shelf key", live: "a customer's live site: Publish sends it the production copy" },
@@ -201,6 +201,14 @@
     var out = list.filter(function (x) { return x.trim() && x.trim() !== site; });
     if (on) out.push(site);
     return out.length ? out : [""];
+  }
+  // Install now's state, per site and version: read the words, ask the one press, installing, or done
+  function instKey(site, version) { return site + "@" + (version || ""); }
+  function installState(inst, installed) {
+    if (installed || (inst && inst.done)) return "done";
+    if (!inst || (!inst.sha && !inst.step && !inst.reading)) return "read";
+    if (inst.step === "installing" || inst.reading) return "wait";
+    return "ask";
   }
   // EASY3a part 4: Publish and keep it going (spec J5-01, J5-04, J5-16, J5-19, J6-06, J7-01, J7-07, J10-01, J12-01, J13-03,
   // §3b). The words a door answers (who pays, M15 to M17, M23, M30, M33, the message to send, a site's state, the go-back
@@ -467,7 +475,7 @@
               SECTIONS: SECTIONS, consentSections: consentSections, tryRunning: tryRunning, offerAgain: offerAgain,
               noSandboxParts: noSandboxParts, U: U, industryWords: industryWords, tryLabel: tryLabel,
               canGoBack: canGoBack, defaultTitle: defaultTitle, versionsShown: versionsShown, logFile: logFile, payWords: payWords, payLabel: payLabel, pubPlan: pubPlan, pubOpensOn: pubOpensOn, pictureType: pictureType, b64: b64, cardBody: cardBody,
-              S: S, siteHow: siteHow, trySites: trySites, tickLive: tickLive };
+              S: S, siteHow: siteHow, trySites: trySites, tickLive: tickLive, instKey: instKey, installState: installState };
   if (typeof module === "object" && module.exports) {
     module.exports = api;
     return;
@@ -1398,31 +1406,38 @@
       sb.appendChild(copyRow(m.message));
       box.appendChild(sb);
     });
-    (s.install_now || []).forEach(function (x) { box.appendChild(vInstallNow(x)); });
+    (s.install_now || []).forEach(function (x) { box.appendChild(vInstallNow(x, s.version)); });
   }
 
-  // MYSITES: Install now on a customer's site where the company holds its own key: the site's own install words first,
-  // then one press, then where it stands until it is installed
-  function vInstallNow(x) {
-    var inst = (data.inst = data.inst || {})[x.site] || {}, box = card(S.installOn.replace("{site}", x.label || x.site));
-    if (x.installed || inst.done) { box.appendChild(el("p", { "class": "hosting-ok", text: inst.words || "Installed." })); return box; }
-    if (inst.words) box.appendChild(p(inst.words));
+  // MYSITES: Install now on a customer's site where the company holds its own key: the site's own install words, read
+  // as the card first draws (as Try does), then one press, then where it stands until it is installed
+  function vInstallNow(x, version) {
+    var k = instKey(x.site, version), inst = (data.inst = data.inst || {})[k] || {};
+    var box = card(S.installOn.replace("{site}", x.label || x.site)), state = installState(inst, x.installed);
     var ask = function (body) {
       return call("POST", "/publish/install", Object.assign({ app: data.appId, site: x.site }, body)).then(function (r) {
-        data.inst[x.site] = r; render();
-        if (r.step === "installing") root.setTimeout(function () { ask({ sha: r.sha || inst.sha || "0".repeat(64) }); }, 3000);
-      }, fail);
+        data.inst[k] = r; render();
+        if (r.step === "installing") root.setTimeout(function () { ask({ sha: inst.sha || r.sha }); }, 3000);
+      }, function (e) { delete data.inst[k]; fail(e); });   // refused: the button comes back with the site's words
     };
-    if (inst.sha && !inst.step) {
+    if (state === "done") { box.appendChild(el("p", { "class": "hosting-ok", text: inst.words || "Installed." })); return box; }
+    if (inst.words) box.appendChild(p(inst.words));
+    if (state === "read") {
+      data.inst[k] = { reading: true };
+      ask({});
+      box.appendChild(p("Reading what installing it changes on " + x.site + "\u2026"));
+    } else if (state === "ask") {
       consentSections(inst).forEach(function (sec) {
         box.appendChild(el("p", {}, el("strong", { text: sec.title })));
         var ul = el("ul", {});
         sec.lines.forEach(function (l) { ul.appendChild(el("li", { text: l })); });
         box.appendChild(ul);
       });
-      box.appendChild(button(S.installNow, function (ev) { ev.target.disabled = true; ask({ sha: inst.sha }); }));
-    } else if (!inst.step) {
-      box.appendChild(button(S.installNow, function (ev) { ev.target.disabled = true; ask({}); }, true));
+      box.appendChild(button(S.installNow, function (ev) {
+        ev.target.disabled = true;
+        data.inst[k] = Object.assign({}, inst, { step: "installing", words: "" });
+        ask({ sha: inst.sha });
+      }));
     }
     return box;
   }
@@ -1839,25 +1854,31 @@
       var parts = noSandboxParts(sites.words);
       box.appendChild(el("p", {}, parts[0], parts[1] ? el("a", { href: "/sandbox.html", text: parts[1] }) : null, parts[2] || null));
     }
-    if (sites.get_sandbox) box.appendChild(el("p", {}, button(S.getSandbox, function (ev) {
+    var hasOwn = (sites.company || []).some(function (x) { return x.yours; });
+    if (sites.get_sandbox && !hasOwn) box.appendChild(el("p", {}, button(S.getSandbox, function (ev) {
       ev.target.disabled = true;   // one press, one sandbox
       call("POST", "/sandbox/get", {}).then(function (r) { if (r.logins) data.shownLogins = r; done(r); },
                                          function (e) { ev.target.disabled = false; fail(e); });
     })));
     var add = card(S.add);
+    var form = data.addForm = data.addForm || { site: "", key: "", secret: "" };   // kept through a refusal's redraw
     var addr = el("input", { type: "text", spellcheck: "false", autocomplete: "off", placeholder: "shop.ivendnext.com", "aria-label": S.address });
     var key = el("input", { type: "text", spellcheck: "false", autocomplete: "off", "aria-label": S.key });
     var sec = el("input", { type: "password", autocomplete: "off", "aria-label": S.secret });
+    [[addr, "site"], [key, "key"], [sec, "secret"]].forEach(function (f) {
+      f[0].value = form[f[1]];
+      f[0].addEventListener("input", function () { form[f[1]] = f[0].value; });
+    });
     add.appendChild(field(S.address, addr));
     add.appendChild(field(S.key, key));
     add.appendChild(field(S.secret, sec, S.keyHint));
     add.appendChild(button(S.addBtn, function (ev) {
       ev.target.disabled = true;
       call("POST", "/sites/add", { site: addr.value.trim(), key: key.value.trim(), secret: sec.value.trim() })
-        .then(done, function (e) { ev.target.disabled = false; fail(e); });
+        .then(function (r) { data.addForm = null; done(r); }, function (e) { ev.target.disabled = false; fail(e); });
     }));
     var out = el("div", {}, box, add);
-    out.appendChild(button("Back to My apps", function () { data.shownLogins = null; go("home"); }, true));
+    out.appendChild(button("Back to My apps", function () { data.shownLogins = null; data.addForm = null; go("home"); }, true));
     return out;
   }
 

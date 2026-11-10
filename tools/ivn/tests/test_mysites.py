@@ -54,8 +54,13 @@ class Stub(B.Stub):
     def publish_status(self, b):
         out = super().publish_status(b)
         if out.get("done"):
-            out["install_now"] = [{"site": ACME_LIVE, "label": "Acme live", "installed": False}]
+            out["install_now"] = [{"site": ACME_LIVE, "label": "Acme live",
+                                   "installed": bool(getattr(self, "publish_status_installed", False))}]
         return out
+
+    def sites_remove(self, b):
+        self.remove_body = b
+        return super().sites_remove(b) if b.get("app") else {**self.sites({}), "removed": b["site"]}
 
     def try_start(self, b):
         self.asked_site = b.get("site")
@@ -71,7 +76,7 @@ class Stub(B.Stub):
                 "words": f"Installed 1.0.0 on {b['site']}." if done else f"Installing on {b['site']}…"}
 
     ROUTES = {**B.Stub.ROUTES, "/v1/sites": sites, "/v1/sites/add": sites_add, "/v1/sites/label": sites_label,
-              "/v1/sites/default": sites_default, "/v1/publish/status": publish_status, "/v1/try": try_start,
+              "/v1/sites/default": sites_default, "/v1/sites/remove": sites_remove, "/v1/publish/status": publish_status, "/v1/try": try_start,
               "/v1/publish/install": publish_install}
 
 
@@ -109,10 +114,25 @@ class MySites(B.Base):
         self.assertEqual((rc, self.stub.labels), (0, {"shop.acme.example": "Acme test"}))
         rc, out = self.run_ivn("sites", "use", "Acme test")
         self.assertEqual(out.splitlines()[0], "Acme test is your default: Try uses it.")
-        rc, out = self.run_ivn("sites", "remove", "shop.acme.example")
-        self.assertEqual((rc, self.stub.removed), (0, "shop.acme.example"))
+        rc, out = self.run_ivn("sites", "remove", "other.acme.example")
+        self.assertEqual((rc, self.stub.remove_body), (0, {"site": "other.acme.example", "mine": True}))
+        out = out.replace("other.acme.example", "shop.acme.example")
         self.assertIn("shop.acme.example is off your list, with the key you added for it. (ivn remove-site stops an app "
                       "reaching a site.)", out)
+
+    def test_removing_one_of_ours_says_it_stays(self):
+        rc, out = self.run_ivn("sites", "remove", "acme.sandbox.ivend.co")
+        self.assertIn("acme.sandbox.ivend.co is still on your list: it is one of our sandboxes", out)
+
+    def test_publish_without_install_installs_nothing_and_a_done_site_is_skipped(self):
+        folder, _ = self.made()
+        self.in_app(folder)
+        self.assertEqual(self.run_ivn("publish", "--to", "Acme live", "--plan", "starter", stdin="1\n")[0], 0)
+        self.assertEqual(self.stub.installs, 0)
+        self.stub.publish_status_installed = True
+        rc, out = self.run_ivn("publish", "--to", "Acme live", "--plan", "starter", "--install", stdin="1\n")
+        self.assertEqual((rc, self.stub.installs), (0, 0))
+        self.assertNotIn("Installing", out)
 
     def test_a_subcommand_without_its_site_says_how(self):
         rc, out = self.run_ivn("sites", "label", "shop.acme.example")
@@ -130,6 +150,7 @@ class MySites(B.Base):
         self.in_app(folder)
         rc, out = self.run_ivn("publish", "--to", "Acme live", "--plan", "starter", "--install", stdin="1\n")
         self.assertEqual(rc, 0, out)
+        self.assertIn("1.0.0 published to Acme live (retail.acme.example).", out)
         self.assertIn("Installing 1.0.0 on retail.acme.example…\n  New in Desk\n    Members: a new list", out)
         self.assertIn("Installed 1.0.0 on retail.acme.example.", out)
 
