@@ -177,6 +177,39 @@
   };
   // the Try button names its site before the press; with none on the list, it opens the list to add one
   function tryLabel(site) { return site ? G.tryOn.replace("{site}", site) : G.addSite; }
+  // MYSITES (J2, KK 11-10): the developer's own list of sites: add any site they administer (with a key made there on
+  // their own user, Try installs in one press), label it by customer, test or live, make one their default, remove one;
+  // and a sandbox of their own in one press. The words a door answers are the hosting's, shown as given (§0b rule 8).
+  var S = {
+    title: "My sites", open: "My sites",
+    why: "The sites you try your apps on, and your customers' sites. Add any iVendNext site you administer, and label it with the customer's name and test or live.",
+    add: "Add a site", address: "Its address", key: "API key", secret: "API secret", addBtn: "Add",
+    keyHint: "Optional. Make the key on that site under your own user, one with System Manager: User, API Access, Generate Keys (not on Administrator: making keys there replaces its secret). With a key, Try installs there in one press; without one, its administrator installs from the shelf key Try shows.",
+    label: "Label", labelHint: "A customer's name and test or live, like Acme test. A label with live, prod or production puts the site on Publish's list, not Try's.",
+    save: "Save", makeDefault: "Make default", isDefault: "your default", remove: "Remove from my list",
+    how: { ours: "Try installs in one press, with our key", own: "Try installs in one press, with your key",
+           shelf: "its administrator installs from the shelf key", live: "a customer's live site: Publish sends it the production copy" },
+    getSandbox: "Get a sandbox", logins: "Show its logins", loginsNote: "Shown once: keep them now.",
+    liveTick: "Your customers' live sites", installNow: "Install now", installOn: "Install now on {site}"
+  };
+  // how Try installs on one of the company's sites, in a line
+  function siteHow(x) { return x.stale ? x.stale : x.live ? S.how.live : S.how[x.route] || S.how.shelf; }
+  // Try's sites: every company site but its customers' live sites (Publish's)
+  function trySites(sites) { return ((sites && sites.company) || []).filter(function (x) { return !x.live; }); }
+  // a live site ticked on Publish joins the customer's site addresses (an empty first box is filled, not kept)
+  function tickLive(list, site, on) {
+    var out = list.filter(function (x) { return x.trim() && x.trim() !== site; });
+    if (on) out.push(site);
+    return out.length ? out : [""];
+  }
+  // Install now's state, per site and version: read the words, ask the one press, installing, or done
+  function instKey(site, version) { return site + "@" + (version || ""); }
+  function installState(inst, installed) {
+    if (installed || (inst && inst.done)) return "done";
+    if (!inst || (!inst.sha && !inst.step && !inst.reading)) return "read";
+    if (inst.step === "installing" || inst.reading) return "wait";
+    return "ask";
+  }
   // EASY3a part 4: Publish and keep it going (spec J5-01, J5-04, J5-16, J5-19, J6-06, J7-01, J7-07, J10-01, J12-01, J13-03,
   // §3b). The words a door answers (who pays, M15 to M17, M23, M30, M33, the message to send, a site's state, the go-back
   // and cancel lines, a key) are the hosting's and are shown as given (§0b rule 8).
@@ -441,7 +474,8 @@
               covers: covers, coversText: coversText, ASK_PAGE: ASK_PAGE, CLAIM_FORM: CLAIM_FORM, T: T,
               SECTIONS: SECTIONS, consentSections: consentSections, tryRunning: tryRunning, offerAgain: offerAgain,
               noSandboxParts: noSandboxParts, U: U, industryWords: industryWords, tryLabel: tryLabel,
-              canGoBack: canGoBack, defaultTitle: defaultTitle, versionsShown: versionsShown, logFile: logFile, payWords: payWords, payLabel: payLabel, pubPlan: pubPlan, pubOpensOn: pubOpensOn, pictureType: pictureType, b64: b64, cardBody: cardBody };
+              canGoBack: canGoBack, defaultTitle: defaultTitle, versionsShown: versionsShown, logFile: logFile, payWords: payWords, payLabel: payLabel, pubPlan: pubPlan, pubOpensOn: pubOpensOn, pictureType: pictureType, b64: b64, cardBody: cardBody,
+              S: S, siteHow: siteHow, trySites: trySites, tickLive: tickLive, instKey: instKey, installState: installState };
   if (typeof module === "object" && module.exports) {
     module.exports = api;
     return;
@@ -515,6 +549,7 @@
     if (!session || !who || !who.company) return;
     if (screen === "people") call("GET", "/people").then(function (r) { data.people = r.people; data.you = r.you; render(); }, fail);
     if (screen === "tokens") call("GET", "/tokens").then(function (r) { data.tokens = r.tokens; render(); }, fail);
+    if (screen === "sites") loadSites();
     if (screen === "home") {
       call("GET", "/handovers").then(function (r) { data.handovers = r; render(); }, function () {});
       call("GET", "/apps").then(function (r) { data.apps = r; render(); }, fail);
@@ -601,7 +636,8 @@
   function vHome() {
     var box = card(who.name || who.company);
     box.appendChild(p("Signed in as " + who.login + (who.role === "owner" ? ", an owner." : ".")));
-    box.appendChild(el("p", {}, button(WORDS.people, function () { go("people"); }, true), " ",
+    box.appendChild(el("p", {}, button(S.open, function () { go("sites"); }, true), " ",
+      button(WORDS.people, function () { go("people"); }, true), " ",
       button(WORDS.tokens, function () { go("tokens"); }, true), " ", button("Sign out", signOut, true)));
     var tail = el("div", {});
     var offers = (data.handovers || {}).offered_to_you || [];
@@ -1158,11 +1194,14 @@
       box.appendChild(el("h3", { text: T.here }));
       here.forEach(function (x) { box.appendChild(el("p", {}, button(tryLabel(x.site), tryOn(x.site), true), " " + (x.state || x.version || "") + " ", added(x.site))); });
     }
-    var others = (sites.company || []).filter(function (x) { return named.indexOf(x.site) < 0; });
+    var others = trySites(sites).filter(function (x) { return named.indexOf(x.site) < 0; });
     if (others.length) {
       box.appendChild(el("h3", { text: here.length ? T.others : T.ours }));
-      others.forEach(function (x) { box.appendChild(el("p", {}, button(tryLabel(x.site), tryOn(x.site), true), " ", added(x.site))); });
+      others.forEach(function (x) {
+        box.appendChild(el("p", {}, button(tryLabel(x.site), tryOn(x.site), true), " " + (x.label ? x.label + " \u00b7 " : "") + siteHow(x) + " ", added(x.site)));
+      });
     }
+    box.appendChild(el("p", {}, button(S.open, function () { data.pick = null; go("sites"); }, true)));
     if (!(sites.company || []).length && sites.words) {
       var parts = noSandboxParts(sites.words);
       box.appendChild(el("p", {}, parts[0], parts[1] ? el("a", { href: "/sandbox.html", text: parts[1] }) : null, parts[2] || null));
@@ -1367,6 +1406,40 @@
       sb.appendChild(copyRow(m.message));
       box.appendChild(sb);
     });
+    (s.install_now || []).forEach(function (x) { box.appendChild(vInstallNow(x, s.version)); });
+  }
+
+  // MYSITES: Install now on a customer's site where the company holds its own key: the site's own install words, read
+  // as the card first draws (as Try does), then one press, then where it stands until it is installed
+  function vInstallNow(x, version) {
+    var k = instKey(x.site, version), inst = (data.inst = data.inst || {})[k] || {};
+    var box = card(S.installOn.replace("{site}", x.label || x.site)), state = installState(inst, x.installed);
+    var ask = function (body) {
+      return call("POST", "/publish/install", Object.assign({ app: data.appId, site: x.site }, body)).then(function (r) {
+        data.inst[k] = r; render();
+        if (r.step === "installing") root.setTimeout(function () { ask({ sha: inst.sha || r.sha }); }, 3000);
+      }, function (e) { delete data.inst[k]; fail(e); });   // refused: the button comes back with the site's words
+    };
+    if (state === "done") { box.appendChild(el("p", { "class": "hosting-ok", text: inst.words || "Installed." })); return box; }
+    if (inst.words) box.appendChild(p(inst.words));
+    if (state === "read") {
+      data.inst[k] = { reading: true };
+      ask({});
+      box.appendChild(p("Reading what installing it changes on " + x.site + "\u2026"));
+    } else if (state === "ask") {
+      consentSections(inst).forEach(function (sec) {
+        box.appendChild(el("p", {}, el("strong", { text: sec.title })));
+        var ul = el("ul", {});
+        sec.lines.forEach(function (l) { ul.appendChild(el("li", { text: l })); });
+        box.appendChild(ul);
+      });
+      box.appendChild(button(S.installNow, function (ev) {
+        ev.target.disabled = true;
+        data.inst[k] = Object.assign({}, inst, { step: "installing", words: "" });
+        ask({ sha: inst.sha });
+      }));
+    }
+    return box;
   }
 
   function go2settings() { screen = "settings"; say(""); openApp(data.appId); render(); }
@@ -1408,6 +1481,15 @@
         box.appendChild(el("p", {}, inp));
       });
       box.appendChild(el("p", {}, button(U.addSite, function () { form.sites.push(""); render(); }, true)));
+      if ((c.live_sites || []).length) {   // MYSITES: the company's customers' live sites, by label, to tick
+        box.appendChild(el("p", {}, el("strong", { text: S.liveTick })));
+        c.live_sites.forEach(function (x) {
+          var tick = el("input", { type: "checkbox" });
+          tick.checked = form.sites.indexOf(x.site) >= 0;
+          tick.addEventListener("change", function () { form.sites = tickLive(form.sites, x.site, tick.checked); render(); });
+          box.appendChild(el("p", {}, el("label", {}, tick, " " + (x.label ? x.label + " \u00b7 " : "") + x.site)));
+        });
+      }
       var own = el("input", { type: "checkbox" });
       own.checked = form.own;
       own.addEventListener("change", function () { form.own = own.checked; render(); });
@@ -1724,6 +1806,82 @@
   }
 
   // J2-04
+  // MYSITES: the company's sites, one list (Try's Change list reads it too)
+  function vSites() {
+    var box = card(S.title), sites = data.sites;
+    box.appendChild(p(S.why));
+    if (!sites) { box.appendChild(p("Reading your sites\u2026")); return box; }
+    var done = function (r) { data.sites = r; data.where = null; data.whereAsked = null; if (r.words) say(r.words); render(); };
+    if (data.shownLogins) {   // a sandbox's logins, kept nowhere but on this screen, until it is left
+      var lg = card(data.shownLogins.site);
+      lg.appendChild(p(data.shownLogins.logins_words || S.loginsNote));
+      var t = el("table", {}, el("thead", {}, el("tr", {}, el("th", { text: "User" }), el("th", { text: "Till ID" }),
+        el("th", { text: "Password" }), el("th", { text: "PIN" }))));
+      var tb = el("tbody", {});
+      (data.shownLogins.logins || []).forEach(function (x) {
+        tb.appendChild(el("tr", {}, el("td", { text: x.user || "" }), el("td", { text: x.username || "" }),
+          el("td", {}, el("code", { text: x.password || "" })), el("td", { text: x.pin || "" })));
+      });
+      t.appendChild(tb); lg.appendChild(t); box.appendChild(lg);
+    }
+    (sites.company || []).forEach(function (x) {
+      var row = el("div", { "class": "hosting-step" });
+      row.appendChild(el("h3", { text: x.label ? x.label + " \u00b7 " + x.site : x.site }));
+      row.appendChild(p(siteHow(x) + (x.site === sites["default"] ? " \u00b7 " + S.isDefault : "")));
+      var lab = el("input", { type: "text", maxlength: "60", spellcheck: "false", "aria-label": S.label + ": " + x.site });
+      lab.value = x.own_label || "";
+      var acts = el("p", {}, lab, " ", button(S.save, function (ev) {
+        ev.target.disabled = true;
+        call("POST", "/sites/label", { site: x.site, label: lab.value.trim() }).then(done, function (e) { ev.target.disabled = false; fail(e); });
+      }, true));
+      if (!x.live && x.site !== sites["default"]) acts.appendChild(el("span", {}, " ", button(S.makeDefault, function (ev) {
+        ev.target.disabled = true;
+        call("POST", "/sites/default", { site: x.site }).then(done, function (e) { ev.target.disabled = false; fail(e); });
+      }, true)));
+      if (!x.ours || x.route === "own") acts.appendChild(el("span", {}, " ", button(S.remove, function (ev) {
+        ev.target.disabled = true;
+        call("POST", "/sites/remove", { site: x.site, mine: true }).then(done, function (e) { ev.target.disabled = false; fail(e); });
+      }, true)));
+      if (x.logins) acts.appendChild(el("span", {}, " ", button(S.logins, function (ev) {
+        ev.target.disabled = true;
+        call("POST", "/sandbox/logins", { site: x.site }).then(function (r) { data.shownLogins = r; done(r); },
+                                                           function (e) { ev.target.disabled = false; fail(e); });
+      })));
+      row.appendChild(acts);
+      box.appendChild(row);
+    });
+    if (!(sites.company || []).length && sites.words) {
+      var parts = noSandboxParts(sites.words);
+      box.appendChild(el("p", {}, parts[0], parts[1] ? el("a", { href: "/sandbox.html", text: parts[1] }) : null, parts[2] || null));
+    }
+    var hasOwn = (sites.company || []).some(function (x) { return x.yours; });
+    if (sites.get_sandbox && !hasOwn) box.appendChild(el("p", {}, button(S.getSandbox, function (ev) {
+      ev.target.disabled = true;   // one press, one sandbox
+      call("POST", "/sandbox/get", {}).then(function (r) { if (r.logins) data.shownLogins = r; done(r); },
+                                         function (e) { ev.target.disabled = false; fail(e); });
+    })));
+    var add = card(S.add);
+    var form = data.addForm = data.addForm || { site: "", key: "", secret: "" };   // kept through a refusal's redraw
+    var addr = el("input", { type: "text", spellcheck: "false", autocomplete: "off", placeholder: "shop.ivendnext.com", "aria-label": S.address });
+    var key = el("input", { type: "text", spellcheck: "false", autocomplete: "off", "aria-label": S.key });
+    var sec = el("input", { type: "password", autocomplete: "off", "aria-label": S.secret });
+    [[addr, "site"], [key, "key"], [sec, "secret"]].forEach(function (f) {
+      f[0].value = form[f[1]];
+      f[0].addEventListener("input", function () { form[f[1]] = f[0].value; });
+    });
+    add.appendChild(field(S.address, addr));
+    add.appendChild(field(S.key, key));
+    add.appendChild(field(S.secret, sec, S.keyHint));
+    add.appendChild(button(S.addBtn, function (ev) {
+      ev.target.disabled = true;
+      call("POST", "/sites/add", { site: addr.value.trim(), key: key.value.trim(), secret: sec.value.trim() })
+        .then(function (r) { data.addForm = null; done(r); }, function (e) { ev.target.disabled = false; fail(e); });
+    }));
+    var out = el("div", {}, box, add);
+    out.appendChild(button("Back to My apps", function () { data.shownLogins = null; data.addForm = null; go("home"); }, true));
+    return out;
+  }
+
   function vPeople() {
     var box = card(WORDS.people);
     box.appendChild(p(WORDS.peopleWhy));
@@ -1808,7 +1966,7 @@
     if (lede && lede.tagName === "P") lede.hidden = !!session;
     if (!session) { view.appendChild(vSignIn()); return; }
     if (!who.company) { view.appendChild(screen === "company" ? vCompany() : vJoin()); return; }
-    var v = { people: vPeople, tokens: vTokens, gallery: g && vGallery, name: g && vName, made: data.made && data.made.words && vMade,
+    var v = { people: vPeople, tokens: vTokens, sites: vSites, gallery: g && vGallery, name: g && vName, made: data.made && data.made.words && vMade,
               settings: vSettings, app: vApp, "try": vTry, publish: vPublish, logs: vLogs }[screen];
     view.appendChild((v || vHome)());
   }

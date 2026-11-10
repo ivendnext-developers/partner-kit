@@ -14,7 +14,7 @@ ivn new acme_bins --from s2
 
 It makes one app from one sample or several.
 
-**Try it on a site.** On My apps, the button names the site: **Try on** *your site*. **Change** picks another of your company's sites, or adds any iVendNext site by its address. In a terminal, `ivn try`, or `ivn try --site <address>`; `ivn sites` lists them. On a site we handed to you or your company, it shows what installing it changes, installs it in one press and tests each connection; on any other site, Try gives you a shelf key, and that site's administrator installs it from **App library** and tests it with **Test connection**. The finished screen says where it went, with **Open Desk** and **Open the till**. Trying is free, and it asks for no key, no plan and no card. No site yet? [Request one](sandbox.md).
+**Try it on a site.** On My apps, the button names the site: **Try on** *your site*. **Change** picks another of your company's sites; **My sites** adds any iVendNext site you administer, labels it and makes it your default. In a terminal, `ivn try`, or `ivn try --site <address or label>`; `ivn sites` lists them and `ivn sites add` adds one. On a site we handed to you or your company, or one you added with an API key made there on your own user, it shows what installing it changes, installs it in one press and tests each connection; on a site added without a key, Try gives you a shelf key, and that site's administrator installs it from **App library** and tests it with **Test connection**. The finished screen says where it went, with **Open Desk** and **Open the till**. Trying is free, and it asks for no key, no plan and no card. No site yet? [Request one](sandbox.md).
 
 **Publish it to a customer.** On My apps, **Publish**, then **To a customer**, or:
 
@@ -22,7 +22,7 @@ It makes one app from one sample or several.
 ivn publish --to retailer.ivendnext.com
 ```
 
-It puts the version on the customer's own shelf and prints the message to send their administrator, with the key in it. An app that CitiXsys hosts connects by itself when the customer installs it. Add a site later with the same command.
+It puts the version on the customer's own shelf and prints the message to send their administrator, with the key in it. An app that CitiXsys hosts connects by itself when the customer installs it. Add a site later with the same command. `--to` takes a label too (`ivn publish --to "Acme live"`), and Publish on My apps lists your sites labelled *live* to tick. On a live site you added with its key on **My sites**, **Install now** (or `--install`) shows what installing it changes and installs it there in one press.
 
 **List it for every retailer.** On My apps, **Publish**, then **To everyone**, or:
 

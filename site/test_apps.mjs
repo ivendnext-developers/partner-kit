@@ -348,6 +348,29 @@ check("EASYLOOK: Cancel stays reachable: a paid try that stopped still has a way
 check("EASYLOOK: a shortlist's gallery does not say every sample is below (A02)", G.ledeNeeds.startsWith("These samples") && src.includes("g.fromNeeds && !g.every ? G.ledeNeeds"));
 check("EASYLOOK: a sandbox with nothing on it is not listed where the app runs (A05)", src.includes("s.customer || s.state || s.version"));
 check("EASYLOOK: Upload is one button, its file box hidden (08)", src.includes('hidden: ""') && src.includes("file.click()"));
+check("MYSITES: My sites says how Try installs on each site, a stale key in the hosting's words", a.siteHow({ route: "ours" }) === a.S.how.ours &&
+  a.siteHow({ route: "own" }) === a.S.how.own && a.siteHow({ route: "shelf" }) === a.S.how.shelf && a.siteHow({ route: "own", live: true }) === a.S.how.live &&
+  a.siteHow({ route: "shelf", stale: "The key for x no longer signs in: add it again." }).startsWith("The key for x"));
+check("MYSITES: Try's list leaves out a customer's live site", a.trySites({ company: [{ site: "a" }, { site: "b", live: true }] }).map((x) => x.site).join() === "a");
+check("MYSITES: ticking a live site on Publish fills the first empty box, unticking takes it out",
+  a.tickLive([""], "shop.acme.example", true).join() === "shop.acme.example" && a.tickLive(["x.example", "shop.acme.example"], "shop.acme.example", false).join() === "x.example" &&
+  a.tickLive(["shop.acme.example"], "shop.acme.example", false).join() === "");
+check("MYSITES: the key's line says where it is made, never on Administrator, and that a key is optional",
+  /User, API Access, Generate Keys/.test(a.S.keyHint) && /not on Administrator/.test(a.S.keyHint) && a.S.keyHint.startsWith("Optional."));
+check("MYSITES: the page's doors, a secret box that does not echo, one press for a sandbox, and logins kept on this screen only",
+  ["/sites/add", "/sites/label", "/sites/default", "/sandbox/get", "/sandbox/logins", "/publish/install"].every((d) => src.includes('"' + d + '"')) &&
+  src.includes('el("input", { type: "password", autocomplete: "off", "aria-label": S.secret })') && src.includes("ev.target.disabled = true;   // one press, one sandbox") &&
+  src.includes("data.shownLogins = null; data.addForm = null; go(\"home\")"));
+check("MYSITES: home opens My sites, and Try's Change list opens it too", src.includes('button(S.open, function () { go("sites"); }, true)') &&
+  src.includes('button(S.open, function () { data.pick = null; go("sites"); }, true)'));
+check("MYSITES: Install now shows the site's own words before the press", src.includes("consentSections(inst).forEach") && src.includes("ask({ sha: inst.sha })"));
+check("MYSITES: Install now's state is per site and version: words read first, one press, then installing, then done",
+  a.instKey("s", "1.0.1") !== a.instKey("s", "1.0.0") && a.installState(undefined, false) === "read" &&
+  a.installState({ reading: true }) === "wait" && a.installState({ sha: "a", sections: [] }) === "ask" &&
+  a.installState({ step: "installing" }) === "wait" && a.installState({ done: true }) === "done" && a.installState({}, true) === "done");
+check("MYSITES: a refused Install now brings its button back, and a refused Add keeps what was typed",
+  src.includes("function (e) { delete data.inst[k]; fail(e); }") && src.includes("data.addForm = data.addForm ||"));
+check("MYSITES: Get a sandbox is offered only until the person has one of their own", src.includes("sites.get_sandbox && !hasOwn"));
 check("no inline style on the page's elements (the policy has no unsafe-inline)", !/\bstyle:\s*"/.test(src));
 check("P-04: /hosting forwards to My apps", readFileSync(path.join(out, "hosting.html"), "utf8").includes("url=apps.html") &&
   !existsSync(path.join(out, "assets/hosting.js")));

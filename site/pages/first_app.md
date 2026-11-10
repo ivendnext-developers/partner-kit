@@ -29,7 +29,7 @@ From one of the kit's samples to your customer's App library in six steps. This 
 - **`ivn doctor`** says on one screen which Python and git it found and whether they are new enough, whether this computer is signed in and as whom, the sites you can try on, and the one command to run next. `ivn update` brings the kit and `ivn` up to date.
 - **A site** to try your app on: an iVendNext site of your own, full of made-up demo data, which we host for you. That is a sandbox. [Request a sandbox](sandbox.md). It is ready for you when it arrives: there is no key to paste. It needs iVendNext POS 2.1.0.679 or later, and so does your customer's site: an earlier build refuses a workflow on the customer's own record type, and `ivn try` says so. [Ask us](feedback.md#open-a-form) to move your sandbox.
 
-  Any other iVendNext site works too, a second sandbox or a customer's test site: `ivn sites` and **Change** on My apps list your company's sites, and Try adds one by its address.
+  Any other iVendNext site you administer works too: a second sandbox or a customer's test site. Add it on **My sites** (on My apps, or `ivn sites add <address>`) with an API key you make there on your own user, one with System Manager (*User*, *API Access*, *Generate Keys*; never on Administrator), and Try installs there in one press. Add your customer's live site for Publish, and label it *live* as you add it: Try never goes there. Label each site with the customer's name and *test* or *live*, and pick your default. Once your company has one of our sandboxes, **Get a sandbox** on **My sites** gives you one of your own in one press.
 
 **Rather do it by hand?** Clone the kit and put `ivn` on your PATH for good (zsh shown; for bash write to `~/.bashrc`), then open a new terminal window:
 
@@ -134,7 +134,7 @@ On My apps, **Try on** *your sandbox*: the button names the site. In a terminal:
 ivn try
 ```
 
-It names the site first, uploads your folder, shows what installing it changes, installs it on your sandbox and tests any connection it has. The finished screen says **Installed on** the site, with **Open Desk** and **Open the till**. **Change** (or `ivn try --site`) picks another site or adds one by its address; on a site we did not hand you, its administrator installs it from the shelf key Try shows, in **App library**. Trying is free. It asks you nothing: no key, no plan, no card.
+It names the site first, uploads your folder, shows what installing it changes, installs it on your sandbox and tests any connection it has. The finished screen says **Installed on** the site, with **Open Desk** and **Open the till**. **Change** (or `ivn try --site`, which takes a label too, such as `ivn try --site "Acme test"`) picks another of your sites; **My sites** adds one, labels it and makes it your default (`ivn sites use`). On a site you added with its key, Try installs in one press; on one you added without a key, its administrator installs it from the shelf key Try shows, in **App library**. A site labelled *live* (or *prod* or *production*) is your customer's live site: Try does not go there, Publish does. Trying is free. It asks you nothing: no key, no plan, no card.
 
 Now use it. Your sandbox came with an administrator's login, a manager's and two cashiers'. As the administrator, make a **Supplier** if there is none, and on each person's **User** record give *Purchase User* to the one who will be your buyer and *Purchase Manager* to your approver. Sign in as the buyer and raise a Purchase Order over the amount; then sign in as the approver, open it, and under **Actions** press **Approve**. It reads *Approved* and it is submitted. A sandbox sends no mail, so you will not see the mail.
 
@@ -148,7 +148,9 @@ On My apps, **Publish**, then **To a customer**. In a terminal:
 ivn publish --to retailer.ivendnext.com
 ```
 
-Publishing S11 is free. It puts the version on your customer's shelf and prints the message to send their administrator, with the key in it. Nothing changes on their site until they install it. If your app has a service we host, this is where its plan starts: see below.
+`--to` takes a label too: `ivn publish --to "Acme live"`. On My apps, Publish lists your sites labelled *live* to tick.
+
+Publishing S11 is free. It puts the version on your customer's shelf and prints the message to send their administrator, with the key in it. Nothing changes on their site until they install it. If you added that site with its key on **My sites**, **Install now** (or `ivn publish --to "Acme live" --install`) shows what installing it changes and installs it there in one press. If your app has a service we host, this is where its plan starts: see below.
 
 ## The customer installs it
 

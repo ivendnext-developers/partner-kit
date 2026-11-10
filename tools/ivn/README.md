@@ -9,8 +9,12 @@ ivn doctor
 ivn login
 ivn new acme_store_rules
 ivn new acme_member_till --from s23 --from s22
-ivn try
-ivn publish --to retailer.ivendnext.com
+ivn sites add test.acme.example
+ivn sites label test.acme.example "Acme test"
+ivn try --site "Acme test"
+ivn sites add live.acme.example
+ivn sites label live.acme.example "Acme live"
+ivn publish --to "Acme live" --install
 ivn publish --public
 ```
 
@@ -29,10 +33,14 @@ ivn publish --public
 | `ivn add <sample>` · `ivn take <sample>` | Adds a sample · takes a sample's newer version, keeping what you changed. |
 | `ivn secret <NAME>` | Sets one of the app's own settings. |
 | `ivn secrets` | Prints each connection point's secret on the site you last tried on, or `--site <address>`. On a site we did not hand you, it points you to **Copy secret** on that site. |
-| `ivn sites` | Lists your company's sites: pick any with `ivn try --site`, or add one by its address. |
-| `ivn try` | Names the site first (`--site <address>`, else the one you last tried on), uploads a changed folder, shows what installing it changes, installs it there and tests each connection point. On a site we did not hand you, it prints the shelf key that site's administrator pastes in **App library**. It asks nothing, and it is free. |
+| `ivn sites` | Lists your company's sites (*My sites* on My apps): each one's label, address and how Try installs there. |
+| `ivn sites add <address>` | Adds a site you administer. It asks for an API key and secret you make there on your own user (*User*, *API Access*, *Generate Keys*; never on Administrator), without echo; a build server sets `IVN_SITE_KEY` and `IVN_SITE_SECRET`. With the key, Try installs there in one press; press Enter for none, and its administrator installs from the shelf key. |
+| `ivn sites use <address or label>` | Makes it your default: `ivn try` goes there. |
+| `ivn sites label <address> "<label>"` | Names it, such as `"Acme test"` or `"Acme live"`. A label with *live*, *prod* or *production* makes it a customer's live site: Publish sends it the production copy, and Try does not go there. `""` takes the label off. |
+| `ivn sites remove <address>` | Takes it off your list, and deletes the key you added for it. (`ivn remove-site` is different: it stops an app's new versions reaching a site.) |
+| `ivn try` | Names the site first (`--site <address or label>`, else your default), uploads a changed folder, shows what installing it changes, installs it there and tests each connection point. On a site added without a key, it prints the shelf key that site's administrator pastes in **App library**. It asks nothing, and it is free. |
 | `ivn test` · `ivn test --local` | Tests each connection point again · on this laptop, with the test secret in `.env.local`. |
-| `ivn publish --to <site>` | Sends it to a customer's sites, and prints the message for their administrator. With no `--to`, to every site it is on. `--own`: the sites are your own company's. |
+| `ivn publish --to <site or label>` | Sends it to a customer's sites, and prints the message for their administrator. With no `--to`, to every site it is on. `--own`: the sites are your own company's. `--install`: on a customer's site where you added its key, it prints what installing it changes and installs it there now. |
 | `ivn publish --public` | Lists it for every retailer. The card's fields go in `app.json`'s `card`: you are asked once. |
 | `ivn status` · `ivn logs` | Where it stands, and any newer sample version · what its service logged. |
 | `ivn rollback <version>` | Publishes an earlier version's content as a new, higher version. |
