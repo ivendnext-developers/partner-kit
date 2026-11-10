@@ -1872,20 +1872,22 @@
                                          function (e) { ev.target.disabled = false; fail(e); });
     })));
     var add = card(S.add);
-    var form = data.addForm = data.addForm || { site: "", key: "", secret: "" };   // kept through a refusal's redraw
+    var form = data.addForm = data.addForm || { site: "", key: "", secret: "", label: "" };   // kept through a refusal's redraw
     var addr = el("input", { type: "text", spellcheck: "false", autocomplete: "off", placeholder: "shop.ivendnext.com", "aria-label": S.address });
     var key = el("input", { type: "text", spellcheck: "false", autocomplete: "off", "aria-label": S.key });
     var sec = el("input", { type: "password", autocomplete: "off", "aria-label": S.secret });
-    [[addr, "site"], [key, "key"], [sec, "secret"]].forEach(function (f) {
+    var lab = el("input", { type: "text", maxlength: "60", spellcheck: "false", placeholder: "Acme test", "aria-label": S.label });
+    [[addr, "site"], [key, "key"], [sec, "secret"], [lab, "label"]].forEach(function (f) {
       f[0].value = form[f[1]];
       f[0].addEventListener("input", function () { form[f[1]] = f[0].value; });
     });
     add.appendChild(field(S.address, addr));
     add.appendChild(field(S.key, key));
     add.appendChild(field(S.secret, sec, S.keyHint));
+    add.appendChild(field(S.label, lab, S.labelHint));   // a customer's live site is labelled live as it is added
     add.appendChild(button(S.addBtn, function (ev) {
       ev.target.disabled = true;
-      call("POST", "/sites/add", { site: addr.value.trim(), key: key.value.trim(), secret: sec.value.trim() })
+      call("POST", "/sites/add", { site: addr.value.trim(), key: key.value.trim(), secret: sec.value.trim(), label: lab.value.trim() })
         .then(function (r) { data.addForm = null; done(r); }, function (e) { ev.target.disabled = false; fail(e); });
     }));
     var out = el("div", {}, box, add);
