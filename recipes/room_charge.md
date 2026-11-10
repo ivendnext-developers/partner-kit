@@ -10,7 +10,7 @@ A guest at the hotel's restaurant signs the bill and says "put it on my room". T
 
 ## How it works
 
-1. The server types **Room** and **Guest** (the surname) on the check's *Sale details*, and any **Tip**.
+1. The server types **Room** and **Guest** (the surname) on the check's *Sale details*. A tip goes on the till's tip chip at Pay, or, on a POS build before `2.1.0.697`, in the **Tip** detail.
 2. At **Checkout**, the check asks the hotel system for that guest. A match answers `allow` and fills the reservation as **Folio**. A room it cannot confirm, or none at all, answers `allow` with the Room Charge tile dimmed and the reason shown, so the guest can still pay by card. The hotel system down with a room typed answers `ask`.
 3. The sale books on the *Custom* tile, on its own clearing account.
 4. The worker reads `sale.booked`, `return.booked` and `sale.cancelled` from the event feed, and posts the sale's own Room Charge row to the folio.
@@ -54,11 +54,11 @@ Read your hotel system's own "do not post" flag: some do not enforce it on the A
 
 ## Limits
 
-- **The tip** is a fourth detail, posted to the folio on the hotel's tip code. The till takes a tip only on a cash or card leg, so iVendNext books nothing for it and its tips report does not see it.
+- **The tip** reaches the folio once, on the hotel's tip code. From POS build `2.1.0.697` the server rings it on the till's tip chip: the till books it from the clearing account to Tips payable, the close names it, and the worker posts that leg's own tip, read from the leg's tip journal. A **Tip** typed in the detail is posted only when no chip tip was rung, so the guest is never charged twice. On a split, a card payer's tip stays on the card.
 - **The tile is online only,** as the till's Custom tiles are. Offline, the server takes cash or a card, or writes the room on a paper slip for the front desk.
 - **The hotel call** is capped at 1.5 seconds, inside the check's 3.
 - **One room per sale.** A sale carries one Room and one Guest, and all its Room Charge rows go to that folio. When a table splits across rooms, ring each room as its own sale.
-- **The clearing entry** takes the report by *Posted on*, so a charge that waited overnight is in the next one.
+- **The clearing entry** takes the report by *Posted on*, so a charge that waited overnight is in the next one, and its amount is the total of the **Clearing** column: each charge plus a tip rung on the till's tip chip, which is what the till put on the clearing account. A tip typed in the *Tip* detail reaches the folio but was never in iVendNext's books, so it is not in *Clearing*.
 - **The guest's surname stays on the sale** as a sale detail, so the auditor can settle a dispute.
 - **The Folio detail** carries the room and guest it was found for, such as `R-1001 (412 Smith)`. A room corrected after the check is looked up again, and never posted to the first guest.
 - A store the settings do not name is left alone.

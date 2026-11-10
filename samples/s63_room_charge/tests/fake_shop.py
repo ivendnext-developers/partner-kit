@@ -76,8 +76,14 @@ def hotel_shop(system="Simulator", tip_code="TIP", store=STORE) -> FakeShop:
 
 
 def sale(t: FakeShop, name: str, room="412", guest="Smith", folio="R-1001 (412 Smith)", paid=(("Room Charge", 120.0),), tip="",
-         is_return=0, against=None, store=STORE):
+         is_return=0, against=None, store=STORE, chip=()):
+    """``chip``: the tips the till's tip chip booked, ((mode, amount), ...): one tip journal per tipped leg, as POS tip.py
+    writes them (the sale, "Tip", the mode), and their sum on the sale's ``custom_mpos_tip_amount``."""
     details = [("Room", room), ("Guest", guest), ("Folio", folio), ("Tip", tip)]
+    for n, (mode, amount) in enumerate(chip):
+        t.put("Journal Entry", f"JV-{name}-{n}", docstatus=1, custom_reference_1=name, custom_reference_2="Tip",
+              custom_reference_3=mode, total_debit=amount)
     return t.put("POS Invoice", name, docstatus=1, is_return=is_return, return_against=against, set_warehouse=store, currency="USD",
                  posting_date="2026-11-08", payments=[{"mode_of_payment": m, "amount": a} for m, a in paid],
+                 custom_mpos_tip_amount=round(sum(a for _m, a in chip), 2),
                  custom_pos_invoice_sale_attribute=[{"sale_attribute": k, "attribute_value": v} for k, v in details if v])

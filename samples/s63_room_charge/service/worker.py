@@ -33,6 +33,8 @@ LOST = "Sent, and the hotel system never answered. Check the folio: post it by h
 STOPPED = "We stopped while sending this. Check the folio: post it by hand if it isn't there."
 CANCELLED = "Cancelled in Desk. The cancel took it off the clearing account: no entry, unless this sale is in a day's clearing entry; then reverse that part."
 DOWN = "The hotel system isn't answering. We keep trying."
+TIP_STAYS = " Its tip, rung on the till, stays booked from the clearing account to Tips payable: settle that part."
+TIP_JOURNAL = "Tip"          # the till's tip journals: custom_reference_1 the sale, _2 "Tip", _3 the paying mode (POS tip.py)
 
 
 class Pass:
@@ -83,12 +85,29 @@ class Pass:
             raise H.HotelRefused("No room and guest on the sale.")
         return hotel.find(row["room"], row["guest"])
 
+    def leg_tip(self, inv: dict, mode: str) -> float | None:
+        """The tip the till booked on this sale's Room Charge leg with its tip chip: the sum of that leg's own tip journals
+        (one per tipped leg). 0 when the sale carries no chip tip or no Room Charge share, so such a sale reads no journal.
+        The read is the app's own role's (``role_rights``: read on Journal Entry, from 0.1.3). A site still on an earlier
+        package refuses it (403) until its manager updates the app: None, and the sale then posts as 0.1.2 did, with the
+        *Tip* detail, so nothing waits on the update."""
+        if not float(inv.get("custom_mpos_tip_amount") or 0) or not rooms.share_of(inv, mode):
+            return 0.0
+        try:
+            rows = self.t.list("Journal Entry", [["custom_reference_1", "=", inv["name"]], ["custom_reference_2", "=", TIP_JOURNAL],
+                                                 ["custom_reference_3", "=", mode], ["docstatus", "=", 1]], ["total_debit"])
+        except ShopError as e:
+            if e.status == 403:
+                return None
+            raise
+        return round(sum(float(r.get("total_debit") or 0) for r in rows), 6)
+
     def booked(self, name: str) -> None:
         inv = self.t.get("POS Invoice", name)
         if not inv or inv.get("docstatus") != 1:
             return
         s = self.stores.get(inv.get("set_warehouse") or "")
-        work = rooms.work_of(inv, s) if s else None
+        work = rooms.work_of(inv, s, self.leg_tip(inv, s["mode"])) if s else None
         if not work:
             return
         try:
@@ -100,6 +119,8 @@ class Pass:
     def cancelled(self, name: str) -> None:
         row = self.t.get(self.table, name)
         said = CANCELLED
+        if row and float(row.get("clearing") or 0) > float(row.get("amount") or 0):
+            said += TIP_STAYS
         if row:
             if row["status"] == "Posted":
                 refs = ", ".join(r for r in (row.get("charge_reference"), row.get("tip_reference")) if r)
@@ -109,8 +130,10 @@ class Pass:
             return self.write(name, "Refused", message=said)
         inv = self.t.get("POS Invoice", name)
         s = self.stores.get((inv or {}).get("set_warehouse") or "")
-        work = rooms.work_of(inv, s) if inv and s else None
+        work = rooms.work_of(inv, s, self.leg_tip(inv, s["mode"])) if inv and s else None
         if work:
+            if work["clearing"] > work["amount"]:
+                said += TIP_STAYS
             try:
                 self.t.insert({"doctype": self.table, **work, "status": "Refused", "message": said})
                 self.count["refused"] += 1

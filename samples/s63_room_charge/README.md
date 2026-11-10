@@ -23,7 +23,7 @@ More: the [recipe](../../recipes/room_charge.md).
 
 **The customer sets:** the *Room Charge* mode and its clearing account first (the restaurant docs show how), then one row per store on *PP RMC Settings*: hotel system, connection, charge code, tip code.
 
-**The app's role needs:** nothing from the retailer's administrator. The install makes *PP RMC Integration* and the app's own user, and gives the role read on POS Invoice, which the feed follows. Give the night auditor the role *PP RMC Auditor*. Only the System Manager changes the hotel system's settings, unless the retailer gives that right to someone else.
+**The app's role needs:** nothing from the retailer's administrator. The install makes *PP RMC Integration* and the app's own user, and gives the role read on POS Invoice, which the feed follows, and read on Journal Entry (`role_rights`), where the till books a tip rung on the Room Charge leg. Give the night auditor the role *PP RMC Auditor*. Only the System Manager changes the hotel system's settings, unless the retailer gives that right to someone else.
 
 **Who carries the hosting plan's charge:** the app is free to install. Its one-minute schedule needs a hosting plan. CitiXsys carries that plan's charge for the listed app; you carry it for your own copy.
 
@@ -51,6 +51,10 @@ HOTEL_SIM_URL=http://127.0.0.1:8161 python3 service/app.py
 - Close the till day when you are done.
 
 ## Versions
+
+### 0.1.3
+
+- A tip the server rings with the till's tip chip on a Room Charge leg reaches the guest's folio once. The app posts that leg's own tip, read from the till's tip journal for the leg, else the *Tip* sale detail, never both. On a split, a card payer's tip stays on the card. Each charge's new **Clearing** figure is what it put on the clearing account (the charge plus a chip tip); the night auditor's day entry is that column's total, and a cancel or a refused return of a chip-tipped sale says the tip stays booked. The app's role gains read on Journal Entry: the update asks the manager's consent again, naming *Rights for its role … on Journal Entry: read*. Until a site takes the update, its sales post the *Tip* detail as 0.1.2 did. **Needs POS build `2.1.0.697` or later** for the tip chip on Room Charge; on an earlier build the *Tip* detail works as before.
 
 ### 0.1.2
 

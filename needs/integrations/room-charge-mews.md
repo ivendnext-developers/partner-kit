@@ -21,7 +21,7 @@ Nothing new: the sample ships this adapter. The server types the room and surnam
 - A posted item cannot be cancelled: a return is a negative line. Confirm that your property allows rebates.
 - An order has no idempotency key: a call whose answer was lost goes to the auditor, never again to Mews.
 - Room numbers may hold letters; the room is matched as typed.
-- The tip is a separate line on the hotel's tip code. iVendNext books nothing for it, so the till's tips report does not see it.
+- The tip is a separate line on the hotel's tip code. From POS build `2.1.0.697` iVendNext books a tip rung on the till's tip chip too (Tips payable and the day's close); the line on the folio is the guest's bill for it.
 
 ## Tell the customer
 Your server types the room and surname, a wrong room is stopped at Pay, and the charge reaches the guest's Mews bill within about a minute. Your night auditor reads one list of anything Mews refused.

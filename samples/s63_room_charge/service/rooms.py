@@ -125,19 +125,38 @@ def share_of(inv: dict, mode: str) -> float:
     return round(sum(float(p.get("amount") or 0) for p in inv.get("payments") or [] if p.get("mode_of_payment") == mode), 6)
 
 
-def work_of(inv: dict, s: dict) -> dict | None:
+def work_of(inv: dict, s: dict, leg_tip: float | None = 0.0) -> dict | None:
     """The row a Room Charge sale or return writes, or None when it has no Room Charge row. A return posts no tip: the tip
-    stays posted, as the till's own tips do."""
+    stays posted, as the till's own tips do.
+
+    The tip is ONE of two, never both: ``leg_tip``, the tip the till booked on this sale's Room Charge leg (its tip chip,
+    read by the worker from that leg's own tip journal), else the *Tip* sale detail the server typed, and the detail only
+    on a sale with no chip tip at all (a detail typed beside a card payer's chip tip is that payer's). On a split, a card
+    payer's tip is on the card's journal, so it never reaches the guest's folio.
+
+    ``clearing`` is what the sale put on the Room charges clearing account: the Room Charge row plus the leg's chip tip
+    (the till books that tip from the clearing account to Tips payable). The auditor's day entry is its total. A typed
+    detail tip is never in iVendNext's books, so it is not in ``clearing``. ``leg_tip`` None: the site has not given the
+    app its journal read yet (an earlier package), so the sale posts the detail as 0.1.2 did."""
     amount = share_of(inv, s["mode"])
     if not amount:
         return None
     d, is_return = details_of_sale(inv), bool(inv.get("is_return"))
     room, guest = d.get(ROOM, ""), d.get(GUEST, "")
-    tip = 0.0 if is_return else float(tip_of(d.get(TIP, ""), 3) or 0)
+    unread = leg_tip is None
+    leg_tip = 0.0 if is_return or unread else round(float(leg_tip or 0), 6)
+    if is_return:
+        tip = 0.0
+    elif leg_tip:
+        tip = leg_tip
+    elif float(inv.get("custom_mpos_tip_amount") or 0) and not unread:
+        tip = 0.0
+    else:
+        tip = float(tip_of(d.get(TIP, ""), 3) or 0)
     fits = folio_fits(d.get(FOLIO, ""), room, guest)
     return {"sale": inv["name"], "status": "Sending", "day": inv.get("posting_date"), "store": s["store"], "room": room,
             "guest": guest, "folio": folio_id(d[FOLIO]) if fits else "", "currency": inv.get("currency"), "amount": amount,
-            "tip": tip, "return_of": inv.get("return_against") if is_return else None}
+            "tip": tip, "clearing": round(amount + leg_tip, 6), "return_of": inv.get("return_against") if is_return else None}
 
 
 def lines_of(row: dict, s: dict) -> list[dict]:
@@ -154,5 +173,8 @@ def return_gate(original: dict | None) -> tuple[str, str]:
     if status in ("Waiting", "Sending"):
         return "Waiting", "Waiting for its sale to reach the folio first."
     if status == "Refused":
-        return "Refused", "Its sale is on the auditor's list. If it is on the folio, take this amount off there. On the clearing account the sale and its return cancel out: no entry."
+        why = "Its sale is on the auditor's list. If it is on the folio, take this amount off there. On the clearing account the sale and its return cancel out: no entry."
+        if float(original.get("clearing") or 0) > float(original.get("amount") or 0):
+            why += " Its tip, rung on the till, stays booked from the clearing account to Tips payable: settle that part."
+        return "Refused", why
     return "go", ""
