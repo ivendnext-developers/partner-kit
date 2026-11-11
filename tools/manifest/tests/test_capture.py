@@ -362,8 +362,8 @@ class Retail(unittest.TestCase):
 
     def test_a_connections_link_and_what_customize_form_makes_that_no_kind_carries(self):
         self.assertEqual(self.e["links"], [{"doctype": "Customer", "link_doctype": "Sales Order", "link_fieldname": "customer",
-                                            "group": "Orders", "_from": ("DocType Link", "Customer: Sales Order")}])
-        self.assertEqual(self.left[("DocType Link", "Item: Sales Order")], C.WORDS["child_link"])
+                                            "group": "Orders", "_from": ("DocType Link", "Customer: Sales Order (customer)")}])
+        self.assertEqual(self.left[("DocType Link", "Item: Sales Order (item_code)")], C.WORDS["child_link"])
         self.assertIn("list mark", self.left[("DocType State", "Sales Order: Waiting")])
         self.assertIn("own Connections links", self.left[("Property Setter", "Customer-lk9-hidden")])  # not a setter on Customer
         self.assertIn("order of Customer's Connections links", self.left[("Property Setter", "Customer-main-links_order")])
@@ -403,6 +403,31 @@ class Parked(unittest.TestCase):
         self.assertFalse(any("custom_approval_note is" in x for x in r["renamed"]))  # said only for what is written
         m2, _ = C.write(BASE, r, skip=["Role/Store Approver"])
         self.assertEqual(m2["workflows"][0]["states"][1]["allow_edit"], "Store Approver")
+
+    def test_an_untick_on_one_record_type_keeps_the_same_name_written_on_another(self):  # ⭐ reviewer-leaf
+        site = {"Custom Field": [{"name": f"{dt}-custom_store", "owner": ME, "dt": dt, "fieldname": "custom_store",
+                                  "fieldtype": "Data", "is_system_generated": 0} for dt in ("Purchase Order", "Sales Order")],
+                "Print Format": [{"name": f"{dt} store", "owner": ME, "standard": "No", "doc_type": dt,
+                                  "html": "<p>{{ doc.custom_store }}</p>"} for dt in ("Purchase Order", "Sales Order")]}
+        r = C.capture(site, [], BASE, "x")
+        m, ids = C.write(BASE, r, skip=["Custom Field/Sales Order-custom_store"])
+        self.assertEqual(validate(m), [])
+        self.assertEqual([(c["dt"], c["fieldname"]) for c in m["custom_fields"]], [("Purchase Order", "acme_rules_store")])
+        html = {pf["doc_type"]: pf["html"] for pf in m["print_formats"]}
+        self.assertEqual(html, {"Purchase Order": "<p>{{ doc.acme_rules_store }}</p>",
+                                "Sales Order": "<p>{{ doc.custom_store }}</p>"})  # the customer's own field there
+
+    def test_an_untick_of_a_field_a_kept_entry_writes_leaves_that_entry_out_in_the_checkers_words(self):
+        site = {"Custom Field": [{"name": "Purchase Order-custom_told", "owner": ME, "dt": "Purchase Order",
+                                  "fieldname": "custom_told", "fieldtype": "Check", "is_system_generated": 0}],
+                "Notification": [{"name": "PO told", "owner": ME, "is_standard": 0, "enabled": 1,
+                                  "document_type": "Purchase Order", "event": "New", "channel": "System Notification",
+                                  "subject": "x", "set_property_after_alert": "custom_told", "property_value": "1",
+                                  "recipients": [{"receiver_by_role": "Purchase User"}]}]}
+        r = C.capture(site, [], BASE, "x")
+        m, ids = C.write(BASE, r, skip=["Custom Field/Purchase Order-custom_told"])
+        self.assertEqual((ids, validate(m)), ([], []))
+        self.assertIn("set_property_after_alert", {x["name"]: x["reason"] for x in r["left_out"]}["PO told"])
 
     def test_a_long_name_is_shortened_to_64(self):
         long = "custom_" + "a" * 57  # 64, as Desk allows

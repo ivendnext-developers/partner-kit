@@ -458,7 +458,7 @@ def _retail(records: dict, add, out: list, site: str) -> None:
     for r in records.get("Retail POS Theme", []):
         out.append({"type": "Retail POS Theme", "name": r["name"], "reason": WORDS["theme"].format(name=r["name"])})
     for r in records.get("DocType Link", []):
-        name = f"{r.get('parent')}: {r.get('link_doctype')}"
+        name = f"{r.get('parent')}: {r.get('link_doctype')} ({r.get('link_fieldname')})"
         if r.get("is_child_table") or r.get("table_fieldname"):
             out.append({"type": "DocType Link", "name": name, "reason": WORDS["child_link"]}); continue
         add("links", {"doctype": r.get("parent"), "link_doctype": r.get("link_doctype"),
@@ -574,6 +574,14 @@ def capture(records: dict, installs: list, base: dict, site: str = "", others=No
     raw, left = to_entries(made_by_person(records, installs), site)
     others = others_of(others, records)
     entries, renamed = rename_to(raw, base["prefix"], others)
+    entries = _checked(entries, base, left)
+    items = [{"id": f"{e['_from'][0]}/{e['_from'][1]}", "kind": kind, "type": e["_from"][0], "name": e["_from"][1]}
+             for kind, rows in entries.items() for e in rows]
+    return {"entries": entries, "items": items, "left_out": left, "renamed": renamed, "_raw": raw, "_others": others}
+
+
+def _checked(entries: dict, base: dict, left: list) -> dict:
+    """``entries`` less what the checker or the install refuses, each added to ``left`` in their words."""
     for _ in range(50):  # each pass leaves out what the checker or the install refuses, in their words
         m = _manifest(base, entries)
         bad = [*validate(m), *site_refusals(m)]
@@ -592,9 +600,7 @@ def capture(records: dict, installs: list, base: dict, site: str = "", others=No
             gone = entries[kind].pop(i)
             left.append({"type": gone["_from"][0], "name": gone["_from"][1], "reason": why})
         entries = {k: v for k, v in entries.items() if v}
-    items = [{"id": f"{e['_from'][0]}/{e['_from'][1]}", "kind": kind, "type": e["_from"][0], "name": e["_from"][1]}
-             for kind, rows in entries.items() for e in rows]
-    return {"entries": entries, "items": items, "left_out": left, "renamed": renamed, "_raw": raw, "_others": others}
+    return entries
 
 
 def peek(records: dict, installs: list, site: str = "", others=None) -> dict:
@@ -635,11 +641,18 @@ def write(base: dict, result: dict, skip=(), only=()) -> tuple[dict, list]:
     if "_raw" in result:  # renamed again from the site's names, with what is not written keeping its own
         ids = {e["_from"] for rows in chosen.values() for e in rows}
         raw = {k: [e for e in rows if e["_from"] in ids] for k, rows in result["_raw"].items()}
-        keep = {e.get("fieldname") for e in result["_raw"].get("custom_fields") or [] if e["_from"] not in ids} \
-            | {e.get("role") for e in result["_raw"].get("role_rights") or [] if e["_from"] not in ids}
-        renamed, result["renamed"] = rename_to({k: v for k, v in raw.items() if v}, base["prefix"],
-                                               result.get("_others"), keep - {None})
-        chosen = renamed
+        written = {e.get("fieldname") for e in raw.get("custom_fields") or []}
+        others, keep = {k: set(v) for k, v in (result.get("_others") or {}).items()}, set()
+        for e in result["_raw"].get("custom_fields") or []:
+            if e["_from"] in ids:
+                continue
+            if e.get("fieldname") in written:  # the same name written on another record type: theirs only about this one
+                others.setdefault(e.get("fieldname"), set()).add(e.get("dt"))
+            else:
+                keep.add(e.get("fieldname"))
+        keep |= {e.get("role") for e in result["_raw"].get("role_rights") or [] if e["_from"] not in ids}
+        renamed, result["renamed"] = rename_to({k: v for k, v in raw.items() if v}, base["prefix"], others, keep - {None})
+        chosen = _checked(renamed, base, result["left_out"])  # an entry that writes a field not written is left out
     m = copy.deepcopy(base)
     for kind, rows in chosen.items():
         key = _key_of(kind)
