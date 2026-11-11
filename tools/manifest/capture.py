@@ -662,10 +662,18 @@ def write(base: dict, result: dict, skip=(), only=()) -> tuple[dict, list]:
     return m, [f"{e['_from'][0]}/{e['_from'][1]}" for rows in chosen.values() for e in rows]
 
 
+# what a second capture replaces an entry by: the record's own identity, as the install keys it (`extension_package.KEYS`),
+# so an entry whose record type or table changed on the site replaces the one before, never stands beside it
+KEY_OF = {"custom_fields": ("dt", "fieldname"), "property_setters": ("doc_type", "field_name", "property"),
+          "list_settings": ("doctype",), "naming_rules": ("document_type", "prefix"),
+          "links": ("doctype", "link_doctype", "link_fieldname"), "scan_sources": ("source_name",),
+          "label_layouts": ("label_name",), "list_marks": ("record_type", "label"), "register_books": ("book",),
+          "save_rules": ("rule_name",), "translations": ("language",), "role_rights": ("doctype", "role"),
+          "field_rules": ("theme", "surface", "field", "action", "language")}
+
+
 def _key_of(kind: str) -> tuple:
-    from validate import KEYED  # noqa: PLC0415
-    return {"property_setters": ("doc_type", "field_name", "property"),
-            "field_rules": ("theme", "surface", "field", "action", "language")}.get(kind) or KEYED.get(kind, ("name",))[:2]
+    return KEY_OF.get(kind, ("name",))  # the rest are named records
 
 
 def lines(result: dict, site: str) -> list[str]:

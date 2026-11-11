@@ -429,6 +429,16 @@ class Parked(unittest.TestCase):
         self.assertEqual((ids, validate(m)), ([], []))
         self.assertIn("set_property_after_alert", {x["name"]: x["reason"] for x in r["left_out"]}["PO told"])
 
+    def test_capturing_again_after_a_record_moved_replaces_it(self):  # ⭐ the walk: a scan source moved to another table
+        def site(table):
+            return {"Retail Scan Source": [{"name": "Price tags", "owner": ME, "source_name": "Price tags", "enabled": 1,
+                                            "record_type": table, "barcode_field": "name", "item_from": "item_code"}],
+                    "Print Format": [{"name": "Tag", "owner": ME, "standard": "No", "doc_type": table, "html": "<p>x</p>"}]}
+        m, _ = C.write(BASE, C.capture(site("Serial No"), [], BASE, "x"))
+        again, _ = C.write(m, C.capture(site("Item Price"), [], m, "x"))
+        self.assertEqual([x["record_type"] for x in again["scan_sources"]], ["Item Price"])
+        self.assertEqual([x["doc_type"] for x in again["print_formats"]], ["Item Price"])
+
     def test_a_long_name_is_shortened_to_64(self):
         long = "custom_" + "a" * 57  # 64, as Desk allows
         r = C.capture({"Custom Field": [{"name": f"Item-{long}", "owner": ME, "dt": "Item", "fieldname": long,
