@@ -176,6 +176,8 @@ class MySites(B.Base):
         self.assertEqual((rc, self.stub.installs), (0, 0))
         self.assertIn(B.ivn.WORDS["install_hint"].format(name=f"Acme live ({ACME_LIVE})", to="Acme live"), out)  # J6f F2
         self.assertNotIn("shelf message for " + ACME_LIVE, out)  # nothing to forward to its administrator
+        self.assertNotIn("administrator installs it", out.split(B.ivn.WORDS["install_hint"][:12])[0])  # J6 F19: Install now leads
+        self.assertNotIn("waiting on the customer's shelf", out)
         self.stub.publish_status_installed = True
         rc, out = self.run_ivn("publish", "--to", "Acme live", "--plan", "starter", "--install", stdin="1\n")
         self.assertEqual((rc, self.stub.installs), (0, 0))
