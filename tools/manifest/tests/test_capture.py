@@ -439,6 +439,14 @@ class Parked(unittest.TestCase):
         self.assertEqual([x["record_type"] for x in again["scan_sources"]], ["Item Price"])
         self.assertEqual([x["doc_type"] for x in again["print_formats"]], ["Item Price"])
 
+    def test_a_type_the_key_may_not_read_is_named_with_the_role_that_may(self):  # J6 F17
+        r = C.capture(SITE, INSTALLS, BASE, "acme-test.example.com", unread=["Server Script", "Retail Scan Source"])
+        left = {x["type"]: x["reason"] for x in r["left_out"] if x["name"] == "(all)"}
+        self.assertIn("Script Manager may", left["Server Script"])
+        self.assertIn("nothing is lost", left["Server Script"])
+        self.assertIn("capture again", left["Retail Scan Source"])
+        self.assertTrue(r["items"])  # the rest is read and captured
+
     def test_a_long_name_is_shortened_to_64(self):
         long = "custom_" + "a" * 57  # 64, as Desk allows
         r = C.capture({"Custom Field": [{"name": f"Item-{long}", "owner": ME, "dt": "Item", "fieldname": long,

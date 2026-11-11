@@ -98,6 +98,10 @@ MODULE_MARKS = {"Custom Field", "Property Setter", "Notification", "Workspace", 
                 "Dashboard", "List View Settings", "Document Naming Rule", "Webhook", "Translation", "Role"}
 # a person's own records only: the hosting asks the site for these alone (`owner` set and not Administrator)
 PERSON_FILTER = [["owner", "is", "set"], ["owner", "!=", "Administrator"]]
+# who may read a type a System Manager's key may not (F17): the site's own roles, named so the developer can give one
+ROLE_TO_READ = {"Server Script": "Script Manager", "Web Page": "Website Manager", "Web Template": "Website Manager"}
+# the types read only to say they are left out: a key that may not read one loses nothing
+REFUSED_TYPES = {"Client Script", "Server Script", "Web Page", "Web Template"}
 FIELD_MAX = 64  # a field's name, as a column of the record type's table: *"Fieldname is limited to 64 characters"*
 
 
@@ -140,6 +144,10 @@ WORDS = {
     "no_kind": "a Customize Form {what}: the manifest carries none. Make it there again on the customer's site{instead}",
     "sale_check": "a sale detail checked by a pattern or filled with a default: the manifest's sale detail carries "
                   "neither, so it would install unchecked. Make it on the customer's site by hand",
+    "unread_lost_nothing": "not read: this key may not read it ({role} may). The manifest carries none, so nothing is lost: "
+                           "anything made there stays out of the app anyway",
+    "unread": "not read: this key may not read it ({role} may). Give that role to your key's user on {site} and capture "
+              "again, or add it to manifest.json by hand",
     "theme": "a till theme: the manifest carries none, only the field rules on it. On the site you install on, make a theme "
              "named {name} first (POS Studio, Save as a new theme), then install: its field rules go on it",
     "field_order": "the whole order of the form's fields on that site: it would fix the customer's form to this layout. "
@@ -566,12 +574,19 @@ def _manifest(base: dict, entries: dict) -> dict:
     return m
 
 
-def capture(records: dict, installs: list, base: dict, site: str = "", others=None) -> dict:
+def unread_lines(unread, site: str = "") -> list:
+    """The types the site's key may not read (F17), as left-out lines with the role that may read each."""
+    return [{"type": dt, "name": "(all)", "reason": WORDS["unread_lost_nothing" if dt in REFUSED_TYPES else "unread"].format(
+        role=ROLE_TO_READ.get(dt, "a role that reads it"), site=site or "the site")} for dt in unread or []]
+
+
+def capture(records: dict, installs: list, base: dict, site: str = "", others=None, unread=None) -> dict:
     """Everything a person made on the site, as entries for the app whose manifest is ``base``:
     ``{"entries": {kind: [...]}, "items": [{"id", "kind", "type", "name"}], "left_out": [...], "renamed": [...]}``.
     Each entry and item carries an ``id`` (``Type/name``) to untick by. ``others``: the site's fields named like a person's
     (``others_of``), so a name the product or another app also uses stays theirs where it is theirs."""
     raw, left = to_entries(made_by_person(records, installs), site)
+    left = [*unread_lines(unread, site), *left]
     others = others_of(others, records)
     entries, renamed = rename_to(raw, base["prefix"], others)
     entries = _checked(entries, base, left)
@@ -603,12 +618,12 @@ def _checked(entries: dict, base: dict, left: list) -> dict:
     return entries
 
 
-def peek(records: dict, installs: list, site: str = "", others=None) -> dict:
+def peek(records: dict, installs: list, site: str = "", others=None, unread=None) -> dict:
     """What a site holds to capture before the app it goes into has a name (My apps' *From a site* reads first, as
     `ivn capture --new` does, so a site with nothing never leaves an empty app): the list, and what is left out. The
     renames are said once the app is named, at *Capture*."""
     r = capture(records, installs, {"manifest_version": 2, "app": "your_app", "prefix": "YOUR APP", "version": "1.0.0"},
-                site, others)
+                site, others, unread)
     return {"items": r["items"], "left_out": r["left_out"]}
 
 
