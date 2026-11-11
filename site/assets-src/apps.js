@@ -468,12 +468,15 @@
     var u = new URL(href, here), h = new URL(here), bare = function (x) { return x.replace(/\.html$/, ""); };
     return u.origin === h.origin && bare(u.pathname) === bare(h.pathname) && !u.hash && !u.search;
   }
-  // J6f F3: the messages to forward to a customer's administrator: none for a site Install now installed (on this
-  // screen or earlier), matched by the site's key address, which the message names
+  // J6f F3, J6 F19: the messages to forward to a customer's administrator: none for a site where the company holds the
+  // key (Install now is its way, installed yet or not), matched by the site's key address, which the message names
   function handOff(s, inst) {
-    var gone = (s.install_now || []).filter(function (x) { return x.installed || (inst[instKey(x.site, s.version)] || {}).done; })
-      .map(function (x) { return x.key_address || x.site; });
-    return (s.send || []).filter(function (m) { return m.message && gone.indexOf(m.site) < 0; });
+    var held = (s.install_now || []).map(function (x) { return x.key_address || x.site; });
+    return (s.send || []).filter(function (m) { return m.message && held.indexOf(m.site) < 0; });
+  }
+  // J6 F19: the shelf line ("…when their administrator installs it") only while some site waits for its administrator
+  function pubLines(s, inst) {
+    return (s.lines || []).filter(function (l) { return l !== s.published || handOff(s, inst).length > 0; });
   }
   function making(name, n) { return n ? "Making " + name + " from " + n + " sample" + (n === 1 ? "" : "s") + "…" : "Making " + name + ", a blank app…"; }
 
@@ -528,7 +531,7 @@
               needKind: needKind, KIND_WORDS: KIND_WORDS, instead: instead, askUrl: askUrl, sampleNumber: sampleNumber,
               sampleTitle: sampleTitle, sampleLabel: sampleLabel, needSamples: needSamples, search: search,
               fromNeeds: fromNeeds, readStart: readStart, barText: barText, appFor: appFor, recordsStart: recordsStart, tickable: tickable,
-              making: making, blankCarries: blankCarries, captureGroups: captureGroups, ticksOff: ticksOff, toThisPage: toThisPage, handOff: handOff, isAddress: isAddress, settingNote: settingNote, versionLine: versionLine, whereWent: whereWent,
+              making: making, blankCarries: blankCarries, captureGroups: captureGroups, ticksOff: ticksOff, pubLines: pubLines, toThisPage: toThisPage, handOff: handOff, isAddress: isAddress, settingNote: settingNote, versionLine: versionLine, whereWent: whereWent,
               covers: covers, coversText: coversText, ASK_PAGE: ASK_PAGE, CLAIM_FORM: CLAIM_FORM, T: T,
               SECTIONS: SECTIONS, consentSections: consentSections, tryRunning: tryRunning, offerAgain: offerAgain,
               noSandboxParts: noSandboxParts, U: U, industryWords: industryWords, tryLabel: tryLabel,
@@ -1541,7 +1544,8 @@
   }
 
   function vPubSteps(box, s) {
-    (s.lines || []).forEach(function (l) { box.appendChild(p(l)); });
+    pubLines(s, data.inst || {}).forEach(function (l) { box.appendChild(p(l)); });
+    (s.install_now || []).forEach(function (x) { box.appendChild(vInstallNow(x, s.version)); });   // J6 F19: it leads
     if (pubRunning(s)) {   // never an empty page while it works
       if (!(s.lines || []).length) box.appendChild(p(U.publishing));
       box.appendChild(el("p", { "class": "hint", text: U.wait }));
@@ -1560,7 +1564,6 @@
       sb.appendChild(copyRow(m.message));
       box.appendChild(sb);
     });
-    (s.install_now || []).forEach(function (x) { box.appendChild(vInstallNow(x, s.version)); });
   }
 
   // MYSITES: Install now on a customer's site where the company holds its own key: the site's own install words, read

@@ -107,6 +107,7 @@ WORDS = {
     "pay_by": "Pay by 1 your company's card · 2 invoice to {email}",  # J5-17
     "published": "{version} published to {sites}. Published means waiting on the customer's shelf: it is installed when their "
                  "administrator installs it.",  # J5-17
+    "published_keyed": "{version} published to {sites}.",  # J6 F19: where the company holds the key, Install now leads
     "send_head": "Send this to the customer's administrator:",  # J5-17
     "published_n": "{version} published to {n} site{s}.",  # J6-03, J2-15
     "published_listed": "{version} published to the App library and {n} site{s}.",  # J7-06
@@ -1376,7 +1377,9 @@ def cmd_publish(a) -> int:
     elif sites:  # the customer's: never the sandbox; a label is named with its address
         named = {x.get("label"): x["site"] for x in online(door, "/v1/sites", {}).get("company") or [] if x.get("label")}
         shown = [f"{s} ({named[s]})" if s in named else s for s in sites]
-        print(lead + WORDS["published"].format(version=shipped, sites=", ".join(shown)))
+        held = {h for x in done.get("install_now") or [] for h in (x.get("site"), x.get("key_address"), x.get("label")) if h}
+        shelf = [s for s in sites if s not in held and named.get(s) not in held]  # J6 F19: only those wait for an administrator
+        print(lead + WORDS["published" if shelf else "published_keyed"].format(version=shipped, sites=", ".join(shown)))
     else:
         print(lead + WORDS["published_n"].format(version=shipped, n=n, s="" if n == 1 else "s"))
     keyed = {x.get("key_address") or x["site"]: x for x in done.get("install_now") or [] if not x.get("installed")}  # J6f F2

@@ -362,14 +362,17 @@ check("MYSITES: ticking a live site on Publish fills the first empty box, untick
 check("MYSITES: the key's line says where it is made (the Settings tab), never on Administrator, and that both may be left empty",
   /User record, its Settings tab, API Access, Generate Keys/.test(a.S.keyHint) && /not on Administrator/.test(a.S.keyHint) && /its Settings tab/.test(a.S.keyHint) && !/Optional/.test(a.S.keyHint) &&
   /Leave both empty/.test(a.S.keyHint));   // J6f F9: never reads as if the secret were optional
-check("J6f F3: a site Install now installed, earlier or on this screen, gets no hand-off message; others keep theirs",
+check("J6f F3, J6 F19: a site where the company holds the key gets no hand-off message, installed yet or not; others keep theirs, and the shelf line shows only while one waits",
   (() => {
-    const st = { version: "1.0.1", send: [{ site: "k.acme.example", message: "m1" }, { site: "other.example", message: "m2" }],
+    const shelf = "Published means waiting on the customer's shelf: it is installed only when their administrator installs it.";
+    const st = { version: "1.0.1", published: shelf, lines: ["Checked.", shelf],
+                 send: [{ site: "k.acme.example", message: "m1" }, { site: "other.example", message: "m2" }],
                  install_now: [{ site: "shop.acme.example", key_address: "k.acme.example", installed: false }] };
-    const before = a.handOff(st, {}).map((m) => m.site).join();
-    const after = a.handOff(st, { [a.instKey("shop.acme.example", "1.0.1")]: { done: true } }).map((m) => m.site).join();
-    st.install_now[0].installed = true;
-    return before === "k.acme.example,other.example" && after === "other.example" && a.handOff(st, {}).map((m) => m.site).join() === "other.example";
+    const mixed = a.handOff(st, {}).map((m) => m.site).join() === "other.example" && a.pubLines(st, {}).length === 2;
+    st.send = [st.send[0]];
+    const keyedOnly = a.handOff(st, {}).length === 0 && a.pubLines(st, {}).join() === "Checked.";
+    return mixed && keyedOnly && src.indexOf("(s.install_now || []).forEach(function (x) { box.appendChild(vInstallNow(") <
+      src.indexOf("(handOff(s, data.inst || {}) || []).forEach(");
   })());
 check("J6f F5: the header's My apps (apps.html while the address reads /apps) goes home without a reload; # links and other pages do not",
   a.toThisPage("apps.html", "https://developer.ivendnext.com/apps") && a.toThisPage("/apps.html", "https://developer.ivendnext.com/apps.html") &&
