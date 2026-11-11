@@ -209,13 +209,16 @@ RETAIL = {
     ],
     "Retail List Mark": [
         {"name": "a1b2c3d4e5", "owner": ME, "record_type": "Item", "label": "Not stocked", "colour": "orange", "enabled": 1,
-         "sequence": 10, "conditions": [{"name": "r1", "field": "is_stock_item", "operator": "=", "value": "0", "idx": 1},
+         "sequence": 0, "conditions": [{"name": "r1", "field": "is_stock_item", "operator": "=", "value": "0", "idx": 1},
                                         {"name": "r2", "field": "custom_shelf_note", "operator": "is set", "value": None}]},
     ],
+    "Transaction Item Attribute": [
+        {"name": "IMEI", "owner": ME, "attribute_name": "IMEI", "validation_type": "No Validation", "regex_pattern": None,
+         "sequence": 0, "default_value": None, "active": 1}],
     "Retail Scan Source": [
         {"name": "Coupon books", "owner": ME, "source_name": "Coupon books", "record_type": "Serial No",
          "barcode_field": "serial_no", "enabled": 1, "sequence": 0, "item_from": "item_code", "status_field": "status",
-         "available_values": "Active\nDelivered\n", "capture_as": None, "batch_from": "", "warehouse_field": None},
+         "available_values": "Active\nDelivered\n", "capture_as": "IMEI", "batch_from": "", "warehouse_field": None},
     ],
     "Retail Register Book": [
         {"name": "acme_liquor.stock_book", "owner": ME, "book": "acme_liquor.stock_book", "title": "Liquor stock book",
@@ -317,13 +320,18 @@ class Retail(unittest.TestCase):
         self.assertEqual(self.e["list_marks"][0]["conditions"],
                          [{"field": "is_stock_item", "operator": "=", "value": "0"},
                           {"field": "acme_rules_shelf_note", "operator": "is set"}])
-        self.assertEqual(self.e["list_marks"][0]["colour"], "orange")
+        self.assertEqual((self.e["list_marks"][0]["colour"], self.e["list_marks"][0]["sequence"]), ("orange", 0))  # first
         self.assertIn("Retail List Mark/Item: Not stocked", [i["id"] for i in self.r["items"]])  # by its label, not its row id
 
     def test_a_scan_source(self):
         self.assertEqual(self.e["scan_sources"], [{
-            "source_name": "Coupon books", "record_type": "Serial No", "barcode_field": "serial_no", "item_from": "item_code",
-            "status_field": "status", "available_values": ["Active", "Delivered"], "_from": ("Retail Scan Source", "Coupon books")}])
+            "source_name": "Coupon books", "record_type": "Serial No", "barcode_field": "serial_no", "capture_as": "IMEI",
+            "item_from": "item_code", "status_field": "status", "sequence": 0, "available_values": ["Active", "Delivered"],
+            "_from": ("Retail Scan Source", "Coupon books")}])
+        # the line detail it records into travels as a default record (made at install, before the scan sources)
+        self.assertEqual(self.e["records"], [{"doctype": "Transaction Item Attribute", "name": "IMEI", "values": {
+            "attribute_name": "IMEI", "validation_type": "No Validation", "sequence": 0, "active": 1},
+            "_from": ("Transaction Item Attribute", "IMEI")}])
 
     def test_a_register_book_without_the_shops_register_stores(self):
         b = self.e["register_books"]
@@ -374,7 +382,7 @@ class Retail(unittest.TestCase):
         self.assertEqual(validate(m), [])
         self.assertEqual({k for k in m if isinstance(m[k], list) and m[k]} >= {
             "label_layouts", "list_marks", "scan_sources", "register_books", "save_rules", "sale_attributes", "field_rules",
-            "links"}, True)
+            "links", "records"}, True)
         again, _ = C.write(m, self.r)  # a second capture replaces its own, a field rule by what it does
         self.assertEqual(len(again["field_rules"]), 3)  # a relabel in Spanish is a rule of its own
 

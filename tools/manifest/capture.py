@@ -76,6 +76,7 @@ READ_TYPES = {
     "Retail Register Book": [["source_app", "is", "not set"]],  # a book an app brought names its app
     "Retail Save Rule": [],
     "Sale Attribute": [],
+    "Transaction Item Attribute": [],  # a line detail (a scan source records a unit's code in one): carried as a record
     "Retail POS Theme Field": [],  # a till theme's field rules: rows of the theme, read as rows
     "Retail POS Theme": [],  # a theme saved as new (the shipped ones stay as they ship): no kind carries it, so it is said
     "DocType Link": [["custom", "=", 1]],  # a Connections link made in Customize Form
@@ -209,6 +210,11 @@ def _rows(rec: dict, key: str, kind: str) -> list:
     return [{**_kept(r, CHILD_KEEP[kind]), **({"value": r["value"]} if kind == "conditions" and r.get("value") is not None
                                               else {})}
             for r in rec.get(key) or [] if isinstance(r, dict)]
+
+
+def _sequence(rec: dict) -> dict:
+    """A record's sequence as it is: 0 is an order a person chose (first), not an empty value."""
+    return {"sequence": rec["sequence"]} if rec.get("sequence") is not None else {}
 
 
 def _conditions(rec: dict) -> list:
@@ -419,13 +425,13 @@ def _retail(records: dict, add, out: list, site: str) -> None:
     for r in records.get("Retail List Mark", []):
         if not r.get("enabled"):
             off("Retail List Mark", r, r.get("label") or r["name"]); continue
-        add("list_marks", {**_kept(r, KEEP["list_marks"]), "conditions": _conditions(r)},
+        add("list_marks", {**_kept(r, KEEP["list_marks"]), **_sequence(r), "conditions": _conditions(r)},
             ("Retail List Mark", f"{r.get('record_type')}: {r.get('label')}"))  # its own name is a row id
     for r in records.get("Retail Scan Source", []):
         if not r.get("enabled"):
             off("Retail Scan Source", r, r["name"]); continue
         values = [x.strip() for x in str(r.get("available_values") or "").splitlines() if x.strip()]
-        add("scan_sources", {**_kept(r, KEEP["scan_sources"]), **({"available_values": values} if values else {})},
+        add("scan_sources", {**_kept(r, KEEP["scan_sources"]), **_sequence(r), **({"available_values": values} if values else {})},
             ("Retail Scan Source", r["name"]))
     for r in records.get("Retail Register Book", []):  # installed on or off as it declares, so a book off is still a book
         b = _kept(r, KEEP["register_books"])
@@ -438,7 +444,7 @@ def _retail(records: dict, add, out: list, site: str) -> None:
     for r in records.get("Retail Save Rule", []):
         if not r.get("enabled"):
             off("Retail Save Rule", r, r["name"]); continue
-        rule = _kept(r, KEEP["save_rules"])
+        rule = {**_kept(r, KEEP["save_rules"]), **_sequence(r)}
         if r.get("value") not in (None, ""):  # a threshold of 0 is a threshold
             rule["value"] = r["value"]
         for k in RULE_LINES:
@@ -458,6 +464,12 @@ def _retail(records: dict, add, out: list, site: str) -> None:
         if r.get("validation_type") == "DocType" and r.get("doctype_name"):
             a.update(validation_type="DocType", doctype_name=r["doctype_name"])
         add("sale_attributes", a, ("Sale Attribute", r["name"]))  # a required one: the checker says why it cannot be
+    for r in records.get("Transaction Item Attribute", []):  # a default record: made at install if missing, never written over
+        if not r.get("active"):
+            off("Transaction Item Attribute", r, r["name"]); continue
+        add("records", {"doctype": "Transaction Item Attribute", "name": r["name"], "values": {
+            **_kept(r, ("attribute_name", "validation_type", "doctype_name", "regex_pattern", "default_value")), **_sequence(r),
+            "active": 1}}, ("Transaction Item Attribute", r["name"]))
     for r in records.get("Retail POS Theme Field", []):
         rule = {"theme": r.get("parent"), **_kept(r, KEEP["field_rules"])}
         add("field_rules", rule, ("Retail POS Theme Field",  # a language's own words are a rule of their own
@@ -684,6 +696,7 @@ KEY_OF = {"custom_fields": ("dt", "fieldname"), "property_setters": ("doc_type",
           "links": ("doctype", "link_doctype", "link_fieldname"), "scan_sources": ("source_name",),
           "label_layouts": ("label_name",), "list_marks": ("record_type", "label"), "register_books": ("book",),
           "save_rules": ("rule_name",), "translations": ("language",), "role_rights": ("doctype", "role"),
+          "records": ("doctype", "name"),
           "field_rules": ("theme", "surface", "field", "action", "language")}
 
 
