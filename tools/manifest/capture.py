@@ -76,6 +76,7 @@ READ_TYPES = {
     "Retail Register Book": [["source_app", "is", "not set"]],  # a book an app brought names its app
     "Retail Save Rule": [],
     "Sale Attribute": [],
+    "Transaction Item Attribute": [],  # a line detail (a scan source records a unit's code in one): carried as a record
     "Retail POS Theme Field": [],  # a till theme's field rules: rows of the theme, read as rows
     "Retail POS Theme": [],  # a theme saved as new (the shipped ones stay as they ship): no kind carries it, so it is said
     "DocType Link": [["custom", "=", 1]],  # a Connections link made in Customize Form
@@ -98,6 +99,10 @@ MODULE_MARKS = {"Custom Field", "Property Setter", "Notification", "Workspace", 
                 "Dashboard", "List View Settings", "Document Naming Rule", "Webhook", "Translation", "Role"}
 # a person's own records only: the hosting asks the site for these alone (`owner` set and not Administrator)
 PERSON_FILTER = [["owner", "is", "set"], ["owner", "!=", "Administrator"]]
+# who may read a type a System Manager's key may not (F17): the site's own roles, named so the developer can give one
+ROLE_TO_READ = {"Server Script": "Script Manager", "Web Page": "Website Manager", "Web Template": "Website Manager"}
+# the types read only to say they are left out: a key that may not read one loses nothing
+REFUSED_TYPES = {"Client Script", "Server Script", "Web Page", "Web Template"}
 FIELD_MAX = 64  # a field's name, as a column of the record type's table: *"Fieldname is limited to 64 characters"*
 
 
@@ -140,6 +145,10 @@ WORDS = {
     "no_kind": "a Customize Form {what}: the manifest carries none. Make it there again on the customer's site{instead}",
     "sale_check": "a sale detail checked by a pattern or filled with a default: the manifest's sale detail carries "
                   "neither, so it would install unchecked. Make it on the customer's site by hand",
+    "unread_lost_nothing": "not read: this key may not read it ({role} may). The manifest carries none, so nothing is lost: "
+                           "anything made there stays out of the app anyway",
+    "unread": "not read: this key may not read it ({role} may). Give that role to your key's user on {site} and capture "
+              "again, or add it to manifest.json by hand",
     "theme": "a till theme: the manifest carries none, only the field rules on it. On the site you install on, make a theme "
              "named {name} first (POS Studio, Save as a new theme), then install: its field rules go on it",
     "field_order": "the whole order of the form's fields on that site: it would fix the customer's form to this layout. "
@@ -201,6 +210,11 @@ def _rows(rec: dict, key: str, kind: str) -> list:
     return [{**_kept(r, CHILD_KEEP[kind]), **({"value": r["value"]} if kind == "conditions" and r.get("value") is not None
                                               else {})}
             for r in rec.get(key) or [] if isinstance(r, dict)]
+
+
+def _sequence(rec: dict) -> dict:
+    """A record's sequence as it is: 0 is an order a person chose (first), not an empty value."""
+    return {"sequence": rec["sequence"]} if rec.get("sequence") is not None else {}
 
 
 def _conditions(rec: dict) -> list:
@@ -411,13 +425,13 @@ def _retail(records: dict, add, out: list, site: str) -> None:
     for r in records.get("Retail List Mark", []):
         if not r.get("enabled"):
             off("Retail List Mark", r, r.get("label") or r["name"]); continue
-        add("list_marks", {**_kept(r, KEEP["list_marks"]), "conditions": _conditions(r)},
+        add("list_marks", {**_kept(r, KEEP["list_marks"]), **_sequence(r), "conditions": _conditions(r)},
             ("Retail List Mark", f"{r.get('record_type')}: {r.get('label')}"))  # its own name is a row id
     for r in records.get("Retail Scan Source", []):
         if not r.get("enabled"):
             off("Retail Scan Source", r, r["name"]); continue
         values = [x.strip() for x in str(r.get("available_values") or "").splitlines() if x.strip()]
-        add("scan_sources", {**_kept(r, KEEP["scan_sources"]), **({"available_values": values} if values else {})},
+        add("scan_sources", {**_kept(r, KEEP["scan_sources"]), **_sequence(r), **({"available_values": values} if values else {})},
             ("Retail Scan Source", r["name"]))
     for r in records.get("Retail Register Book", []):  # installed on or off as it declares, so a book off is still a book
         b = _kept(r, KEEP["register_books"])
@@ -430,7 +444,7 @@ def _retail(records: dict, add, out: list, site: str) -> None:
     for r in records.get("Retail Save Rule", []):
         if not r.get("enabled"):
             off("Retail Save Rule", r, r["name"]); continue
-        rule = _kept(r, KEEP["save_rules"])
+        rule = {**_kept(r, KEEP["save_rules"]), **_sequence(r)}
         if r.get("value") not in (None, ""):  # a threshold of 0 is a threshold
             rule["value"] = r["value"]
         for k in RULE_LINES:
@@ -450,6 +464,12 @@ def _retail(records: dict, add, out: list, site: str) -> None:
         if r.get("validation_type") == "DocType" and r.get("doctype_name"):
             a.update(validation_type="DocType", doctype_name=r["doctype_name"])
         add("sale_attributes", a, ("Sale Attribute", r["name"]))  # a required one: the checker says why it cannot be
+    for r in records.get("Transaction Item Attribute", []):  # a default record: made at install if missing, never written over
+        if not r.get("active"):
+            off("Transaction Item Attribute", r, r["name"]); continue
+        add("records", {"doctype": "Transaction Item Attribute", "name": r["name"], "values": {
+            **_kept(r, ("attribute_name", "validation_type", "doctype_name", "regex_pattern", "default_value")), **_sequence(r),
+            "active": 1}}, ("Transaction Item Attribute", r["name"]))
     for r in records.get("Retail POS Theme Field", []):
         rule = {"theme": r.get("parent"), **_kept(r, KEEP["field_rules"])}
         add("field_rules", rule, ("Retail POS Theme Field",  # a language's own words are a rule of their own
@@ -566,12 +586,19 @@ def _manifest(base: dict, entries: dict) -> dict:
     return m
 
 
-def capture(records: dict, installs: list, base: dict, site: str = "", others=None) -> dict:
+def unread_lines(unread, site: str = "") -> list:
+    """The types the site's key may not read (F17), as left-out lines with the role that may read each."""
+    return [{"type": dt, "name": "(all)", "reason": WORDS["unread_lost_nothing" if dt in REFUSED_TYPES else "unread"].format(
+        role=ROLE_TO_READ.get(dt, "a role that reads it"), site=site or "the site")} for dt in unread or []]
+
+
+def capture(records: dict, installs: list, base: dict, site: str = "", others=None, unread=None) -> dict:
     """Everything a person made on the site, as entries for the app whose manifest is ``base``:
     ``{"entries": {kind: [...]}, "items": [{"id", "kind", "type", "name"}], "left_out": [...], "renamed": [...]}``.
     Each entry and item carries an ``id`` (``Type/name``) to untick by. ``others``: the site's fields named like a person's
     (``others_of``), so a name the product or another app also uses stays theirs where it is theirs."""
     raw, left = to_entries(made_by_person(records, installs), site)
+    left = [*unread_lines(unread, site), *left]
     others = others_of(others, records)
     entries, renamed = rename_to(raw, base["prefix"], others)
     entries = _checked(entries, base, left)
@@ -603,12 +630,12 @@ def _checked(entries: dict, base: dict, left: list) -> dict:
     return entries
 
 
-def peek(records: dict, installs: list, site: str = "", others=None) -> dict:
+def peek(records: dict, installs: list, site: str = "", others=None, unread=None) -> dict:
     """What a site holds to capture before the app it goes into has a name (My apps' *From a site* reads first, as
     `ivn capture --new` does, so a site with nothing never leaves an empty app): the list, and what is left out. The
     renames are said once the app is named, at *Capture*."""
     r = capture(records, installs, {"manifest_version": 2, "app": "your_app", "prefix": "YOUR APP", "version": "1.0.0"},
-                site, others)
+                site, others, unread)
     return {"items": r["items"], "left_out": r["left_out"]}
 
 
@@ -669,6 +696,7 @@ KEY_OF = {"custom_fields": ("dt", "fieldname"), "property_setters": ("doc_type",
           "links": ("doctype", "link_doctype", "link_fieldname"), "scan_sources": ("source_name",),
           "label_layouts": ("label_name",), "list_marks": ("record_type", "label"), "register_books": ("book",),
           "save_rules": ("rule_name",), "translations": ("language",), "role_rights": ("doctype", "role"),
+          "records": ("doctype", "name"),
           "field_rules": ("theme", "surface", "field", "action", "language")}
 
 

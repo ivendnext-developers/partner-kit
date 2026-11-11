@@ -667,12 +667,19 @@ def cmd_capture(a) -> int:
     written there. `--only` and `--skip` take record types, kinds or `Type/name` ids, as the list prints them."""
     import capture  # noqa: PLC0415
     import blank  # noqa: PLC0415
-    read = unpack(online(door, "/v1/capture/read", {"site": a.site}))
     prefix = a.new.replace("_", " ").replace("-", " ").strip().upper() if a.new else None
+    if a.new:  # the name first (F18): a name My apps refuses is said before the site is read
+        try:
+            online(door, "/v1/name", {"app": capture.app_for(prefix)})
+        except Refused as e:
+            if e.status != 404:  # a hosting without the command's name door: the new app's own door says it
+                raise
+    read = unpack(online(door, "/v1/capture/read", {"site": a.site}))
     folder = None if a.new else app_folder(a)
     # a new app is made only once the site has something to capture: never an empty app left behind
     manifest = blank.manifest(prefix, capture.app_for(prefix)) if a.new else read_json(folder / "manifest.json")
-    res = capture.capture(read.get("records") or {}, read.get("installs") or [], manifest, read["site"], read.get("others"))
+    res = capture.capture(read.get("records") or {}, read.get("installs") or [], manifest, read["site"], read.get("others"),
+                          read.get("unread"))
     for line in capture.lines(res, read["site"]):
         print(line)
     if not res["items"]:
@@ -682,7 +689,8 @@ def cmd_capture(a) -> int:
         made = online(door, "/v1/new", {"samples": [], "name": prefix})
         folder = bring_down(made["app"], made.get("version"))
         manifest = read_json(folder / "manifest.json")
-        res = capture.capture(read.get("records") or {}, read.get("installs") or [], manifest, read["site"], read.get("others"))
+        res = capture.capture(read.get("records") or {}, read.get("installs") or [], manifest, read["site"], read.get("others"),
+                              read.get("unread"))
     m, ids = capture.write(manifest, res, skip=a.skip or [], only=a.only or [])
     if not ids:
         raise Stop(WORDS["capture_none"])

@@ -84,9 +84,12 @@ class Stub(B.Stub):
         self.captured_from = b["site"]
         if getattr(self, "empty_site", False):
             return {"site": "acme.sandbox.ivend.co", "installs": [], "records": {}}
+        if getattr(self, "no_read", False):  # the site refuses the key every type
+            raise B.Refuse("no_read", "acme.sandbox.ivend.co did not let the key read its set-up (it answered 403)", 409)
         import base64, gzip  # noqa: E401, PLC0415
         return {"site": "acme.sandbox.ivend.co", "packed": base64.b64encode(gzip.compress(B.json.dumps({
-            "installs": [], "others": [["POS Invoice", "custom_gift_note"]], "records": self.recorded()}).encode())).decode()}
+            "installs": [], "others": [["POS Invoice", "custom_gift_note"]], "records": self.recorded(),
+            "unread": getattr(self, "unread", [])}).encode())).decode()}
 
     def recorded(self):
         return {
@@ -200,12 +203,42 @@ class MySites(B.Base):
     def test_capture_new_on_a_site_with_nothing_makes_no_app(self):  # the critic: never an empty app left behind
         self.stub.empty_site = True
         news = []
-        real = self.stub.ROUTES["/v1/new"]
-        self.stub.ROUTES = {**self.stub.ROUTES, "/v1/new": lambda st, b: news.append(b) or real(st, b)}
-        rc, out = self.run_ivn("capture", "--site", "Acme test", "--new", "acme_po_rules")
-        self.assertEqual((rc, news), (0, []), out)
+        real = type(self.stub).ROUTES["/v1/new"]
+        with B.unittest.mock.patch.dict(type(self.stub).ROUTES, {"/v1/new": lambda st, b: news.append(b) or real(st, b)}):
+            rc, out = self.run_ivn("capture", "--site", "Acme test", "--new", "acme_po_rules")
+            made_on_empty = list(news)
+            self.stub.empty_site = False  # the same stub on a site with something: the app is made, so the spy sees it
+            rc2, _ = self.run_ivn("capture", "--site", "Acme test", "--new", "acme_po_rules2")
+        self.assertEqual((rc, made_on_empty), (0, []), out)
+        self.assertEqual([b.get("name") for b in news], ["ACME PO RULES2"])  # only the site with something made an app
         self.assertIn("a new app (none was made)", out)
         self.assertIn(B.ivn.WORDS["capture_nothing"].format(folder="a new app (none was made)"), out)
+
+    def test_capture_with_a_partners_own_key_reads_the_rest_and_names_what_it_may_not(self):  # ⭐ J6 F17
+        folder, _ = self.made()
+        self.in_app(folder)
+        self.stub.unread = ["Server Script", "Web Page"]
+        rc, out = self.run_ivn("capture", "--site", "Acme test")
+        self.assertEqual(rc, 0, out)
+        self.assertIn("Left out: Server Script (all): not read: this key may not read it (Script Manager may)", out)
+        self.assertIn("Website Manager may", out)
+        self.assertIn("CHECK GREEN", out)
+
+    def test_a_refused_capture_exits_1(self):  # J6 F17: the walk's transcript read 0
+        folder, _ = self.made()
+        self.in_app(folder)
+        self.stub.no_read = True
+        rc, out = self.run_ivn("capture", "--site", "Acme test")
+        self.assertEqual(rc, 1, out)
+        self.assertIn("did not let the key read", out)
+
+    def test_capture_new_with_another_companys_word_says_so_before_reading(self):  # ⭐ J6 F18
+        asked = []
+        refuse = lambda st, b: (_ for _ in ()).throw(B.Refuse("name_word", "Your company's apps start with ACME.", 409))
+        with B.unittest.mock.patch.dict(type(self.stub).ROUTES, {"/v1/name": lambda st, b: asked.append(b) or refuse(st, b)}):
+            rc, out = self.run_ivn("capture", "--site", "Acme test", "--new", "other_po_rules")
+        self.assertEqual((rc, asked, getattr(self.stub, "captured_from", None)), (1, [{"app": "other_po_rules"}], None), out)
+        self.assertIn("Your company's apps start with ACME.", out)
 
     def test_a_subcommand_without_its_site_says_how(self):
         rc, out = self.run_ivn("sites", "label", "shop.acme.example")
