@@ -402,13 +402,22 @@ check("SANDBOXPOLICY: Get a sandbox for one of our developers with none; Ask for
   src.indexOf('if (sites.sandbox === "get") box.appendChild(offer);') < src.indexOf("(sites.company || []).forEach(function (x) {", src.indexOf("var offer")) &&
   a.S.askSandbox === "Ask for another sandbox" && src.includes('sites.sandbox === "request" && (sites.company || []).length && !sites.words') &&
   !src.includes("sites.get_sandbox"));
-check("J3: New app's tiles are Start blank, then From a site, which opens Capture from a site on the new blank app",
-  src.indexOf("wrap.appendChild(blankTile())") < src.indexOf("wrap.appendChild(siteTile())") &&
-  src.includes("if (fromSite) { data.made = null; data.capture = { app: r.app }; screen = \"app\"; render(); openApp(r.app); return; }"));
+check("J3: New app's tiles are Start blank, then From a site",
+  src.indexOf("wrap.appendChild(blankTile())") < src.indexOf("wrap.appendChild(siteTile())"));
+check("J3b: From a site reads the site before the app is named, Next only with something ticked, then Make the app captures what stayed ticked",
+  src.includes('g.fromSite = { off: {} }; screen = "fromsite";') && src.includes("fromsite: g && g.fromSite && vFromSite,") &&
+  src.includes('call("POST", "/capture/list", app ? { app: app, site: c.site } : { site: c.site })') &&
+  src.includes("if ((l.items || []).length && !app) box.appendChild(el(\"p\", {}, button(G.next,") &&
+  src.includes("if (ticksOff(c).length < l.items.length) { screen = \"name\"; say(\"\"); } else say(G.captureNone, true);\n      render();") &&
+  src.includes("if (!data.sites) loadSites();   // the sites Capture can read") && a.G.captureNone.startsWith("Nothing is ticked") &&
+  src.includes('say(G.madeEmpty.replace("{why}", e.message), true); render();') &&
+  src.includes('call("POST", "/capture/take", { app: r.app, site: from.site, skip: ticksOff(from) })') &&
+  src.indexOf('call("POST", "/new", body)') < src.indexOf("site: from.site, skip: ticksOff(from)") &&
+  !src.includes("data.capture = { app: r.app }") && a.ticksOff({ off: { a: true, b: false } }).join() === "a");
 check("J3: Capture from a site reads, lists by record type with every item ticked, and captures what stays ticked",
   ["/capture/list", "/capture/take"].every((d) => src.includes('"' + d + '"')) && src.includes("cb.checked = !c.off[it.id];") &&
-  src.includes(".filter(function (x) { return x.press; });") && src.includes("if (l.not_read) box.appendChild(") &&
-  src.includes("var skip = Object.keys(c.off).filter(function (k) { return c.off[k]; });") &&
+  src.includes(".filter(function (x) { return x.press; });") && !src.includes("not_read") &&
+  src.includes('call("POST", "/capture/take", { app: app, site: c.site, skip: ticksOff(c) })') &&
   a.captureGroups([{ id: "a", type: "Workflow", name: "w" }, { id: "b", type: "Custom Field", name: "f" }, { id: "c", type: "Workflow", name: "v" }])
     .map((x) => x.type + ":" + x.items.length).join() === "Workflow:2,Custom Field:1");
 check("SANDBOXPOLICY: each pool sandbox says the date it goes back to the pool, in the hosting's words", src.includes("if (x.back_words) row.appendChild(p(x.back_words));"));

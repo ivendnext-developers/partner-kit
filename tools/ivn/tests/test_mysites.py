@@ -80,17 +80,25 @@ class Stub(B.Stub):
         return {"version": "1.0.0", "site": b["site"], "step": "done" if done else "installing", "done": done,
                 "words": f"Installed 1.0.0 on {b['site']}." if done else f"Installing on {b['site']}…"}
 
-    def capture_read(self, b):  # J3: the site's records a person made, as the hosting answers them
+    def capture_read(self, b):  # J3: the site's records a person made, as the hosting answers them (packed: J3b)
         self.captured_from = b["site"]
         if getattr(self, "empty_site", False):
             return {"site": "acme.sandbox.ivend.co", "installs": [], "records": {}}
-        return {"site": "acme.sandbox.ivend.co", "installs": [], "records": {
+        import base64, gzip  # noqa: E401, PLC0415
+        return {"site": "acme.sandbox.ivend.co", "packed": base64.b64encode(gzip.compress(B.json.dumps({
+            "installs": [], "others": [["POS Invoice", "custom_gift_note"]], "records": self.recorded()}).encode())).decode()}
+
+    def recorded(self):
+        return {
             "Custom Field": [{"name": "Purchase Order-custom_gift_note", "owner": "c@acme.example", "dt": "Purchase Order",
                               "fieldname": "custom_gift_note", "fieldtype": "Data", "label": "Gift note"}],
             "Notification": [{"name": "Gift note set", "owner": "c@acme.example", "enabled": 1, "document_type": "Purchase Order",
                               "event": "Save", "channel": "System Notification", "subject": "Gift note",
                               "message": "{{ doc.custom_gift_note }}", "recipients": [{"receiver_by_role": "Purchase User"}]}],
-            "Client Script": [{"name": "PO colour", "owner": "c@acme.example"}]}}
+            "Client Script": [{"name": "PO colour", "owner": "c@acme.example"}],
+            "Report": [{"name": "Gift notes at the till", "owner": "c@acme.example", "is_standard": "No",
+                        "report_type": "Report Builder", "ref_doctype": "POS Invoice",
+                        "json": B.json.dumps({"fields": [["custom_gift_note", "POS Invoice"]]})}]}
 
     ROUTES = {**B.Stub.ROUTES, "/v1/capture/read": capture_read, "/v1/sites": sites, "/v1/sites/add": sites_add, "/v1/sites/label": sites_label,
               "/v1/sites/default": sites_default, "/v1/sites/remove": sites_remove, "/v1/publish/status": publish_status, "/v1/try": try_start,
@@ -182,8 +190,10 @@ class MySites(B.Base):
         fp = m["prefix"].lower().replace(" ", "_") + "_"
         self.assertIn(fp + "gift_note", [c["fieldname"] for c in m["custom_fields"]])
         self.assertIn("{{ doc." + fp + "gift_note }}", [n["message"] for n in m["notifications"]])
+        self.assertEqual(m["reports"][0]["columns"], ["custom_gift_note"])  # POS Invoice's own field of that name stays
+        self.assertNotIn("Not read by Capture yet", out)
         self.assertIn("CHECK GREEN", out)
-        rc, out = self.run_ivn("capture", "--site", "Acme test", "--skip", "Notification", "--skip", "Custom Field")
+        rc, out = self.run_ivn("capture", "--site", "Acme test", "--skip", "Notification", "--skip", "Custom Field", "--skip", "Report")
         self.assertEqual(rc, 1)
         self.assertIn(B.ivn.WORDS["capture_none"], out)
 

@@ -651,18 +651,28 @@ def cmd_new(a) -> int:
     return 0
 
 
+def unpack(read: dict) -> dict:
+    """The site's set-up as the hosting sends it: packed (`packed`: gzip, then base64, of the JSON), so a chain's print
+    formats and layouts pass the load balancer's 1 MB, or plain."""
+    if "packed" not in read:
+        return read
+    import gzip  # noqa: PLC0415
+    return {**{k: v for k, v in read.items() if k != "packed"},
+            **json.loads(gzip.decompress(base64.b64decode(read["packed"])).decode("utf-8"))}
+
+
 def cmd_capture(a) -> int:
     """J3: what a person made in Desk on a site (`--site`, an address or a label on My sites), written into the app in this
     folder, or into a new blank app (`--new <name>`). The site is read with the key our hosting keeps for it; nothing is
     written there. `--only` and `--skip` take record types, kinds or `Type/name` ids, as the list prints them."""
     import capture  # noqa: PLC0415
     import blank  # noqa: PLC0415
-    read = online(door, "/v1/capture/read", {"site": a.site})
+    read = unpack(online(door, "/v1/capture/read", {"site": a.site}))
     prefix = a.new.replace("_", " ").replace("-", " ").strip().upper() if a.new else None
     folder = None if a.new else app_folder(a)
     # a new app is made only once the site has something to capture: never an empty app left behind
     manifest = blank.manifest(prefix, capture.app_for(prefix)) if a.new else read_json(folder / "manifest.json")
-    res = capture.capture(read.get("records") or {}, read.get("installs") or [], manifest, read["site"])
+    res = capture.capture(read.get("records") or {}, read.get("installs") or [], manifest, read["site"], read.get("others"))
     for line in capture.lines(res, read["site"]):
         print(line)
     if not res["items"]:
@@ -672,7 +682,7 @@ def cmd_capture(a) -> int:
         made = online(door, "/v1/new", {"samples": [], "name": prefix})
         folder = bring_down(made["app"], made.get("version"))
         manifest = read_json(folder / "manifest.json")
-        res = capture.capture(read.get("records") or {}, read.get("installs") or [], manifest, read["site"])
+        res = capture.capture(read.get("records") or {}, read.get("installs") or [], manifest, read["site"], read.get("others"))
     m, ids = capture.write(manifest, res, skip=a.skip or [], only=a.only or [])
     if not ids:
         raise Stop(WORDS["capture_none"])

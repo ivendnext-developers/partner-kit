@@ -157,13 +157,15 @@
     blankCarries: "Started blank. It carries: {kinds}.", backToApps: "Back to My apps",
     // J3 CAPTURE: what a person made in Desk on a site, into this app (the kit's capture.py on our side)
     capture: "Capture from a site", fromSite: "From a site",
-    fromSiteHint: "Made fields, a workflow, a notification or a print format in Desk on a test site? Capture them into an " +
-      "app, and it installs them on the customer's site the same way.",
+    fromSiteHint: "Set up fields, approvals, print formats, labels or till rules in Desk on a test site? Read the site, pick " +
+      "what to keep, and name your app: it installs them on the customer's site the same way.",
     captureLede: "What a person made in Desk on that site, signed in as themselves (not as Administrator). Untick what to leave " +
       "out. Nothing is written to the site.",
     captureRead: "Read the site", captureTake: "Capture", reading: "Reading the site\u2026",
     renamed: "Renamed to your app", leftOut: "Left out",
     captureNoSite: "Add the site you built it on to My sites first, with a key you make there: Capture reads with that key.",
+    captureNone: "Nothing is ticked: tick what to capture, then press Next again.",
+    madeEmpty: "Your app is made, with nothing in it yet: {why} Press Capture from a site on it to read the site again.",
     settingsLede: "Your app's own values, the same for every site. A customer's own account (their wallet) goes in the app's " +
       "settings in their Desk.",
     addresses: "Outside addresses", secrets: "Secrets your own service needs",
@@ -526,7 +528,7 @@
               needKind: needKind, KIND_WORDS: KIND_WORDS, instead: instead, askUrl: askUrl, sampleNumber: sampleNumber,
               sampleTitle: sampleTitle, sampleLabel: sampleLabel, needSamples: needSamples, search: search,
               fromNeeds: fromNeeds, readStart: readStart, barText: barText, appFor: appFor, recordsStart: recordsStart, tickable: tickable,
-              making: making, blankCarries: blankCarries, captureGroups: captureGroups, toThisPage: toThisPage, handOff: handOff, isAddress: isAddress, settingNote: settingNote, versionLine: versionLine, whereWent: whereWent,
+              making: making, blankCarries: blankCarries, captureGroups: captureGroups, ticksOff: ticksOff, toThisPage: toThisPage, handOff: handOff, isAddress: isAddress, settingNote: settingNote, versionLine: versionLine, whereWent: whereWent,
               covers: covers, coversText: coversText, ASK_PAGE: ASK_PAGE, CLAIM_FORM: CLAIM_FORM, T: T,
               SECTIONS: SECTIONS, consentSections: consentSections, tryRunning: tryRunning, offerAgain: offerAgain,
               noSandboxParts: noSandboxParts, U: U, industryWords: industryWords, tryLabel: tryLabel,
@@ -747,13 +749,22 @@
     return c;
   }
   function startBlank() { g.ticks = []; g.blank = true; g.refused = ""; g.checking = false; screen = "name"; say(""); render(); }
-  // J3: From a site: a blank app named as Start blank names one, then Capture from a site opens on it
+  // J3b: From a site reads the site first, then names the app, which is made with what stays ticked: a site with nothing
+  // on it never leaves an empty app (as `ivn capture --new`)
   function siteTile() {
     var c = el("div", { "class": "hosting-step gallery-card gallery-blank" });
     c.appendChild(el("h3", { text: G.fromSite }));
     c.appendChild(el("p", { "class": "hint", text: G.fromSiteHint }));
-    c.appendChild(el("p", {}, button(G.fromSite, function () { startBlank(); g.fromSite = true; render(); })));
+    c.appendChild(el("p", {}, button(G.fromSite, function () {
+      if (!data.sites) loadSites();   // the sites Capture can read: none are loaded until an app or My sites is opened
+      startBlank(); g.fromSite = { off: {} }; screen = "fromsite"; render();
+    })));
     return c;
+  }
+  function vFromSite() {
+    var box = vCapture(null, g.fromSite);
+    box.appendChild(button("Back", function () { screen = "gallery"; g.blank = false; g.fromSite = false; say(""); render(); }, true));
+    return box;
   }
 
   // the bar's refusals before Next (M01 to M03, M34, M35): the hosting's dry run, its words as given (spec rule 8)
@@ -996,7 +1007,10 @@
       box.appendChild(field(G.yourName, own, G.yourNameHint));
     }
     box.appendChild(bad);   // a refusal stands under the field it is about
-    box.appendChild(button("Back", function () { screen = "gallery"; g.blank = false; g.fromSite = false; data.nameBad = ""; say(""); render(); }, true));
+    box.appendChild(button("Back", function () {   // From a site goes back to its list, as it was ticked
+      if (g.fromSite) { screen = "fromsite"; data.nameBad = ""; say(""); render(); return; }
+      screen = "gallery"; g.blank = false; g.fromSite = false; data.nameBad = ""; say(""); render();
+    }, true));
     box.appendChild(root.document.createTextNode(" "));
     var make = button(G.make, function (ev) {
       ev.target.disabled = true; clearTimeout(timer); asked++;
@@ -1007,9 +1021,15 @@
       if (own) body.name = own.value.trim().toUpperCase();
       call("POST", "/new", body)
         .then(function (r) {
-          var fromSite = g && g.fromSite;
+          var from = g && g.fromSite;
           data.made = { making: data.made.making, title: r.title || title, words: r.words }; data.appId = r.app; data.app = null; g = null;
-          if (fromSite) { data.made = null; data.capture = { app: r.app }; screen = "app"; render(); openApp(r.app); return; }
+          if (from) {   // J3b: the new app takes what stayed ticked on the site read before it was named
+            var opened = function () { data.made = null; screen = "app"; render(); openApp(r.app); };
+            call("POST", "/capture/take", { app: r.app, site: from.site, skip: ticksOff(from) })
+              .then(function (t) { opened(); say((t.words || []).join(" ")); },
+                function (e) { opened(); say(G.madeEmpty.replace("{why}", e.message), true); render(); });
+            return;
+          }
           screen = "made"; render(); openApp(r.app);
         }, function (e) { data.made = null; screen = "name"; data.nameBad = e.message; render(); });
     });
@@ -1103,7 +1123,7 @@
       .forEach(function (b) { if (b) { acts.appendChild(b); acts.appendChild(root.document.createTextNode(" ")); } });
     box.appendChild(acts);
     if (data.pick === a.app) box.appendChild(vPick(a.app));   // one list: where it is, the company's other sites, another
-    if (data.capture && data.capture.app === a.app) box.appendChild(vCapture(a.app));
+    if (data.capture && data.capture.app === a.app) box.appendChild(vCapture(a.app, data.capture));
     box.appendChild(file);
     // J6-08: the newer-version notice
     (a.newer || []).forEach(function (n) {
@@ -1252,17 +1272,18 @@
 
   // Change, one list (any site, any number, read from records). Where this app is now, each with its
   // version; the company's other sites; Another site…, any iVendNext site's address, which joins the list
-  // J3: Capture from a site: pick a site, read it, untick what to leave out, capture into the app's next version
-  function vCapture(app) {
+  // J3: Capture from a site: pick a site, read it, untick what to leave out, capture into the app's next version; with no
+  // app (J3b, New app's From a site), Next names the new app, which is made with what stays ticked
+  function vCapture(app, c) {
     // only a site Capture can read: one of ours granted to the company, or one added with its key (J3 critic)
-    var c = data.capture, box = card(G.capture), sites = ((data.sites || {}).company || []).filter(function (x) { return x.press; });
+    var box = card(app ? G.capture : G.fromSite), sites = ((data.sites || {}).company || []).filter(function (x) { return x.press; });
     box.appendChild(p(G.captureLede));
     var sel = el("select", { "aria-label": "Site" });
     sites.forEach(function (x) { sel.appendChild(el("option", { value: x.site, text: x.label ? x.label + " \u00b7 " + x.site : x.site })); });
     if (c.site) sel.value = c.site;
     box.appendChild(el("p", {}, sel, " ", button(G.captureRead, function (ev) {
       ev.target.disabled = true; c.site = sel.value; c.list = null; c.reading = true; render();
-      call("POST", "/capture/list", { app: app, site: c.site }).then(function (r) {
+      call("POST", "/capture/list", app ? { app: app, site: c.site } : { site: c.site }).then(function (r) {
         c.reading = false; c.list = r; c.off = {}; render();
       }, function (e) { c.reading = false; fail(e); });
     }, !!c.list || !sites.length)));
@@ -1271,7 +1292,6 @@
     var l = c.list;
     if (!l) return box;
     if (l.words) box.appendChild(p(l.words));
-    if (l.not_read) box.appendChild(el("p", { "class": "hint", text: l.not_read }));
     captureGroups(l.items).forEach(function (grp) {
       var gb = el("div", { "class": "hosting-step" }, el("h3", { text: grp.type }));
       grp.items.forEach(function (it) {
@@ -1290,15 +1310,19 @@
       box.appendChild(el("h3", { text: G.leftOut }));
       l.left_out.forEach(function (x) { box.appendChild(el("p", { "class": "hint", text: x.type + " " + x.name + ": " + x.reason })); });
     }
-    if ((l.items || []).length) box.appendChild(el("p", {}, button(G.captureTake, function (ev) {
+    if ((l.items || []).length && !app) box.appendChild(el("p", {}, button(G.next, function () {   // name it, then Make the app
+      if (ticksOff(c).length < l.items.length) { screen = "name"; say(""); } else say(G.captureNone, true);
+      render();
+    })));
+    if ((l.items || []).length && app) box.appendChild(el("p", {}, button(G.captureTake, function (ev) {
       ev.target.disabled = true;
-      var skip = Object.keys(c.off).filter(function (k) { return c.off[k]; });
-      call("POST", "/capture/take", { app: app, site: c.site, skip: skip }).then(function (r) {
+      call("POST", "/capture/take", { app: app, site: c.site, skip: ticksOff(c) }).then(function (r) {
         data.capture = null; say((r.words || []).join(" ")); openApp(app);
       }, function (e) { ev.target.disabled = false; fail(e); });
     })));
     return box;
   }
+  function ticksOff(c) { return Object.keys(c.off || {}).filter(function (k) { return c.off[k]; }); }
   // the capture list, one group per record type, in the order the site answered
   function captureGroups(items) {
     var out = [];
@@ -2103,6 +2127,7 @@
     if (!session) { view.appendChild(vSignIn()); return; }
     if (!who.company) { view.appendChild(screen === "company" ? vCompany() : vJoin()); return; }
     var v = { people: vPeople, tokens: vTokens, sites: vSites, gallery: g && vGallery, name: g && vName, made: data.made && data.made.words && vMade,
+              fromsite: g && g.fromSite && vFromSite,
               settings: vSettings, app: vApp, "try": vTry, publish: vPublish, logs: vLogs }[screen];
     view.appendChild((v || vHome)());
   }
