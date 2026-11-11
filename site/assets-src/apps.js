@@ -165,6 +165,7 @@
     renamed: "Renamed to your app", leftOut: "Left out",
     captureNoSite: "Add the site you built it on to My sites first, with a key you make there: Capture reads with that key.",
     captureNone: "Nothing is ticked: tick what to capture, then press Next again.",
+    madeEmpty: "Your app is made, with nothing in it yet: {why} Press Capture from a site on it to read the site again.",
     settingsLede: "Your app's own values, the same for every site. A customer's own account (their wallet) goes in the app's " +
       "settings in their Desk.",
     addresses: "Outside addresses", secrets: "Secrets your own service needs",
@@ -754,7 +755,10 @@
     var c = el("div", { "class": "hosting-step gallery-card gallery-blank" });
     c.appendChild(el("h3", { text: G.fromSite }));
     c.appendChild(el("p", { "class": "hint", text: G.fromSiteHint }));
-    c.appendChild(el("p", {}, button(G.fromSite, function () { startBlank(); g.fromSite = { off: {} }; screen = "fromsite"; render(); })));
+    c.appendChild(el("p", {}, button(G.fromSite, function () {
+      if (!data.sites) loadSites();   // the sites Capture can read: none are loaded until an app or My sites is opened
+      startBlank(); g.fromSite = { off: {} }; screen = "fromsite"; render();
+    })));
     return c;
   }
   function vFromSite() {
@@ -1022,7 +1026,8 @@
           if (from) {   // J3b: the new app takes what stayed ticked on the site read before it was named
             var opened = function () { data.made = null; screen = "app"; render(); openApp(r.app); };
             call("POST", "/capture/take", { app: r.app, site: from.site, skip: ticksOff(from) })
-              .then(function (t) { opened(); say((t.words || []).join(" ")); }, function (e) { opened(); fail(e); });
+              .then(function (t) { opened(); say((t.words || []).join(" ")); },
+                function (e) { opened(); say(G.madeEmpty.replace("{why}", e.message), true); render(); });
             return;
           }
           screen = "made"; render(); openApp(r.app);
@@ -1306,7 +1311,8 @@
       l.left_out.forEach(function (x) { box.appendChild(el("p", { "class": "hint", text: x.type + " " + x.name + ": " + x.reason })); });
     }
     if ((l.items || []).length && !app) box.appendChild(el("p", {}, button(G.next, function () {   // name it, then Make the app
-      if (ticksOff(c).length < l.items.length) { screen = "name"; say(""); render(); } else say(G.captureNone, true);
+      if (ticksOff(c).length < l.items.length) { screen = "name"; say(""); } else say(G.captureNone, true);
+      render();
     })));
     if ((l.items || []).length && app) box.appendChild(el("p", {}, button(G.captureTake, function (ev) {
       ev.target.disabled = true;

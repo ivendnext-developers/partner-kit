@@ -245,6 +245,8 @@ RETAIL = {
          "doctype_name": "Sales Person", "sequence": 906, "required": 0, "active": 1},
         {"name": "Must ask", "owner": ME, "attribute_name": "Must ask", "validation_type": "No Validation", "sequence": 907,
          "required": 1, "active": 1},
+        {"name": "Loyalty card no", "owner": ME, "attribute_name": "Loyalty card no", "validation_type": "No Validation",
+         "regex_pattern": "^[0-9]{10}$", "sequence": 908, "required": 0, "active": 1},
         {"name": "IVENDNEXT AGE ID Checked", "owner": "Administrator", "attribute_name": "IVENDNEXT AGE ID Checked",
          "sequence": 900, "required": 0, "active": 1},
     ],
@@ -255,6 +257,9 @@ RETAIL = {
          "label": None, "language": None, "sequence": 1},
         {"name": "f2row", "owner": "Administrator", "parent": "Ironwood", "parenttype": "Retail POS Theme",
          "parentfield": "field_rules", "surface": "cart_line", "field": "item_name", "action": "relabel", "label": "Product"},
+        {"name": "f3row", "owner": "Administrator", "parent": "Ironwood", "parenttype": "Retail POS Theme",
+         "parentfield": "field_rules", "surface": "cart_line", "field": "item_name", "action": "relabel", "label": "Producto",
+         "language": "es"},
         {"name": "appsrow", "owner": "Administrator", "parent": "Ironwood", "parenttype": "Retail POS Theme",
          "parentfield": "field_rules", "surface": "customer_card", "field": "loyalty_points", "action": "hide"},
     ],
@@ -268,6 +273,7 @@ RETAIL = {
          "parent_doctype": "Sales Order", "table_fieldname": "items"},
     ],
     "DocType State": [{"name": "st1", "owner": ME, "parent": "Sales Order", "title": "Waiting", "color": "Orange", "custom": 1}],
+    "Retail POS Theme": [{"name": "Acme Till", "owner": ME, "theme_name": "Acme Till", "layout": "classic"}],  # Save as new
     "Property Setter": [
         {"name": "Customer-lk9-hidden", "owner": ME, "doc_type": "Customer", "field_name": None, "row_name": "lk9",
          "doctype_or_field": "DocType Link", "property": "hidden", "property_type": "Check", "value": "1",
@@ -312,6 +318,7 @@ class Retail(unittest.TestCase):
                          [{"field": "is_stock_item", "operator": "=", "value": "0"},
                           {"field": "acme_rules_shelf_note", "operator": "is set"}])
         self.assertEqual(self.e["list_marks"][0]["colour"], "orange")
+        self.assertIn("Retail List Mark/Item: Not stocked", [i["id"] for i in self.r["items"]])  # by its label, not its row id
 
     def test_a_scan_source(self):
         self.assertEqual(self.e["scan_sources"], [{
@@ -341,12 +348,17 @@ class Retail(unittest.TestCase):
         self.assertEqual((by["Sales person"]["validation_type"], by["Sales person"]["doctype_name"]), ("DocType", "Sales Person"))
         self.assertNotIn("IVENDNEXT AGE ID Checked", by)  # the product's
         self.assertIn("would stop every sale", self.left[("Sale Attribute", "Must ask")])  # the checker's own words
+        self.assertEqual(self.left[("Sale Attribute", "Loyalty card no")], C.WORDS["sale_check"])  # never installed unchecked
 
     def test_till_field_rules_are_the_rows_no_app_made_and_take_the_renamed_field(self):
         self.assertEqual([{k: v for k, v in x.items() if k != "_from"} for x in self.e["field_rules"]], [
             {"theme": "Ironwood", "surface": "customer_create", "field": "acme_rules_id_number", "action": "show", "sequence": 1},
-            {"theme": "Ironwood", "surface": "cart_line", "field": "item_name", "action": "relabel", "label": "Product"}])
+            {"theme": "Ironwood", "surface": "cart_line", "field": "item_name", "action": "relabel", "label": "Product"},
+            {"theme": "Ironwood", "surface": "cart_line", "field": "item_name", "action": "relabel", "label": "Producto",
+             "language": "es"}])
+        self.assertIn("Retail POS Theme Field/Ironwood: relabel item_name on cart_line (es)", [i["id"] for i in self.r["items"]])
         self.assertIn("Retail POS Theme Field/Ironwood: show custom_id_number on customer_create", [i["id"] for i in self.r["items"]])
+        self.assertEqual(self.left[("Retail POS Theme", "Acme Till")], C.WORDS["theme"].format(name="Acme Till"))
 
     def test_a_connections_link_and_what_customize_form_makes_that_no_kind_carries(self):
         self.assertEqual(self.e["links"], [{"doctype": "Customer", "link_doctype": "Sales Order", "link_fieldname": "customer",
@@ -364,7 +376,7 @@ class Retail(unittest.TestCase):
             "label_layouts", "list_marks", "scan_sources", "register_books", "save_rules", "sale_attributes", "field_rules",
             "links"}, True)
         again, _ = C.write(m, self.r)  # a second capture replaces its own, a field rule by what it does
-        self.assertEqual(len(again["field_rules"]), 2)
+        self.assertEqual(len(again["field_rules"]), 3)  # a relabel in Spanish is a rule of its own
 
 
 class Parked(unittest.TestCase):

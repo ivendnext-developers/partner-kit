@@ -77,6 +77,7 @@ READ_TYPES = {
     "Retail Save Rule": [],
     "Sale Attribute": [],
     "Retail POS Theme Field": [],  # a till theme's field rules: rows of the theme, read as rows
+    "Retail POS Theme": [],  # a theme saved as new (the shipped ones stay as they ship): no kind carries it, so it is said
     "DocType Link": [["custom", "=", 1]],  # a Connections link made in Customize Form
     "DocType Action": [["custom", "=", 1]],  # Customize Form's own buttons and document states: no kind carries them
     "DocType State": [["custom", "=", 1]],
@@ -87,9 +88,10 @@ PARENT = {"Retail POS Theme Field": "Retail POS Theme", "DocType Link": "Customi
 # rows a person adds to a record the product made: a row takes its parent's owner, so the install records alone judge them
 # (a new site's till themes carry no field rules)
 ANY_OWNER = {"Retail POS Theme Field"}
-# the types whose records come one by one, with their child rows; the rest come whole from the list
+# the types whose records come one by one: with their child rows, or a print format's HTML (a list of a chain's print formats
+# would pass the 1 MB the hosting reads of one answer); the rest come whole from the list
 WITH_CHILDREN = {"Workflow", "Notification", "DocType", "Report", "Workspace", "Dashboard", "Document Naming Rule",
-                 "Retail List Mark", "Retail Save Rule"}
+                 "Retail List Mark", "Retail Save Rule", "Print Format"}
 # the types whose `module` marks an app's record: Desk itself sets the module of a person's print format, report and record
 # type (from the record type it is for), so those are judged by their standard mark and the install records alone
 MODULE_MARKS = {"Custom Field", "Property Setter", "Notification", "Workspace", "Number Card", "Dashboard Chart",
@@ -136,6 +138,10 @@ WORDS = {
     "child_link": "a Connections link to a child table's rows: the manifest's links list records of a record type; make it "
                   "in Customize Form on the customer's site",
     "no_kind": "a Customize Form {what}: the manifest carries none. Make it there again on the customer's site{instead}",
+    "sale_check": "a sale detail checked by a pattern or filled with a default: the manifest's sale detail carries "
+                  "neither, so it would install unchecked. Make it on the customer's site by hand",
+    "theme": "a till theme: the manifest carries none, only the field rules on it. On the site you install on, make a theme "
+             "named {name} first (POS Studio, Save as a new theme), then install: its field rules go on it",
     "field_order": "the whole order of the form's fields on that site: it would fix the customer's form to this layout. "
                    "Each captured field keeps its place by its Insert After",
 }
@@ -405,7 +411,8 @@ def _retail(records: dict, add, out: list, site: str) -> None:
     for r in records.get("Retail List Mark", []):
         if not r.get("enabled"):
             off("Retail List Mark", r, r.get("label") or r["name"]); continue
-        add("list_marks", {**_kept(r, KEEP["list_marks"]), "conditions": _conditions(r)}, ("Retail List Mark", r["name"]))
+        add("list_marks", {**_kept(r, KEEP["list_marks"]), "conditions": _conditions(r)},
+            ("Retail List Mark", f"{r.get('record_type')}: {r.get('label')}"))  # its own name is a row id
     for r in records.get("Retail Scan Source", []):
         if not r.get("enabled"):
             off("Retail Scan Source", r, r["name"]); continue
@@ -436,14 +443,20 @@ def _retail(records: dict, add, out: list, site: str) -> None:
     for r in records.get("Sale Attribute", []):
         if not r.get("active"):
             off("Sale Attribute", r, r["name"]); continue
+        if r.get("regex_pattern") or r.get("default_value") or r.get("validation_type") not in (None, "", "No Validation",
+                                                                                                 "DocType"):
+            out.append({"type": "Sale Attribute", "name": r["name"], "reason": WORDS["sale_check"]}); continue
         a = {"name": r.get("attribute_name") or r["name"], **_kept(r, ("sequence", "required"))}
         if r.get("validation_type") == "DocType" and r.get("doctype_name"):
             a.update(validation_type="DocType", doctype_name=r["doctype_name"])
         add("sale_attributes", a, ("Sale Attribute", r["name"]))  # a required one: the checker says why it cannot be
     for r in records.get("Retail POS Theme Field", []):
         rule = {"theme": r.get("parent"), **_kept(r, KEEP["field_rules"])}
-        add("field_rules", rule, ("Retail POS Theme Field",
-                                  f"{r.get('parent')}: {r.get('action')} {r.get('field')} on {r.get('surface')}"))
+        add("field_rules", rule, ("Retail POS Theme Field",  # a language's own words are a rule of their own
+                                  f"{r.get('parent')}: {r.get('action')} {r.get('field')} on {r.get('surface')}"
+                                  + (f" ({r['language']})" if r.get("language") else "")))
+    for r in records.get("Retail POS Theme", []):
+        out.append({"type": "Retail POS Theme", "name": r["name"], "reason": WORDS["theme"].format(name=r["name"])})
     for r in records.get("DocType Link", []):
         name = f"{r.get('parent')}: {r.get('link_doctype')}"
         if r.get("is_child_table") or r.get("table_fieldname"):
@@ -451,7 +464,7 @@ def _retail(records: dict, add, out: list, site: str) -> None:
         add("links", {"doctype": r.get("parent"), "link_doctype": r.get("link_doctype"),
                       "link_fieldname": r.get("link_fieldname"), **_kept(r, ("group",))}, ("DocType Link", name))
     for dt, what, instead in (("DocType Action", "form button", ""),
-                              ("DocType State", "document state", ", or show it with a list mark (list_marks)")):
+                              ("DocType State", "document state", ", or show it with a list mark")):
         for r in records.get(dt, []):
             out.append({"type": dt, "name": f"{r.get('parent')}: {r.get('label') or r.get('title') or r['name']}",
                         "reason": WORDS["no_kind"].format(what=what, instead=instead)})
@@ -466,8 +479,8 @@ DT_KEY = {"custom_fields": "dt", "property_setters": "doc_type", "print_formats"
           "number_cards": "document_type", "dashboard_charts": "document_type", "list_marks": "record_type",
           "scan_sources": "record_type", "save_rules": "record_type", "role_rights": "doctype", "links": "link_doctype"}
 # a till field rule names a field of the record the till screen shows; a label layout's `{item.<field>}` an Item's
-SURFACE_DT = {"customer_create": "Customer", "customer_card": "Customer", "item_result": "Item", "cart_line": "POS Invoice Item",
-              "sale_details": "POS Invoice", "receipt_preview": "POS Invoice", "totals": "POS Invoice"}
+SURFACE_DT = {"customer_create": "Customer", "customer_card": "Customer", "item_result": "Item", "cart_line": "Item",
+              "receipt_preview": "Item"}  # the till's own table (pos_fields.SURFACES); sale details and totals name none
 
 
 def _about(kind: str, entry: dict):
@@ -639,7 +652,7 @@ def write(base: dict, result: dict, skip=(), only=()) -> tuple[dict, list]:
 def _key_of(kind: str) -> tuple:
     from validate import KEYED  # noqa: PLC0415
     return {"property_setters": ("doc_type", "field_name", "property"),
-            "field_rules": ("theme", "surface", "field", "action")}.get(kind) or KEYED.get(kind, ("name",))[:2]
+            "field_rules": ("theme", "surface", "field", "action", "language")}.get(kind) or KEYED.get(kind, ("name",))[:2]
 
 
 def lines(result: dict, site: str) -> list[str]:

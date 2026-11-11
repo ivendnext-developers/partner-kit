@@ -408,7 +408,9 @@ check("J3b: From a site reads the site before the app is named, Next only with s
   src.includes('g.fromSite = { off: {} }; screen = "fromsite";') && src.includes("fromsite: g && g.fromSite && vFromSite,") &&
   src.includes('call("POST", "/capture/list", app ? { app: app, site: c.site } : { site: c.site })') &&
   src.includes("if ((l.items || []).length && !app) box.appendChild(el(\"p\", {}, button(G.next,") &&
-  src.includes("if (ticksOff(c).length < l.items.length) { screen = \"name\";") &&
+  src.includes("if (ticksOff(c).length < l.items.length) { screen = \"name\"; say(\"\"); } else say(G.captureNone, true);\n      render();") &&
+  src.includes("if (!data.sites) loadSites();   // the sites Capture can read") && a.G.captureNone.startsWith("Nothing is ticked") &&
+  src.includes('say(G.madeEmpty.replace("{why}", e.message), true); render();') &&
   src.includes('call("POST", "/capture/take", { app: r.app, site: from.site, skip: ticksOff(from) })') &&
   src.indexOf('call("POST", "/new", body)') < src.indexOf("site: from.site, skip: ticksOff(from)") &&
   !src.includes("data.capture = { app: r.app }") && a.ticksOff({ off: { a: true, b: false } }).join() === "a");
