@@ -27,7 +27,7 @@ sys.path[:0] = [HERE, os.path.dirname(HERE), os.path.join(os.path.dirname(os.pat
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "tools", "app_template", "service"))
 import bins  # noqa: E402
 import core  # noqa: E402
-from receiver import HEADER, replay_key, verify  # noqa: E402  (S1's webhook receiver, unchanged: samples/s1_warranty/service)
+from receiver import HEADER, replay_key, verify  # noqa: E402  (S1's webhook receiver: samples/s1_warranty/service)
 from store import Store  # noqa: E402
 from tenant import Tenant, TenantError  # noqa: E402
 import testcall  # noqa: E402  (the template's test call)
