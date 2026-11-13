@@ -1,5 +1,6 @@
 """S1's webhook answers the site's Test connection: a call marked ``X-iVendNext-Test: 1`` is checked as a real call, then answered
-``{"test": "ok"}`` with no work done. A call that is not signed gets the real refusal.
+``{"test": "ok"}`` with no work done. A call that is not signed gets the real refusal. The signature is checked over the
+bytes received, however the sender laid the JSON out, and never over a body laid out again.
 
     python3 -m unittest discover -s samples/s1_warranty/tests -p 'test_test_marker.py' -v
 """
@@ -18,6 +19,7 @@ import urllib.request
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "service"))
 import app  # noqa: E402
+import receiver  # noqa: E402
 
 SECRET = "the-webhook-secret"
 
@@ -59,6 +61,22 @@ class Marker(unittest.TestCase):
 
     def test_a_test_call_with_a_bad_signature_gets_the_real_refusal(self):
         self.assertEqual(self.post("bad")[0], 401)
+
+
+class Layout(unittest.TestCase):
+    def test_a_body_laid_out_either_way_verifies_over_the_bytes_received(self):
+        data = {"name": "S-1", "doctype": "POS Invoice", "event": "on_submit", "modified": "2026-11-12 10:00:00"}
+        compact, indented = json.dumps(data).encode(), json.dumps(data, indent=1, sort_keys=True).encode()
+        for body in (compact, indented):
+            self.assertEqual(receiver.verify(body, receiver._sign(SECRET, body).decode(), SECRET), (data, "raw-body"))
+        self.assertNotEqual(compact, indented)
+
+    def test_a_body_laid_out_again_after_signing_is_refused(self):
+        data = {"name": "S-1", "doctype": "POS Invoice", "event": "on_submit", "modified": "2026-11-12 10:00:00"}
+        signed = json.dumps(data).encode()
+        for again in (json.dumps(data, separators=(",", ":")), json.dumps(data, indent=1, sort_keys=True)):
+            got = receiver.verify(again.encode(), receiver._sign(SECRET, signed).decode(), SECRET)
+            self.assertEqual(got, (None, "the signature does not match"))
 
 
 if __name__ == "__main__":

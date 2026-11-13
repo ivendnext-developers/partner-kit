@@ -359,6 +359,9 @@ CANARIES = [
      "                pass", L + "LiveTest.test_v4_a_dropped_socket_says_so_then_comes_back_and_every_screen_reads"),
     ("a failed page read does not use up the name read's window", LS, "                    if name is not None:    # read: not again",
      "                    if True:    # read: not again", L + "LiveTest.test_v17_a_failed_page_read_with_a_cached_name_does_not_hold_a_rename_back"),
+    ("a Desk that moved is read at its new address", LS, "        for page in NAME_PAGES:         # a release that moved",
+     "        for page in NAME_PAGES[:1]:     # a release that moved",
+     L + "LiveTest.test_v18_a_site_whose_desk_moved_is_read_at_its_new_address_and_the_redirect_is_never_followed"),
     # KSCSOLDNAME
     ("a sold-out dish is named by its record", S, "            value = ksc.with_names(value, named)", "            value = value",
      T + "test_s8_a_dish_sold_out_that_no_ticket_names_is_shown_by_its_name"),

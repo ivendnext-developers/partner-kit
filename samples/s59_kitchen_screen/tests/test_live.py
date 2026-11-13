@@ -177,6 +177,18 @@ class LiveTest(unittest.TestCase):
         self.site.push(F.STORE)
         self.assertEqual(self.events(r, lambda n, d: n == "read", 3)[-1], ("read", {}))
 
+    def test_v18_a_site_whose_desk_moved_is_read_at_its_new_address_and_the_redirect_is_never_followed(self):
+        other = fakesite.FakeSite(name="other.example.com")
+        self.addCleanup(other.stop)
+        for moved_to in ("/desk", f"http://{other.site}/app"):             # the redirect names the site, or another host
+            with self.subTest(moved_to):
+                self.start(name="shop-internal.example.com")
+                self.site.moved_to = moved_to
+                r = self.open_line(link_for(self.site.site, "KSC-SCREEN-00001"))
+                self.assertEqual(self.up(r)[-1], ("state", {"live": True}))
+                self.assertEqual((self.hub.names, self.site.pages), ({self.site.site: "shop-internal.example.com"}, 1))
+                self.assertEqual(other.headers, [])                        # the key went to the site and nowhere else
+
     def test_v6_no_key_or_secret_reaches_a_log_line_and_a_wrong_key_is_refused(self):
         self.start(site_key="k3y-app-user:wrong-secret-99")
         r = self.open_line(link_for(self.site.site, "KSC-SCREEN-00001"))
