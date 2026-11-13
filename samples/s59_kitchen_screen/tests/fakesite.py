@@ -44,9 +44,10 @@ class FakeSite:
             def do_GET(self):
                 site.headers.append(dict(self.headers))
                 url = urllib.parse.urlsplit(self.path)
-                if url.path == "/app" and site.moved_to is not None:
-                    return self._send(301, "", extra={"Location": site.moved_to})
-                if url.path == ("/app" if site.moved_to is None else "/desk"):
+                if url.path in ("/app", "/desk") and url.path != ("/app" if site.moved_to is None else "/desk"):
+                    return self._send(*((404, "not found") if site.moved_to is None else (301, "")),
+                                      extra={"Location": site.moved_to} if site.moved_to else None)
+                if url.path in ("/app", "/desk"):
                     site.pages += 1
                     if site.edge_page is not None:
                         return self._send(200, site.edge_page, "text/html")

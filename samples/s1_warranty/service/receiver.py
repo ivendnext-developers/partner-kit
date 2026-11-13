@@ -1,10 +1,9 @@
 """Receiving iVendNext webhooks safely — the reference implementation of recipes/webhook_receiver.md.
 
-1. VERIFY: header ``X-iVendNext-Webhook-Signature`` = base64(HMAC-SHA256(secret, body)), over the RAW BODY (any language
-   can). The body's layout is the sender's and differs between releases (on one line, or indented with its keys sorted),
-   so it is never rebuilt first. The release that sends it on one line signs ``json.dumps(data)`` and sends
-   ``json.dumps(data, default=str)``: the same bytes for a payload of plain JSON values. If the raw body fails we
-   also try that form, ``json.dumps(json.loads(body))``, and record which one matched (measured on our test bench).
+1. VERIFY: header ``X-Frappe-Webhook-Signature`` = base64(HMAC-SHA256(secret, body)). The sender signs
+   and lays out the body in its own way, which differs between releases (on one line, or indented with its keys
+   sorted). So we verify over the RAW BODY (any language can), before anything is parsed, and never rebuild it first:
+   a body that does not verify as received is refused.
 2. REPLAY: nothing in the payload is signed with a time, so a captured request stays valid for ever. We keep
    a seen-set keyed on record type + name + event + ``modified``.
 3. IDEMPOTENCY and MISSED DELIVERIES are the caller's (app.py): every handler is safe to run twice, and a
@@ -18,7 +17,7 @@ import hashlib
 import hmac
 import json
 
-HEADER = "X-iVendNext-Webhook-Signature"
+HEADER = "X-Frappe-Webhook-Signature"
 
 
 def _sign(secret: str, payload: bytes) -> bytes:
@@ -26,20 +25,18 @@ def _sign(secret: str, payload: bytes) -> bytes:
 
 
 def verify(body: bytes, signature: str | None, secret: str) -> tuple[dict | None, str]:
-    """``(data, how)`` when the signature holds — ``how`` is "raw-body" or "re-serialised" — else ``(None, why)``."""
+    """``(data, "raw-body")`` when the signature holds over the bytes received, else ``(None, why)``."""
     if not signature:
         return None, "no signature header"
-    sig = signature.strip().encode()
-    how = "raw-body" if hmac.compare_digest(_sign(secret, body), sig) else None   # HMAC first, parse after
+    if not hmac.compare_digest(_sign(secret, body), signature.strip().encode()):   # HMAC first, parse after
+        return None, "the signature does not match"
     try:
         data = json.loads(body)
     except ValueError:
-        return None, "the signature does not match" if how is None else "the body is not JSON"
+        return None, "the body is not JSON"
     if not isinstance(data, dict):
         return None, "the body is not a JSON object"
-    if how is None and hmac.compare_digest(_sign(secret, json.dumps(data).encode()), sig):
-        how = "re-serialised"
-    return (data, how) if how else (None, "the signature does not match")
+    return data, "raw-body"
 
 
 def replay_key(data: dict) -> str | None:

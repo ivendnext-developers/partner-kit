@@ -30,8 +30,8 @@ LIFE_S while a screen is open).
 A site's socket is opened when the first screen of that site opens its line, and closed LINGER_S after its last line
 ends: a retailer with no screen open costs its socket server nothing. Its namespace is the site's own name, which a
 hosted site may give a name other than its address: when the socket refuses the address, the name is read once from
-the site's own Desk page (as the app's user) and kept. A site whose Desk moved answers with a redirect: it is followed
-on the site itself only, so the key never travels to another host.
+the site's own Desk page (as the app's user) and kept. The Desk page is at ``/app``, or at ``/desk`` on a release that
+moved it: each is asked of the site itself, and the redirect such a release answers at ``/app`` is never followed.
 
 Settings (environment): IVN_LIBRARY_APP, KSC_PREFIX, KSC_PAGE_URL (the service's own, as ``service/app.py`` reads them:
 the screens' origin is KSC_PAGE_URL's), IVN_SHOPS_TABLE (the service's table, read-only here) or IVN_SHOPS_FILE, PORT.
@@ -68,21 +68,11 @@ SITE_STREAMS_MAX = 300    # … and one retailer's
 CONNECTIONS_MAX = STREAMS_MAX + 200   # connections at once, admitted or not (a slow caller holds a thread each)
 NAME_RETRY_S = 1800       # a Desk page read whole is read again at most this often (no name in it, or a refusal
                           # of the name it gave)
-NAME_PAGE = "/app"        # the site's Desk page: its boot data names the site (``"sitename": …``)
-NAME_HOPS = 3             # requests at most for it: a site whose Desk moved redirects there, on the same host
+NAME_PAGES = ("/app", "/desk")   # the site's Desk page, where each release serves it: its boot data names the
+                          # site (``"sitename": …``)
 NAME_MAX = 4 * 1024 * 1024
 NAME_PAGE_MIN = 64 * 1024 # a Desk page is larger than this; a smaller one (an edge's own page) is not parked
 _NAME = re.compile(r'sitename\\?"\s*:\s*\\?"([a-z0-9][a-z0-9.-]{0,252})\\?"')
-
-
-def same_host_path(site: urllib.parse.SplitResult, location: str | None) -> str | None:
-    """The path a redirect names on the site itself; None when it names another host, scheme or port, or no path."""
-    to = urllib.parse.urlsplit(location or "")
-    if (to.scheme or to.netloc) and (to.scheme, to.hostname, to.port) != (site.scheme, site.hostname, site.port):
-        return None
-    if not to.path.startswith("/"):
-        return None
-    return to.path + ("?" + to.query if to.query else "")
 
 
 def fingerprint(key: str | None) -> str:
@@ -267,21 +257,17 @@ class Hub:
 
     @staticmethod
     def _open_page(url: str, key: str) -> str | None:
-        site = urllib.parse.urlsplit(url)
-        kind = http.client.HTTPSConnection if site.scheme == "https" else http.client.HTTPConnection
-        path = NAME_PAGE
-        for _ in range(NAME_HOPS):
-            conn = kind(site.hostname, site.port, timeout=15)   # always the site itself, whatever a redirect names
-            try:
-                conn.request("GET", path, headers={"Authorization": f"token {key}", "Accept": "text/html"})
+        parts = urllib.parse.urlsplit(url)
+        kind = http.client.HTTPSConnection if parts.scheme == "https" else http.client.HTTPConnection
+        for page in NAME_PAGES:         # a release that moved its Desk answers the first with a redirect: it is never
+            conn = kind(parts.hostname, parts.port, timeout=15)     # followed (a key never travels to another host);
+            try:                                                    # the next address is asked of the site itself
+                conn.request("GET", page, headers={"Authorization": f"token {key}", "Accept": "text/html"})
                 r = conn.getresponse()
                 if r.status == 200:
                     return r.read(NAME_MAX).decode("utf-8", "replace")
-                path = same_host_path(site, r.getheader("Location")) if r.status in (301, 302, 303, 307, 308) else None
             finally:
                 conn.close()
-            if not path:                # another answer, or a redirect to another host: a key never travels there
-                return None
         return None
 
     def sweep(self):

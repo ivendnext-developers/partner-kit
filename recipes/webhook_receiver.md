@@ -27,20 +27,20 @@ A thin body keeps the signature check simple (rule 2) and keeps customer data ou
 
 ## 2. Verify the signature — over the raw body
 
-Each call carries `X-iVendNext-Webhook-Signature`: the **base64 of HMAC-SHA256(secret, body)**. Compute it over the **exact bytes you received**, and compare in constant time:
+Each call carries `X-Frappe-Webhook-Signature`: the **base64 of HMAC-SHA256(secret, body)**. Compute it over the **exact bytes you received**, and compare in constant time:
 
 ```python
 expected = base64.b64encode(hmac.new(secret.encode(), raw_body, hashlib.sha256).digest())
-ok = hmac.compare_digest(expected, request.headers["X-iVendNext-Webhook-Signature"].encode())
+ok = hmac.compare_digest(expected, request.headers["X-Frappe-Webhook-Signature"].encode())
 ```
 
 Refuse anything else with `401`: a missing header, a wrong signature, a body changed after signing. Check the signature **before** parsing anything.
 
-⚠ **No `Content-Type` header is sent** unless the subscription adds one by hand. So read the raw body whatever the header says.
+⚠ **Read the raw body whatever `Content-Type` says.** iVendNext sets no `Content-Type` itself. Desk's Webhook form adds `application/json` when *Request Structure* is *JSON*; a subscription made another way may carry none.
 
 ⚠ **Never rebuild the body before you verify it.** How the JSON is laid out is the sender's choice, and it differs between iVendNext releases: one sends it on one line, another indented with its keys sorted. A receiver that parses the body and serialises it again will refuse every call from a release that lays it out differently; one that verifies the bytes it received works on all of them.
 
-⚠ **Keep the body to plain JSON values.** The release that sends the JSON on one line signs its payload serialised one way and sends it serialised a second way. For a body of plain JSON values, which is what rule 1's template produces, the two are byte-identical, and verifying over the raw body works. If you put a non-JSON value (a date object, a decimal) into a custom body, the two forms can differ. The release that sends indented JSON signs exactly the bytes it sends.
+⚠ **Keep the body to plain JSON values**, which is what rule 1's template produces. On the release that sends the JSON on one line, a custom body that holds a non-JSON value (a date object, a decimal) is not sent at all: signing it fails, and the retailer's iVendNext only logs the failure.
 
 ## 3. Reject replays
 
@@ -75,6 +75,5 @@ Proposed to our product team: a signed timestamp (so a receiver can reject old c
 ## Technical notes
 
 - **The sample.** `samples/s1_warranty/service/receiver.py` and `service/app.py` are proven end to end on our test bench. The GIF is the sample's own walk (see `samples/s1_warranty/README.md` for its date, frames and pin).
-- **Rule 2, the header and the layout.** On 2026-11-12 one signed webhook was captured on the release in service and one on the release after it: both carry the header, and on both it is the base64 HMAC-SHA256 of the bytes sent. The sending code was re-read on both on 2026-11-13.
-- **Rule 2, `Content-Type`.** The signing code was re-read at framework `9c19f570`, the bench's pin.
-- **Rule 2, plain JSON values.** ⚠ **Measured on our test bench**, on the release that sends the JSON on one line. The two serialisations were byte-identical for rule 1's template; our tests checked this on a real sale's delivery.
+- **Rule 2, the header and the layout.** On 2026-11-12 one signed webhook was captured on a test build of the current release and one on the release after it: on both the header is the base64 HMAC-SHA256 of the bytes sent. The sending code and Desk's Webhook form were re-read on both on 2026-11-13. Builds from 2026-10-15 on send the same value a second time, as `X-iVendNext-Webhook-Signature`; read the header above until every release in service sends both.
+- **Rule 2, plain JSON values.** ⚠ **Measured on our test bench**, on the release that sends the JSON on one line. That release serialises the body twice, once to sign and once to send; the two were byte-identical for rule 1's template, and our tests checked this on a real sale's delivery.

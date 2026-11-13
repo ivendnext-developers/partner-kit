@@ -64,7 +64,8 @@ class AllowTest(unittest.TestCase):
 
 class Shop:
     """A stand-in shop. ``page``: "form" (Allow is a POST with the page's token; a GET of approve, or a POST without the
-    token, is refused), "script" (Allow is a GET), or "skip" (no page: authorize redirects to the approve address)."""
+    token, is refused), "script" (Allow is a GET), "skip" (no page: authorize redirects to the approve address) or
+    "skip-direct" (no page: authorize redirects straight back to the app with the code)."""
 
     def __init__(self, page):
         shop, self.page, self.presses = self, page, []
@@ -96,6 +97,9 @@ class Shop:
                 address = APPROVE + "?" + urllib.parse.urlencode(q, quote_via=urllib.parse.quote)
                 if shop.page == "skip":
                     return self._send(302, location=address)
+                if shop.page == "skip-direct":
+                    back = urllib.parse.urlencode({"code": "c0de", "state": q["state"]})
+                    return self._send(302, location=f"{q['redirect_uri']}?{back}")
                 self._send(200, form_page(address) if shop.page == "form" else script_page(address))
 
             def do_POST(self):
@@ -124,13 +128,15 @@ class AuthorizeTest(unittest.TestCase):
         return shop
 
     def test_each_page_gives_a_code_and_the_same_state(self):
-        for page, press in (("form", ("POST", {"csrf_token": TOKEN})), ("script", ("GET", {})), ("skip", ("GET", {}))):
+        pressed = {"form": [("POST", {"csrf_token": TOKEN})], "script": [("GET", {})], "skip": [("GET", {})],
+                   "skip-direct": []}
+        for page, presses in pressed.items():
             with self.subTest(page):
                 shop = self.shop(page)
                 a = flow.authorize(flow.browser(), "c1", REDIRECT, "chal", "s 1")
                 self.assertEqual((a["code"], a["state_back"], a["redirected_to"]), ("c0de", "s 1", REDIRECT))
-                self.assertEqual(shop.presses, [press])                 # pressed once, the way the page asks
-                self.assertEqual(a["consent_shown"], page != "skip")
+                self.assertEqual(shop.presses, presses)                 # pressed once at most, the way the shop asks
+                self.assertEqual(a["consent_shown"], page in ("form", "script"))
 
     def test_a_redirect_address_the_shop_refuses_gives_no_code_and_nothing_is_pressed(self):
         for page in ("form", "script"):
