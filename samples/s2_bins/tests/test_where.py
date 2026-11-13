@@ -557,17 +557,14 @@ class OwnServerTestCall(unittest.TestCase):
 
     def test_a_signed_test_call_at_the_webhook_stores_no_sale(self):
         """The webhook answers a test call after its own signature check, and handles no sale (nothing is stored)."""
-        import re as _re
         import urllib.error
         import urllib.request
         sys.path.insert(0, str(HERE.parents[1] / "s1_warranty" / "service"))
         import receiver
-        source = (HERE.parent / "service" / "app.py").read_text(encoding="utf-8")
-        header = _re.search(r'self\.headers\.get\("(X-[A-Za-z]+-Webhook-Signature)"\)', source).group(1)
         body = json.dumps({"doctype": "POS Invoice", "name": "T-1", "modified": "2026-10-31 10:00:00"}).encode()
 
         def post(secret):
-            h = {header: receiver._sign(secret, body).decode(), "X-iVendNext-Test": "1"}
+            h = {receiver.HEADER: receiver._sign(secret, body).decode(), "X-iVendNext-Test": "1"}
             req = urllib.request.Request(f"http://127.0.0.1:{self.port}/webhook", data=body, headers=h, method="POST")
             try:
                 with urllib.request.urlopen(req, timeout=10) as r:

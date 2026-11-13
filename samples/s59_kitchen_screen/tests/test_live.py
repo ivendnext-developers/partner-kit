@@ -177,6 +177,37 @@ class LiveTest(unittest.TestCase):
         self.site.push(F.STORE)
         self.assertEqual(self.events(r, lambda n, d: n == "read", 3)[-1], ("read", {}))
 
+    def test_v18_a_site_whose_desk_moved_is_followed_there_on_the_site_itself(self):
+        for moved_to in ("/desk", "http://{site}/desk"):                   # a redirect written either way
+            with self.subTest(moved_to):
+                self.start(name="shop-internal.example.com")
+                self.site.moved_to = moved_to.format(site=self.site.site)
+                r = self.open_line(link_for(self.site.site, "KSC-SCREEN-00001"))
+                self.assertEqual(self.up(r)[-1], ("state", {"live": True}))
+                self.assertEqual((self.hub.names, self.site.pages), ({self.site.site: "shop-internal.example.com"}, 1))
+
+    def test_v19_a_redirect_to_another_host_is_not_followed_and_the_key_goes_nowhere_else(self):
+        shop = live.urllib.parse.urlsplit("https://shop.example.com")
+        asked = ("/desk", "https://shop.example.com/desk?x=1", "desk", "", None, "https://shop.example.com:8443/desk",
+                 "http://shop.example.com/desk", "//other.example.com/desk")
+        self.assertEqual([live.same_host_path(shop, to) for to in asked], ["/desk", "/desk?x=1"] + [None] * 6)
+        other = fakesite.FakeSite(name="shop-internal.example.com")
+        self.addCleanup(other.stop)
+        other.moved_to = "/desk"                                           # it would name the site, were it asked
+        for moved_to in (f"http://{other.site}/desk", f"//{other.site}/desk", f"https://{{site}}/desk", "desk"):
+            with self.subTest(moved_to):
+                self.start(name="shop-internal.example.com")
+                self.site.moved_to = moved_to.format(site=self.site.site)
+                self.events(self.open_line(link_for(self.site.site, "KSC-SCREEN-00001")), None, 1.5)
+                self.assertEqual((self.hub.names, self.site.pages, other.headers), ({}, 0, []))
+
+    def test_v20_a_site_that_redirects_for_ever_is_asked_a_few_times_and_no_more(self):
+        self.start(name="shop-internal.example.com")
+        self.site.moved_to = "/app"
+        asked = lambda: len([h for h in self.site.headers if h.get("Accept") == "text/html"])   # noqa: E731
+        self.assertIsNone(live.Hub._open_page(self.site.url, fakesite.KEY))
+        self.assertEqual(asked(), live.NAME_HOPS)
+
     def test_v6_no_key_or_secret_reaches_a_log_line_and_a_wrong_key_is_refused(self):
         self.start(site_key="k3y-app-user:wrong-secret-99")
         r = self.open_line(link_for(self.site.site, "KSC-SCREEN-00001"))

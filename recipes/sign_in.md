@@ -16,7 +16,7 @@ They give you its **client id** and its **client secret**. Optionally, *Allowed 
 ## 2. The flow
 1. Your app makes a random **verifier** (43–128 characters) and its **challenge** = base64url(SHA-256(verifier)), and a random **state**. Keep both on your side for this sign-in.
 2. Send the person's browser to `https://<shop>/api/method/frappe.integrations.oauth2.authorize` with `client_id`, `response_type=code`, `redirect_uri`, `scope=openid all`, `state`, `code_challenge`, `code_challenge_method=S256`.
-3. The person signs in to iVendNext **with their own account**. A person not yet signed in is sent to the retailer's own sign-in page first. iVendNext then shows an **Allow / Deny** page naming your app — unless the client is set to skip it, or the retailer's *OAuth Provider Settings* say *Auto*: then, once any token is active anywhere in the retailer's iVendNext, nobody is asked.
+3. The person signs in to iVendNext **with their own account**. A person not yet signed in is sent to the retailer's own sign-in page first. iVendNext then shows an **Allow / Deny** page naming your app — unless the client is set to skip it, or the retailer's *OAuth Provider Settings* say *Auto* (on a newer release, *OAuth Settings* says to skip authorization). Then the page is skipped while a token is active: on one release once any token is active anywhere in the retailer's iVendNext, on a newer one only for a person who already holds an active token for your app.
 4. On Allow, iVendNext redirects to your redirect address with `code` and the **same** `state`. **Refuse the callback if `state` is not the one you sent.**
 5. Your server exchanges the code at `…/frappe.integrations.oauth2.get_token` (form fields: `grant_type=authorization_code`, `code`, `redirect_uri`, `client_id`, **`code_verifier`**, and, from a server, `client_secret`). You get an `access_token` (and a `refresh_token`).
 6. Every call then carries `Authorization: Bearer <access_token>` and runs **as that person**. `…/frappe.integrations.oauth2.openid_profile` names them and their roles.
@@ -61,5 +61,5 @@ On this build a code issued **without** PKCE was exchanged with a **wrong** secr
 
 ### Bounds, stated
 - Our test bench is reached over plain HTTP on a private network; a real site is HTTPS.
-- The person's browser was played by a script (signing in with the persona's password, pressing Allow); the pages themselves were not looked at by a person.
+- The person's browser was played by a script (signing in with the persona's password, pressing Allow); the pages themselves were not looked at by a person. The script presses Allow as the page itself sends it: on one release a button that sends the browser on, on another a form posted with the page's own token. Your app does neither: Allow is the retailer's page, in the person's browser.
 - The refresh token was issued but not exercised. *Allowed Roles* was exercised later, by S13 (`recipes/portal.md`): a user outside the roles is stopped at the retailer's Allow step.

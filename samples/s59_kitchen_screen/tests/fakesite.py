@@ -2,7 +2,8 @@
 transport (engine.io 4, socket.io 5), on 127.0.0.1. It signs a connection in to the namespace ``/<its name>`` only with
 the app user's key, the site's own origin and a cookie that holds no ``sid``, as the site's socket does; it pings, it
 pushes ``mpos_station_ticket`` notices to every signed-in connection, it can drop every connection, and its Desk page
-(``/app``) names the site to a request with the key. It records each request's headers for the tests."""
+(``/app``) names the site to a request with the key. A site whose Desk moved (``moved_to``) answers ``/app`` with a
+redirect there and serves the page at ``/desk``. It records each request's headers for the tests."""
 
 import json
 import threading
@@ -21,6 +22,7 @@ class FakeSite:
         self.page_fails = page_fails                                    # the Desk page answers 502 this many times first
         self.poll_ts = []                                               # each long poll's t= (a fresh one each time)
         self.edge_page = None                                           # /app answers this small page (an edge's)
+        self.moved_to = None                                            # /app answers 301 to this; the page is /desk
         self.refuse_ns = False
         self.lock = threading.Condition()
         self.queues, self.signed, self.headers, self.pongs, self.closed, self.pages = {}, set(), [], 0, [], 0
@@ -42,7 +44,9 @@ class FakeSite:
             def do_GET(self):
                 site.headers.append(dict(self.headers))
                 url = urllib.parse.urlsplit(self.path)
-                if url.path == "/app":
+                if url.path == "/app" and site.moved_to is not None:
+                    return self._send(301, "", extra={"Location": site.moved_to})
+                if url.path == ("/app" if site.moved_to is None else "/desk"):
                     site.pages += 1
                     if site.edge_page is not None:
                         return self._send(200, site.edge_page, "text/html")

@@ -5,13 +5,17 @@ A partner app: (1) makes a random verifier and its S256 challenge and a random s
 the shop's authorize address; (3) the person signs in to THEIR OWN account and allows the app; (4) the shop redirects back
 with a code and the state; (5) the app checks the state and exchanges the code WITH THE VERIFIER for a token; (6) every
 call it then makes carries the token and runs with that person's permissions, nothing more.
-Here a script plays the person's browser (it signs in with the persona's password and presses Allow).
+Here a script plays the person's browser: it signs in with the persona's password, reads the Allow/Deny page and
+presses Allow as that page sends it (``allow``). A partner's app never does this part: the person's own browser does.
 """
 import base64
 import hashlib
+import html
+import html.parser
 import http.cookiejar
 import json
 import os
+import re
 import secrets
 import sys
 import urllib.error
@@ -49,15 +53,55 @@ def call(opener, method, path, data=None, headers=None):
         return e.code, dict(e.headers), e.read().decode(errors="replace")
 
 
+class _Forms(html.parser.HTMLParser):
+    """A page's forms: each one's method, its address and its hidden fields."""
+
+    def __init__(self):
+        super().__init__()
+        self.forms, self.open = [], None
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        if tag == "form":
+            self.open = {"method": (a.get("method") or "GET").upper(), "action": a.get("action") or "", "fields": {}}
+            self.forms.append(self.open)
+        elif tag == "input" and self.open and (a.get("type") or "").lower() == "hidden" and a.get("name"):
+            self.open["fields"][a["name"]] = a.get("value") or ""
+
+    def handle_endtag(self, tag):
+        if tag == "form":
+            self.open = None
+
+
+def allow(page):
+    """What the consent page's Allow sends, as the person's browser sends it: ``(method, address, form fields)``, or
+    None when the page offers no Allow. A shop serves one of two pages: a form that POSTs to the shop's approve address
+    with the page's own token as a hidden field, or a button whose script sends the browser to that address (a GET).
+    Only the shop's own approve address counts: anything else on the page is never pressed."""
+    forms = _Forms()
+    forms.feed(page)
+    for f in forms.forms:
+        if f["method"] == "POST" and f["action"].startswith(f"{O}.approve?"):
+            return "POST", f["action"], f["fields"]
+    m = re.search(r'location\.replace\(\s*"(' + re.escape(O) + r'\.approve\?[^"]*)"', page)
+    return ("GET", html.unescape(m.group(1)), None) if m else None
+
+
 def authorize(br, client_id, redirect, challenge, state, method="S256"):
-    """The person's browser: authorize (the Allow/Deny page), then Allow (the page's own success link)."""
+    """The person's browser: authorize (the Allow/Deny page), then Allow, pressed as that page sends it."""
     q = {"client_id": client_id, "response_type": "code", "redirect_uri": redirect, "scope": "openid all",
          "state": state}
     if challenge:
         q |= {"code_challenge": challenge, "code_challenge_method": method}
-    st, _, page = call(br, "GET", f"{O}.authorize?" + urllib.parse.urlencode(q))
-    st2, hdr, _ = call(br, "GET", f"{O}.approve?" + urllib.parse.urlencode(q))
-    loc = hdr.get("Location", "")
+    st, hdr, page = call(br, "GET", f"{O}.authorize?" + urllib.parse.urlencode(q))
+    step, st2, loc = (allow(page) if st == 200 else None), None, ""
+    if st in (301, 302, 303):           # a shop set to skip the page answers with a redirect at once: to its own
+        loc = hdr.get("Location", "")   # approve address (a browser follows it), or straight back to the app
+        if loc.startswith(f"{O}.approve?"):
+            step = ("GET", loc, None)
+    if step:
+        st2, hdr2, _ = call(br, *step)
+        loc = hdr2.get("Location", "")
     got = urllib.parse.parse_qs(urllib.parse.urlparse(loc).query)
     return {"consent_page": st, "consent_shown": APP in page and "allow" in page.lower(), "approve_status": st2,
             "redirected_to": loc.split("?")[0], "code": (got.get("code") or [None])[0],

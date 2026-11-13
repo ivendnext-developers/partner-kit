@@ -1,9 +1,10 @@
 """Receiving iVendNext webhooks safely — the reference implementation of recipes/webhook_receiver.md.
 
-1. VERIFY: header ``X-Frappe-Webhook-Signature`` = base64(HMAC-SHA256(secret, body)). The sender signs
-   ``json.dumps(data)`` and sends ``json.dumps(data, default=str)``; for a payload of plain JSON values the
-   two are the same bytes, so we verify over the RAW BODY (any language can). If that fails we also try the
-   sender's own form, ``json.dumps(json.loads(body))``, and record which one matched (measured on our test bench).
+1. VERIFY: header ``X-iVendNext-Webhook-Signature`` = base64(HMAC-SHA256(secret, body)), over the RAW BODY (any language
+   can). The body's layout is the sender's and differs between releases (on one line, or indented with its keys sorted),
+   so it is never rebuilt first. The release that sends it on one line signs ``json.dumps(data)`` and sends
+   ``json.dumps(data, default=str)``: the same bytes for a payload of plain JSON values. If the raw body fails we
+   also try that form, ``json.dumps(json.loads(body))``, and record which one matched (measured on our test bench).
 2. REPLAY: nothing in the payload is signed with a time, so a captured request stays valid for ever. We keep
    a seen-set keyed on record type + name + event + ``modified``.
 3. IDEMPOTENCY and MISSED DELIVERIES are the caller's (app.py): every handler is safe to run twice, and a
@@ -17,7 +18,7 @@ import hashlib
 import hmac
 import json
 
-HEADER = "X-Frappe-Webhook-Signature"
+HEADER = "X-iVendNext-Webhook-Signature"
 
 
 def _sign(secret: str, payload: bytes) -> bytes:
