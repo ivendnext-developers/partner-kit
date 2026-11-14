@@ -3,6 +3,7 @@ fields are the ones the service reads; the integration role only reads (the sett
 prescriptions are written by the optometrist and read by store staff; the lab order's workflow sets the two ticks the
 report and the shop's own messages read; each record type opens its help."""
 import json
+import os
 import re
 import sys
 import unittest
@@ -12,11 +13,29 @@ HERE = Path(__file__).resolve().parent
 sys.path[:0] = [str(HERE.parents[2] / "tools" / "manifest"), str(HERE.parent / "service"), str(HERE.parent)]
 import validate  # noqa: E402
 
+try:
+    import jinja2
+    from jinja2.sandbox import SandboxedEnvironment
+except ImportError:
+    if os.environ.get("S42_REQUIRE_JINJA"):
+        raise
+    jinja2 = None
+
 MANIFEST = json.loads((HERE.parent / "manifest.json").read_text())
 P = MANIFEST["prefix"]
 DT = {d["name"]: d for d in MANIFEST["doctypes"]}
 (SUB,) = MANIFEST["extension_subscriptions"]
 PF = {p["name"]: p for p in MANIFEST["print_formats"]}
+
+
+class Doc(dict):
+    """A record as a print format reads it: fields as attributes, and get_formatted as the engine's own, which drops a
+    whole number's decimals on a Float field with no options (-1.0 prints -1: the walk's sheet on demo-optical)."""
+    __getattr__ = dict.get
+
+    def get_formatted(self, field):
+        v = self.get(field)
+        return ("%f" % v).rstrip("0").rstrip(".") if isinstance(v, float) else ("" if v is None else str(v))
 
 
 def fields(dt):
@@ -106,12 +125,21 @@ class ManifestTest(unittest.TestCase):
         for f in ("ready_to_collect", "closed"):
             self.assertEqual(fields(f"{P} Lab Order")[f]["read_only"], 1)
 
-    def test_the_job_sheet_prints_each_lens_value_in_its_fields_format(self):     # run 11's walk: -0.5, not -0.50
+    @unittest.skipUnless(jinja2, "jinja2 is not installed: the job sheet's rendering test did not run")
+    def test_the_job_sheet_prints_each_lens_value_in_its_fields_format(self):     # run 11's walk: -0.5; F-OP-7: -1
         pf = PF[f"{P} Job Sheet"]
         for side in ("r", "l"):
-            for f in ("sph", "cyl", "add", "prism"):
-                self.assertIn(f'doc.get_formatted("{side}_{f}")', pf["html"])
-                self.assertNotIn(f"{{{{ doc.{side}_{f} }}}}", pf["html"])
+            for f in ("sph", "cyl", "add"):
+                self.assertIn(f"{{{{ power(doc.{side}_{f}) }}}}", pf["html"])
+            self.assertIn(f"{{{{ amount(doc.{side}_prism) }}}}", pf["html"])
+        doc = Doc(name="OPT-LAB-00023", customer_name="Ingrid Solberg", prescription="RX-00028", due_date="2026-11-21",
+                  r_sph=-1.25, r_cyl=-0.5, r_axis=90, r_add=2.0, r_prism=0.0, l_sph=-1.0, l_cyl=-0.25, l_axis=85,
+                  l_add=2.0, l_prism=0.0, pd_distance=63.0, pd_near=60.0, r_height=22.0, l_height=22.0, store_name="SoHo")
+        out = SandboxedEnvironment(autoescape=True).from_string(pf["html"]).render(doc=doc, _=lambda t: t)
+        text = " ".join(re.sub(r"<[^>]+>", " ", out).split())
+        self.assertIn("Right eye -1.25 -0.50 90 +2.00 0.00", text)      # what the lab reads
+        self.assertIn("Left eye -1.00 -0.25 85 +2.00 0.00", text)       # a whole power, -1.00 not -1
+        self.assertIn("Collect at SoHo", text)
 
     def test_the_job_sheet_prints_the_stores_own_name_and_names_the_eyes(self):
         pf = PF[f"{P} Job Sheet"]
@@ -126,25 +154,57 @@ class ManifestTest(unittest.TestCase):
         default = {ps["doc_type"]: ps["value"] for ps in MANIFEST["property_setters"] if ps["property"] == "default_print_format"}
         self.assertEqual(default, {f"{P} Lab Order": f"{P} Job Sheet", f"{P} Prescription": f"{P} Prescription Sheet"})
         html, rx = pf["html"], fields(f"{P} Prescription")
-        for f in ("sph", "cyl", "add", "prism", "bc", "dia"):             # -1.00, not -1
-            for side in ("r", "l"):
-                self.assertIn(f'doc.get_formatted("{side}_{f}")', html)
+        for side in ("r", "l"):                     # each power signed to two places, the prism to two, the axis whole
+            for f in ("sph", "cyl", "add"):
+                self.assertIn(f"{{{{ power(doc.{side}_{f}) }}}}", html)
+            self.assertIn(f"{{{{ amount(doc.{side}_prism) }}}}", html)
+            self.assertIn(f'{{{{ (doc.{side}_axis or 0)|int if doc.{side}_cyl else "" }}}}', html)
+            for f in ("sph", "cyl", "add", "prism", "bc", "dia", "axis"):
                 self.assertIn(f"{side}_{f}", rx)
                 self.assertNotIn(f"{{{{ doc.{side}_{f} }}}}", html)
         self.assertEqual(html.count('_("Right eye")'), 2)
         self.assertEqual(html.count('_("Left eye")'), 2)
         for bare in ('_("Right")', '_("Left")'):
             self.assertNotIn(bare, html)
-        self.assertTrue(html.startswith('<div dir="auto"'))
+        self.assertIn('<div dir="auto"', html)
         # a contact lens's base curve and diameter print only on a contact-lens prescription, never as 0 on spectacles
         self.assertIn("Contact lenses", rx["kind"]["options"].split("\n"))
         (block,) = re.findall(r"\{%-? *if (.*?) *-?%\}(.*?)\{%-? *endif *-?%\}", html, re.S)
         self.assertEqual(block[0], 'doc.kind == "Contact lenses"')
         for f in ("r_bc", "r_dia", "l_bc", "l_dia", "cl_lens"):
-            self.assertIn(f"doc.{f}" if f == "cl_lens" else f'get_formatted("{f}")', block[1], f)
+            self.assertIn(f"doc.{f}" if f == "cl_lens" else f"{{{{ one(doc.{f}) }}}}", block[1], f)
             self.assertNotIn(f, html.replace(block[1], ""), f)          # nowhere outside the contact-lens block
         for f in ("examined_by", "registration", "notes"):              # who examined, under which registration
             self.assertIn(f"{{{{ doc.{f} or \"\" }}}}", html.replace(block[1], ""), f)
+
+    @unittest.skipUnless(jinja2, "jinja2 is not installed: the prescription sheet's rendering test did not run")
+    def test_the_prescription_sheet_prints_the_walks_prescription_as_an_optometrist_writes_it(self):  # F-OP-7, demo-optical
+        def sheet(**values):
+            doc = Doc(name="RX-00028", customer_name="Ingrid Solberg", kind="Spectacles", test_date="2026-11-14",
+                      valid_until="2028-11-14", r_sph=-1.25, r_cyl=-0.5, r_axis=90, r_add=0.0, r_prism=0.0,
+                      l_sph=-1.0, l_cyl=-0.25, l_axis=85, l_add=0.0, l_prism=0.0, pd_distance=63.0, pd_near=0.0,
+                      r_bc=0.0, r_dia=0.0, l_bc=0.0, l_dia=0.0, examined_by="Dr. Castellanos", registration="NY-0042")
+            doc.update(values)
+            env = SandboxedEnvironment(autoescape=True)
+            out = env.from_string(PF[f"{P} Prescription Sheet"]["html"]).render(doc=doc, _=lambda t: t)
+            return " ".join(re.sub(r"<[^>]+>", " ", out).split())
+        text = sheet()
+        self.assertIn("Prescription RX-00028", text)                    # its own name, never the record type's
+        self.assertNotIn(P, text)
+        self.assertIn("Right eye -1.25 -0.50 90 0.00 0.00", text)
+        self.assertIn("Left eye -1.00 -0.25 85 0.00 0.00", text)        # the walk's -1 and 0
+        self.assertIn("Distance PD 63 mm", text)
+        self.assertNotIn("Base curve", text)                            # spectacles: no contact-lens values at 0
+        self.assertIn("Examined by Dr. Castellanos · Registration number NY-0042", text)
+        text = sheet(r_sph=1.5, r_add=2.0, l_sph=0.0, l_add=2.25, l_prism=1.0, l_base="In")
+        self.assertIn("Right eye +1.50 -0.50 90 +2.00 0.00", text)      # a plus sign on a positive power
+        self.assertIn("Left eye 0.00 -0.25 85 +2.25 1.00 In", text)     # a prism is an amount: its direction is Base
+        text = sheet(kind="Contact lenses", r_bc=8.6, l_bc=8.6, r_dia=14.0, l_dia=14.2, cl_lens="Daily toric")
+        self.assertIn("Right eye 8.6 14.0", text)                       # one place: 14.0, never 14
+        self.assertIn("Left eye 8.6 14.2", text)
+        self.assertIn("Lens brand and type Daily toric", text)
+        text = sheet(r_sph=-1.0, r_cyl=0.0, r_axis=0, l_sph=-1.0, l_cyl=None, l_axis=None)
+        self.assertIn("Right eye -1.00 0.00 0.00 0.00 Left eye -1.00 0.00 0.00 0.00", text)  # a sphere only: no axis
 
     def test_desk_names_the_records_states_and_buttons_in_plain_words(self):
         (tr,) = MANIFEST["translations"]

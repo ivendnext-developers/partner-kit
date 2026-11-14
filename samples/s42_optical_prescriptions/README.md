@@ -43,10 +43,15 @@ ivn try
 
 ## Versions
 
+### 1.1.5
+
+- Manifest 0.2.5.
+- The prescription sheet and the lab job sheet print each power to two places, signed as an optometrist writes it (*-1.00*, *+2.00*, *0.00*), the prism to two places, the axis as a whole number (blank when there is no cylinder), and a contact lens's base curve and diameter to one place (*14.0*): a field's own format dropped a whole number's decimals (*-1*).
+
 ### 1.1.4
 
 - Manifest 0.2.4.
-- *Print* on a prescription opens its own sheet (the prescription's default print format): *Right eye* and *Left eye* rows with each value in its field's format (*-1.00*, not *-1*), and a contact lens's base curve, diameter and brand only on a contact-lens prescription.
+- *Print* on a prescription opens its own sheet (the prescription's default print format): *Right eye* and *Left eye* rows with each value in its field's format, and a contact lens's base curve, diameter and brand only on a contact-lens prescription.
 - Desk shows plain names (*Prescription*, *Lab order*, *Sent to lab*, *Lab orders to chase*) through the manifest's `translations` block.
 - *The customer sets* says how to let an optometrist link the till sale on a lab order.
 
