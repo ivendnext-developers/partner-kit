@@ -385,6 +385,12 @@ class T(unittest.TestCase):
         self.assertEqual(len(steps), 3)
         self.assertEqual({t["allow_self_approval"] for t in steps}, {0})
 
+    def test_a_requester_can_pick_the_price_list(self):
+        # a requester who holds no sales or buying role met *No permission for Price List*: select lists the price
+        # lists, read lets the form fill the currency from the one picked. Item needs nothing: every Desk user may select one.
+        m = json.loads((HERE.parent / "manifest.json").read_text())
+        self.assertIn({"doctype": "Price List", "role": "PP APS Requester", "rights": ["read", "select"]}, m["role_rights"])
+
 
 if __name__ == "__main__":
     unittest.main()

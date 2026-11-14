@@ -42,6 +42,10 @@ BASE=https://shop.example AP_KEY=… AP_SECRET=… LIMIT_PCT=10 python3 approval
 
 ## Versions
 
+### 0.3.3
+
+- The requester can pick the price list: the install gives *PP APS Requester* read and select on Price List (`role_rights`), where a requester with no sales or buying role met *No permission for Price List*. Read lets the form fill the currency from the price list picked.
+
 ### 0.3.2
 
 - The three approve steps say `"allow_self_approval": 0`, so the person who raised a price change still cannot approve it once a silent step takes Desk's own setting.
