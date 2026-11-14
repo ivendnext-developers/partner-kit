@@ -206,7 +206,7 @@
     label: "Label", labelHint: "A customer's name and test or live, like Acme test. A label with live, prod or production puts the site on Publish's list, not Try's.",
     save: "Save", makeDefault: "Make default", isDefault: "your default", remove: "Remove from my list",
     how: { ours: "Try installs in one press, with our key", own: "Try installs in one press, with your key",
-           shelf: "its administrator installs from the shelf key", live: "a customer's live site: Publish sends it the production copy" },
+           shelf: "its administrator installs from the shelf key", live: "a customer's live site: Publish goes there, Try does not" },   // W227 F-OP-10: true for every company
     getSandbox: "Get a sandbox", logins: "Show its logins", loginsNote: "Shown once: keep them now.",
     // one free sandbox per partner company, more by the request form; our own developers take their own
     askSandbox: "Ask for another sandbox", requestSandbox: "Request a sandbox",
@@ -240,9 +240,9 @@
   function trySites(sites) { return ((sites && sites.company) || []).filter(function (x) { return !x.live; }); }
   // W227 F-FA-17: an app's Try goes back to the site it was last tried on, while that site is on the list; a try never
   // moves the default (only Make default does)
-  function triedOn(a) {
+  function triedOn(a, sites) {
     var h = a && a.tried_on;
-    return h && trySites(data.sites).some(function (x) { return x.site === h; }) ? h : null;
+    return h && trySites(sites).some(function (x) { return x.site === h; }) ? h : null;
   }
   // a live site ticked on Publish joins the customer's site addresses (an empty first box is filled, not kept)
   function tickLive(list, site, on) {
@@ -279,7 +279,7 @@
     picturesBusy: "Adding pictures\u2026", picturesOnly: "Only the first {n} were added: a card has up to four.",
     onSandboxOnly: "Tried, not yet published",
     // W227 F-FA-16: each version's own Where it went, from where it was tried as well as published
-    triedOn: "Tried on {site}", replacedBy: "Tried on {site}, replaced there by {version}", shelfOf: "On {site}'s shelf for its administrator",
+    triedOn: "Tried on {site}", shelfOf: "On {site}'s shelf for its administrator",
     utc: "Times are UTC.", downloaded: "Downloading {file}: your browser saves it where it keeps downloads."
   };
   // an industry the App library's card takes (its ids, as the hosting gives them), in the words the gallery shows
@@ -510,21 +510,25 @@
   // a draft a later version replaced can never reach a site: it leaves the list. The newest draft stays
   function versionsShown(vs) {
     var last = -1;
-    var went = function (v) { return (v.sites || []).length || (v.tried || []).length || (v.shelved || []).length; };
+    var went = function (v) { return (v.sites || []).length || triedHere(v, vs, "tried").length || triedHere(v, vs, "shelved").length; };
     (vs || []).forEach(function (v, i) { if (went(v)) last = i; });
     return (vs || []).filter(function (v, i) { return went(v) || i > last; });
   }
-  function whereWent(v, vs) {
-    var newest = {};   // each site: the newest version Try put there
-    (vs || [v]).forEach(function (x) { (x.tried || []).concat(x.shelved || []).forEach(function (h) { newest[h] = x.version; }); });
-    var out = (v.sites || []).slice();
-    (v.tried || []).concat(v.shelved || []).forEach(function (h) {
-      if (out.indexOf(h) >= 0) return;
-      var shelf = (v.tried || []).indexOf(h) < 0;
-      out.push(newest[h] && newest[h] !== v.version ? U.replacedBy.replace("{site}", h).replace("{version}", newest[h])
-        : (shelf ? U.shelfOf : U.triedOn).replace("{site}", h));
+  // W227 F-FA-16: the sites where Try put this version and no later one since (`tried` installed, `shelved` on the
+  // site's shelf for its administrator)
+  function triedHere(v, vs, field) {
+    return (v[field] || []).filter(function (h) {
+      return !(vs || []).some(function (x) { return x !== v && (vs || []).indexOf(x) > (vs || []).indexOf(v) &&
+                                                       ((x.tried || []).indexOf(h) >= 0 || (x.shelved || []).indexOf(h) >= 0); });
     });
-    return out.length ? out.join(", ") : "On no site yet: a draft, a version on our server that no site has yet.";
+  }
+  function whereWent(v, vs) {
+    var pub = v.sites || [], on = triedHere(v, vs, "tried").filter(function (h) { return pub.indexOf(h) < 0; }),
+        shelf = triedHere(v, vs, "shelved").filter(function (h) { return pub.indexOf(h) < 0 && on.indexOf(h) < 0; }), out = [];
+    if (pub.length) out.push(pub.join(", "));
+    if (on.length) out.push(U.triedOn.replace("{site}", on.join(", ")));
+    shelf.forEach(function (h) { out.push(U.shelfOf.replace("{site}", h)); });
+    return out.length ? out.join(" · ") : "On no site yet: a draft, a version on our server that no site has yet.";
   }
   function day(at) { return at ? new Date(at * 1000).toISOString().slice(0, 10) : ""; }
 
@@ -561,7 +565,7 @@
               noSandboxParts: noSandboxParts, U: U, industryWords: industryWords, tryLabel: tryLabel,
               canGoBack: canGoBack, defaultTitle: defaultTitle, versionsShown: versionsShown, logFile: logFile, payWords: payWords, payLabel: payLabel, pubPlan: pubPlan, pubOpensOn: pubOpensOn, pictureType: pictureType, b64: b64, cardBody: cardBody,
               S: S, siteHow: siteHow, trySites: trySites, tickLive: tickLive, instKey: instKey, installState: installState,
-              removedWords: removedWords, pointClass: pointClass };
+              removedWords: removedWords, pointClass: pointClass, triedOn: triedOn };
   if (typeof module === "object" && module.exports) {
     module.exports = api;
     return;
@@ -1134,7 +1138,7 @@
       sent.length ? null : " · " + vs[vs.length - 1].version + " (draft)"));
     var acts = el("p", {});
     // one next step in blue: Try until it is tried, then Publish
-    var def = triedOn(a) || (data.sites || {}).default;
+    var def = triedOn(a, data.sites) || (data.sites || {}).default;
     var tryB = button(data.sites ? tryLabel(def) : G.tryIt, function () { if (def) openTry(a.app, def); else { data.pick = data.pick === a.app ? null : a.app; render(); } }, tried || sent.length > 0),
       pubB = button(G.publish, function () { openPublish(a.app); }, !(tried || sent.length > 0));
     var changeB = def ? button(T.change, function () { data.pick = data.pick === a.app ? null : a.app; render(); }, true) : null;
@@ -1258,8 +1262,7 @@
 
   function download() {
     call("POST", "/download", { app: data.appId }).then(function (r) {
-      var file = decodeURIComponent(String(r.url).split("?")[0].split("/").pop() || "");
-      say(U.downloaded.replace("{file}", file || "the app folder")); render();   // W227: the press says where it went
+      say(U.downloaded.replace("{file}", r.file || "the app folder")); render();   // W227: the press says where it went
       root.location.assign(r.url);
     }, fail);
   }
@@ -2066,8 +2069,8 @@
     add.appendChild(field(S.label, lab, S.labelHint));   // a customer's live site is labelled live as it is added
     add.appendChild(button(S.addBtn, function (ev) {
       ev.target.disabled = true;
-      var busy = el("span", { "class": "hint", text: " " + S.checking.replace("{site}", addr.value.trim()) });   // W227: ~8 s
-      ev.target.parentNode.insertBefore(busy, ev.target.nextSibling);
+      var busy = el("span", { "class": "hint", text: key.value.trim() ? " " + S.checking.replace("{site}", addr.value.trim()) : "" });
+      ev.target.parentNode.insertBefore(busy, ev.target.nextSibling);   // W227: a key's check takes ~8 s
       call("POST", "/sites/add", { site: addr.value.trim(), key: key.value.trim(), secret: sec.value.trim(), label: lab.value.trim() })
         .then(function (r) { data.addForm = null; done(r); }, function (e) { busy.remove(); ev.target.disabled = false; fail(e); });
     }));

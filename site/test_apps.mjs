@@ -444,19 +444,25 @@ const vt = [{ version: "1.0.0", sites: [] }, { version: "1.0.1", sites: [], trie
 check("W227 F-FA-16: Versions says where each version was tried, and a new upload is on no site yet",
   a.whereWent(vt[1], vt) === "Tried on cd-03.x" && /no site yet/.test(a.whereWent(vt[2], vt)) &&
   a.versionsShown(vt).map((v) => v.version).join() === "1.0.1,1.0.2" && !src.includes("U.onSandboxOnly : whereWent(v)"));
-const vt2 = [{ version: "1.0.1", sites: [], tried: ["cd-03.x"] }, { version: "1.0.2", sites: ["shop.example"], tried: ["cd-03.x"] },
-  { version: "1.0.3", sites: [], shelved: ["acme-test.example"] }];
-check("W227 F-FA-16: a version Try replaced on a site says so; published sites as before; a shelf says whose",
-  a.whereWent(vt2[0], vt2) === "Tried on cd-03.x, replaced there by 1.0.2" &&
-  a.whereWent(vt2[1], vt2) === "shop.example, Tried on cd-03.x" &&
-  a.whereWent(vt2[2], vt2) === "On acme-test.example's shelf for its administrator");
-check("W227 F-FA-17: the app's Try names the site this app was tried on, while it is on the list; else the default",
-  src.includes("var def = triedOn(a) || (data.sites || {}).default;") && src.includes("var h = a && a.tried_on;"));
+const vt2 = [{ version: "1.0.1", sites: [], tried: ["cd-03.x", "dev-01.x"] }, { version: "1.0.2", sites: ["shop.example"], tried: ["cd-03.x"] },
+  { version: "1.0.3", sites: [], shelved: ["acme-test.example"] }, { version: "1.0.4", sites: [], tried: ["cd-03.x"] }];
+check("W227 F-FA-16: a version Try replaced on a site leaves that site; one replaced everywhere, never published, leaves the table",
+  a.whereWent(vt2[0], vt2) === "Tried on dev-01.x" && a.whereWent(vt2[1], vt2) === "shop.example" &&
+  a.whereWent(vt2[2], vt2) === "On acme-test.example's shelf for its administrator" && a.whereWent(vt2[3], vt2) === "Tried on cd-03.x" &&
+  a.versionsShown([{ version: "1.0.1", sites: [], tried: ["s"] }, { version: "1.0.2", sites: [], tried: ["s"] }, { version: "1.0.3", sites: [] }])
+    .map((v) => v.version).join() === "1.0.2,1.0.3");
+const st = { company: [{ site: "cd-05.x" }, { site: "live.x", live: true }], default: "dev-01.x" };
+check("W227 F-FA-17: the app's Try names the site this app was tried on, while it is on Try's list; else the default",
+  a.triedOn({ tried_on: "cd-05.x" }, st) === "cd-05.x" && a.triedOn({ tried_on: "gone.x" }, st) === null &&
+  a.triedOn({ tried_on: "live.x" }, st) === null && !a.triedOn({}, st) && a.triedOn({ tried_on: "cd-05.x" }, null) === null &&
+  src.includes("var def = triedOn(a, data.sites) || (data.sites || {}).default;"));
+check("W227 F-FA-16: a version on a site's shelf and then tried there says it once",
+  ((v) => a.whereWent(v, [v]))({ version: "1.0.1", sites: [], tried: ["x"], shelved: ["x"] }) === "Tried on x");
 check("W227 F-OP-9: Install now's state is per app as well as site and version",
   a.instKey("s", "1.0.2", "app_one") !== a.instKey("s", "1.0.2", "app_two") && src.includes("instKey(x.site, version, data.appId)"));
 check("W227 F-HOSP-22: a refusal above the window is scrolled into view", src.includes('said.scrollIntoView({ block: "nearest" })'));
 check("W227: Download names its file; Add a site says it is checking; Logs says its times are UTC; a redraw waits for a press",
-  a.U.downloaded.includes("{file}") && a.S.checking === "Checking your key on {site}\u2026" && a.U.utc === "Times are UTC." &&
+  a.U.downloaded.includes("{file}") && src.includes("r.file ||") && a.S.checking === "Checking your key on {site}\u2026" && a.U.utc === "Times are UTC." &&
   src.includes("if (pressing) { pending = true; return; }"));
 console.log(red ? `${red} FAILED` : "ALL PASS");
 process.exit(red ? 1 : 0);
