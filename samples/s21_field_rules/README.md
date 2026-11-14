@@ -43,7 +43,7 @@ ivn try
 
 ### 0.1.1
 
-- The README says the theme must be one the customer's site has (Try refuses a missing one; Check does not look at the site), and that a field rule's words are chosen before the first install, because a later version cannot change or drop a field rule. The manifest changes only its version.
+- No change to what the app does. Before you copy it: name a till theme the customer's site has (Try refuses one it lacks; Check does not look at the site), and settle each rule's words before the first install, because a later version cannot change or drop a field rule.
 
 ### 0.1.0
 
