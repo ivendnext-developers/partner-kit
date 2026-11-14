@@ -468,6 +468,13 @@
     {
      "type": "shortcut",
      "data": {
+      "shortcut_name": "Aisles",
+      "col": 3
+     }
+    },
+    {
+     "type": "shortcut",
+     "data": {
       "shortcut_name": "Bins",
       "col": 3
      }
@@ -485,6 +492,11 @@
      "type": "DocType",
      "link_to": "PP BLN Location",
      "label": "Locations"
+    },
+    {
+     "type": "DocType",
+     "link_to": "PP BLN Aisle",
+     "label": "Aisles"
     },
     {
      "type": "DocType",
@@ -527,9 +539,9 @@
  "translations": [
   {"language": "en", "words": {
    "PP BLN Bins": "Bin locations",
-   "PP BLN Location": "Store location",
+   "PP BLN Location": "Stock area",
    "PP BLN Aisle": "Aisle",
-   "PP BLN Bin": "Store bin",
+   "PP BLN Bin": "Bin location",
    "PP BLN Item In Bin": "Item in bin",
    "PP BLN Bin Movement": "Bin movement",
    "PP BLN Bin Label": "Bin label"

@@ -1,6 +1,6 @@
 # S2 — bin locations (`pp_bln`): where stock sits inside a store
 
-S2 records only **where** items sit inside a store (locations such as the back room or shop floor, aisles, bins and what is in each bin) and answers the cashier's **"Where is it?"** key. The retailer's stock and valuation stay in iVendNext. Its record types and its Desk workspace, *Bin locations*, install with the manifest, and a small service answers the key. A Retail Manager or a Stock Manager keeps the lists: adds, changes and removes locations, aisles, bins and what is in each bin.
+S2 records only **where** items sit inside a store (locations such as the back room or shop floor, aisles, bins and what is in each bin) and answers the cashier's **"Where is it?"** key. The retailer's stock and valuation stay in iVendNext. Its record types and its Desk workspace, *Bin locations*, install with the manifest, and a small service answers the key. A Retail Manager or a Stock Manager keeps the lists from the workspace: adds, changes and removes stock areas (*Locations*), aisles, bins and what is in each bin.
 
 ![The bin locations workspace, the bins and what is in each](screenshots/01_workspace.png)
 
@@ -44,7 +44,8 @@ ivn try
 ### 1.1.2
 
 - A Retail Manager or a Stock Manager may add, change and remove locations, aisles, bins and what is in each bin (manifest 0.1.4), as the App library's *Bin locations* does; before, a Retail Manager could only read them and a Stock Manager could not open them.
-- Desk shows plain names (*Bin locations*, *Store bin*, *Item in bin*) through the manifest's `translations` block. No name changed: installed records keep theirs.
+- Desk shows plain names (the workspace *Bin locations*, *Stock area*, *Aisle*, *Bin location*, *Item in bin*) through the manifest's `translations` block. No name changed: installed records keep theirs.
+- The workspace opens the aisles too (*Aisles*): a bin needs an aisle, and there was no way in to add one.
 
 ### 1.1.1
 
