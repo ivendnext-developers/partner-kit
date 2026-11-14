@@ -41,6 +41,10 @@ ivn try
 
 ## Versions
 
+### 1.1.3
+
+- Desk shows plain names (Duty-free allowance settings, Boarding pass) through the manifest's `translations` block, so a search for *boarding pass* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.2.3.
+
 ### 1.1.2
 
 - The manifest, its Registered Application line and the refusal *…cannot read your store…* say store where they said shop. Manifest 0.2.2.
