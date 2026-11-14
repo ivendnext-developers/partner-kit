@@ -26,7 +26,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/expiry_markdown.md).
 
-**The customer sets:** the selling price list its tills sell from and its hours from UTC in `PP EXM Settings`, and the steps on each perishable item group.
+**The customer sets:** the selling price list its tills sell from and its hours from UTC in *Expiry markdown settings* (`PP EXM Settings`), and the steps on each perishable item group.
 
 ## Run it
 
@@ -37,11 +37,17 @@ ivn try
 
 ## Try it at the till
 
+- First set the price list (*Price list to mark down*) in Expiry markdown settings and the steps on your item group (in Desk, on Item Group: *First markdown: days before expiry* 5 and *First markdown (% off)* 25, say).
 - In Desk, tick a lot close to its expiry date on the Batch list and press Mark down.
 - Scan that lot at the till; it rings at its marked-down price.
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.1.2
+
+- *Try it at the till* starts with the two set-up steps: the price list in Expiry markdown settings and the steps on your item group.
+- Desk shows plain names (Expiry markdown settings) through the manifest's `translations` block, so a search for *markdown* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.2.2.
 
 ### 1.1.1
 
