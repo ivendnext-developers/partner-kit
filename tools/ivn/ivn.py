@@ -1016,6 +1016,11 @@ def cmd_secrets(a) -> int:
 
 
 RESULT = re.compile(r"^(\S+) \((.*?)\): (.*)$", re.S)
+def points_ok(rows: list[str]) -> bool:
+    """W227 F-FA-15: as My apps paints them: Passed, or Inconclusive (a feed with nothing to read yet), is not a failure."""
+    return all("Passed" in x or "Inconclusive" in x for x in rows)
+
+
 PASSED = re.compile(r"^Passed(?:, answered in|: reached, signature accepted, answered in) ([\d.]+) s\.?$")
 
 
@@ -1138,7 +1143,7 @@ def cmd_try(a) -> int:
         print(line)
     for line in done.get("till") or []:
         print(line)
-    return 0 if all("Passed" in x for x in rows) else 1
+    return 0 if points_ok(rows) else 1
 
 
 def _local_secret(folder: pathlib.Path) -> str:
@@ -1248,7 +1253,7 @@ def cmd_test(a) -> int:
         print(WORDS["no_points"])
     for line in rows:
         print(line)
-    return 0 if all("Passed" in x for x in rows) else 1
+    return 0 if points_ok(rows) else 1
 
 
 # ── publish ──────────────────────────────────────────────────────────────────

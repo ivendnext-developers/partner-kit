@@ -788,6 +788,12 @@ class FoundOnTheRealDoors(Base):
         rows = ivn.result_rows(["guard (a check at Pay): Passed: reached, signature accepted, answered in 0.1 s."])
         self.assertEqual(rows, ["guard   a check at Pay   Passed  0.1 s"])
 
+    def test_a_feed_with_nothing_to_read_yet_is_not_a_failure(self):  # W227 F-FA-15, as My apps paints it
+        rows = ivn.result_rows(["F (an event feed): Inconclusive: Events waiting: 0 · Last read: never No events yet.",
+                                "guard (a check at Pay): Passed: reached, signature accepted, answered in 0.1 s."])
+        self.assertTrue(ivn.points_ok(rows))
+        self.assertFalse(ivn.points_ok(ivn.result_rows(["F (an event feed): Failed: Events waiting: 3 · Last read: never"])))
+
     def test_status_says_the_sandbox_and_each_customers_install(self):  # ⭐ UX-72 (§14's J2-10), J5-16
         folder, _ = self.made()
         self.in_app(folder)

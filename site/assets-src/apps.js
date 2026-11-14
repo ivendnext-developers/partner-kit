@@ -201,12 +201,12 @@
   var S = {
     title: "My sites", open: "My sites",
     why: "The sites you try your apps on, and your customers' sites. Add any iVendNext site you administer, and label it with the customer's name and test or live.",
-    add: "Add a site", address: "Its address", key: "API key", secret: "API secret", addBtn: "Add",
+    add: "Add a site", checking: "Checking your key on {site}\u2026", address: "Its address", key: "API key", secret: "API secret", addBtn: "Add",
     keyHint: "Make the key on that site under your own user, one with System Manager: open your User record, its Settings tab, API Access, Generate Keys (not on Administrator: making keys there replaces its secret). With the key and its secret, Try installs there in one press. Leave both empty and its administrator installs from the shelf key Try shows.",
     label: "Label", labelHint: "A customer's name and test or live, like Acme test. A label with live, prod or production puts the site on Publish's list, not Try's.",
     save: "Save", makeDefault: "Make default", isDefault: "your default", remove: "Remove from my list",
     how: { ours: "Try installs in one press, with our key", own: "Try installs in one press, with your key",
-           shelf: "its administrator installs from the shelf key", live: "a customer's live site: Publish sends it the production copy" },
+           shelf: "its administrator installs from the shelf key", live: "a customer's live site: Publish goes there, Try does not" },   // W227 F-OP-10: true for every company
     getSandbox: "Get a sandbox", logins: "Show its logins", loginsNote: "Shown once: keep them now.",
     // one free sandbox per partner company, more by the request form; our own developers take their own
     askSandbox: "Ask for another sandbox", requestSandbox: "Request a sandbox",
@@ -238,6 +238,12 @@
   function siteHow(x) { return x.stale ? x.stale : x.live ? S.how.live : S.how[x.route] || S.how.shelf; }
   // Try's sites: every company site but its customers' live sites (Publish's)
   function trySites(sites) { return ((sites && sites.company) || []).filter(function (x) { return !x.live; }); }
+  // W227 F-FA-17: an app's Try goes back to the site it was last tried on, while that site is on the list; a try never
+  // moves the default (only Make default does)
+  function triedOn(a, sites) {
+    var h = a && a.tried_on;
+    return h && trySites(sites).some(function (x) { return x.site === h; }) ? h : null;
+  }
   // a live site ticked on Publish joins the customer's site addresses (an empty first box is filled, not kept)
   function tickLive(list, site, on) {
     var out = list.filter(function (x) { return x.trim() && x.trim() !== site; });
@@ -245,7 +251,10 @@
     return out.length ? out : [""];
   }
   // Install now's state, per site and version: read the words, ask the one press, installing, or done
-  function instKey(site, version) { return site + "@" + (version || ""); }
+  function instKey(site, version, app) { return (app || "") + ":" + site + "@" + (version || ""); }   // W227 F-OP-9: per app
+  // W227 F-FA-15: a connection point's line by the site's own verdict: Passed green, Inconclusive (nothing to read
+  // yet) plain, anything else red
+  function pointClass(l) { return /\): Passed\b/.test(l) ? "hosting-ok" : /\): Inconclusive\b/.test(l) ? "" : "hosting-bad"; }
   function installState(inst, installed) {
     if (installed || (inst && inst.done)) return "done";
     if (!inst || (!inst.sha && !inst.step && !inst.reading)) return "read";
@@ -268,7 +277,10 @@
     pictures: "Pictures", picturesHint: "Up to four: PNG, JPEG or WebP. A big one is made smaller for the card.",
     pictureBad: "Not added: {name} is not a PNG, JPEG or WebP picture we could make small enough. Choose another.",
     picturesBusy: "Adding pictures\u2026", picturesOnly: "Only the first {n} were added: a card has up to four.",
-    onSandboxOnly: "Tried, not yet published"
+    onSandboxOnly: "Tried, not yet published",
+    // W227 F-FA-16: each version's own Where it went, from where it was tried as well as published
+    triedOn: "Tried on {site}", shelfOf: "On {site}'s shelf for its administrator",
+    utc: "Times are UTC.", downloaded: "Downloading {file}: your browser saves it where it keeps downloads."
   };
   // an industry the App library's card takes (its ids, as the hosting gives them), in the words the gallery shows
   function industryWords(id) {
@@ -498,10 +510,26 @@
   // a draft a later version replaced can never reach a site: it leaves the list. The newest draft stays
   function versionsShown(vs) {
     var last = -1;
-    (vs || []).forEach(function (v, i) { if ((v.sites || []).length) last = i; });
-    return (vs || []).filter(function (v, i) { return (v.sites || []).length || i > last; });
+    var went = function (v) { return (v.sites || []).length || triedHere(v, vs, "tried").length || triedHere(v, vs, "shelved").length; };
+    (vs || []).forEach(function (v, i) { if (went(v)) last = i; });
+    return (vs || []).filter(function (v, i) { return went(v) || i > last; });
   }
-  function whereWent(v) { return (v.sites || []).length ? v.sites.join(", ") : "On no site yet: a draft, a version on our server that no site has yet."; }
+  // W227 F-FA-16: the sites where Try put this version and no later one since (`tried` installed, `shelved` on the
+  // site's shelf for its administrator)
+  function triedHere(v, vs, field) {
+    return (v[field] || []).filter(function (h) {
+      return !(vs || []).some(function (x) { return x !== v && (vs || []).indexOf(x) > (vs || []).indexOf(v) &&
+                                                       ((x.tried || []).indexOf(h) >= 0 || (x.shelved || []).indexOf(h) >= 0); });
+    });
+  }
+  function whereWent(v, vs) {
+    var pub = v.sites || [], on = triedHere(v, vs, "tried").filter(function (h) { return pub.indexOf(h) < 0; }),
+        shelf = triedHere(v, vs, "shelved").filter(function (h) { return pub.indexOf(h) < 0 && on.indexOf(h) < 0; }), out = [];
+    if (pub.length) out.push(pub.join(", "));
+    if (on.length) out.push(U.triedOn.replace("{site}", on.join(", ")));
+    shelf.forEach(function (h) { out.push(U.shelfOf.replace("{site}", h)); });
+    return out.length ? out.join(" · ") : "On no site yet: a draft, a version on our server that no site has yet.";
+  }
   function day(at) { return at ? new Date(at * 1000).toISOString().slice(0, 10) : ""; }
 
   // J6-12: what the app covers, from the needs it was started from
@@ -537,7 +565,7 @@
               noSandboxParts: noSandboxParts, U: U, industryWords: industryWords, tryLabel: tryLabel,
               canGoBack: canGoBack, defaultTitle: defaultTitle, versionsShown: versionsShown, logFile: logFile, payWords: payWords, payLabel: payLabel, pubPlan: pubPlan, pubOpensOn: pubOpensOn, pictureType: pictureType, b64: b64, cardBody: cardBody,
               S: S, siteHow: siteHow, trySites: trySites, tickLive: tickLive, instKey: instKey, installState: installState,
-              removedWords: removedWords };
+              removedWords: removedWords, pointClass: pointClass, triedOn: triedOn };
   if (typeof module === "object" && module.exports) {
     module.exports = api;
     return;
@@ -1110,7 +1138,7 @@
       sent.length ? null : " · " + vs[vs.length - 1].version + " (draft)"));
     var acts = el("p", {});
     // one next step in blue: Try until it is tried, then Publish
-    var def = (data.sites || {}).default;
+    var def = triedOn(a, data.sites) || (data.sites || {}).default;
     var tryB = button(data.sites ? tryLabel(def) : G.tryIt, function () { if (def) openTry(a.app, def); else { data.pick = data.pick === a.app ? null : a.app; render(); } }, tried || sent.length > 0),
       pubB = button(G.publish, function () { openPublish(a.app); }, !(tried || sent.length > 0));
     var changeB = def ? button(T.change, function () { data.pick = data.pick === a.app ? null : a.app; render(); }, true) : null;
@@ -1149,7 +1177,7 @@
     var t = el("table", {}, el("thead", {}, el("tr", {}, el("th", { text: "Version" }), el("th", { text: "Made" }), el("th", { text: "Where it went" }))));
     var body = el("tbody", {});
     versionsShown(vs).reverse().forEach(function (v) {
-      var went = el("td", { text: tried && !sent.length && v === vs[vs.length - 1] ? U.onSandboxOnly : whereWent(v) });
+      var went = el("td", { text: whereWent(v, vs) });
       if (canGoBack(vs, v)) {
         went.appendChild(el("br", {}));
         went.appendChild(button(U.goBack, function (ev) { goBack(ev.target, v.version); }, true));
@@ -1233,7 +1261,10 @@
   }
 
   function download() {
-    call("POST", "/download", { app: data.appId }).then(function (r) { root.location.assign(r.url); }, fail);
+    call("POST", "/download", { app: data.appId }).then(function (r) {
+      say(U.downloaded.replace("{file}", r.file || "the app folder")); render();   // W227: the press says where it went
+      root.location.assign(r.url);
+    }, fail);
   }
 
   function upload(f) {
@@ -1451,9 +1482,9 @@
         (s.head || []).filter(function (l) { return l !== s.installed_on; })
           .forEach(function (l, i) { res.appendChild(el("p", { "class": i ? "" : "hint", text: l })); });
         var ul = el("ul", {});
-        (s.results || []).forEach(function (l) { ul.appendChild(el("li", { "class": /: Passed/.test(l) ? "hosting-ok" : "hosting-bad", text: l })); });
+        (s.results || []).forEach(function (l) { ul.appendChild(el("li", { "class": pointClass(l), text: l })); });
         res.appendChild(ul);
-        var pointsOk = (s.results || []).every(function (l) { return /: Passed/.test(l); });
+        var pointsOk = (s.results || []).every(function (l) { return pointClass(l) !== "hosting-bad"; });
         res.appendChild(button(T.testAgain, function (ev) {
           ev.target.disabled = true;
           call("POST", "/test", { app: data.appId }).then(function (r) { data.tryS = r; render(); },
@@ -1569,7 +1600,7 @@
   // MYSITES: Install now on a customer's site where the company holds its own key: the site's own install words, read
   // as the card first draws (as Try does), then one press, then where it stands until it is installed
   function vInstallNow(x, version) {
-    var k = instKey(x.site, version), inst = (data.inst = data.inst || {})[k] || {};
+    var k = instKey(x.site, version, data.appId), inst = (data.inst = data.inst || {})[k] || {};
     var box = card(S.installOn.replace("{site}", x.label || x.site)), state = installState(inst, x.installed);
     var ask = function (body) {
       return call("POST", "/publish/install", Object.assign({ app: data.appId, site: x.site }, body)).then(function (r) {
@@ -1855,6 +1886,7 @@
     })));
     if (!r) { box.appendChild(p("Reading the log…")); return box; }
     if (r.words) box.appendChild(p(r.words));
+    if ((r.lines || []).length) box.appendChild(el("p", { "class": "hint", text: U.utc }));
     var pre = el("pre", { "class": "log-lines", text: (r.lines || []).join("\n") });   // each line wraps, never cut
     if ((r.lines || []).length) {
       box.appendChild(pre);
@@ -2037,8 +2069,10 @@
     add.appendChild(field(S.label, lab, S.labelHint));   // a customer's live site is labelled live as it is added
     add.appendChild(button(S.addBtn, function (ev) {
       ev.target.disabled = true;
+      var busy = el("span", { "class": "hint", text: key.value.trim() ? " " + S.checking.replace("{site}", addr.value.trim()) : "" });
+      ev.target.parentNode.insertBefore(busy, ev.target.nextSibling);   // W227: a key's check takes ~8 s
       call("POST", "/sites/add", { site: addr.value.trim(), key: key.value.trim(), secret: sec.value.trim(), label: lab.value.trim() })
-        .then(function (r) { data.addForm = null; done(r); }, function (e) { ev.target.disabled = false; fail(e); });
+        .then(function (r) { data.addForm = null; done(r); }, function (e) { busy.remove(); ev.target.disabled = false; fail(e); });
     }));
     var out = el("div", {}, box, add);
     out.appendChild(button("Back to My apps", function () { data.shownLogins = null; data.addForm = null; go("home"); }, true));
@@ -2119,12 +2153,24 @@
   }
 
   var shown = null;
+  // W227 (Distribution's Logs link, Thrift's list): a redraw that lands while a press is under way replaces the button
+  // under the pointer, so the press does nothing. It waits for the press to end (at most a second), then runs.
+  var pressing = false, pending = false;
+  function released() { if (!pressing) return; pressing = false; if (pending) { pending = false; root.setTimeout(render, 0); } }
+  if (view && view.addEventListener) {
+    view.addEventListener("pointerdown", function () { pressing = true; root.setTimeout(released, 1000); });
+    root.document.addEventListener("pointerup", released, true);
+    root.document.addEventListener("pointercancel", released, true);
+  }
+
   function render() {
+    if (pressing) { pending = true; return; }
     if (shown !== null && shown !== screen && view.getBoundingClientRect().top < 0) view.scrollIntoView();   // a new screen at its top
     shown = screen;
     view.textContent = "";
     view.hidden = false;
-    if (flash) view.appendChild(el("p", { "class": flash.bad ? "hosting-bad" : "hosting-ok", text: flash.text }));
+    var said = flash ? view.appendChild(el("p", { "class": flash.bad ? "hosting-bad" : "hosting-ok", text: flash.text })) : null;
+    if (said && flash.bad && said.scrollIntoView && said.getBoundingClientRect().top < 0) said.scrollIntoView({ block: "nearest" });   // W227 F-HOSP-22
     var lede = view.previousElementSibling;   // "Sign in to…" says nothing once signed in
     if (lede && lede.tagName === "P") lede.hidden = !!session;
     if (!session) { view.appendChild(vSignIn()); return; }
