@@ -3,7 +3,7 @@
  "app": "pp_rsr",
  "prefix": "PP RSR",
  "title": "Regulated stock register",
- "version": "0.2.2",
+ "version": "0.2.3",
  "publisher": "Partner Programme sample",
  "description": "A legal register for regulated stock (controlled medicine, liquor, tobacco, duty-free), its books declared per market as data and kept by the POS app's register door: one line for each sale or receipt of a regulated item, written in the same save, numbered without a gap, never edited, with a running balance where the law keeps one. It installs each market's books, their prints, a reminder before each return, the register's lists and open-tasks cards, the register's own columns on the Desk sale and delivery and the till's sale details, and the approver role. It reads the pharmacy counter app's drug schedules, prescriptions and patients: install that app first.",
  "custom_fields": [
@@ -4346,6 +4346,24 @@
      "label": "Purchase receipts"
     }
    ]
+  }
+ ],
+ "translations": [
+  {
+   "language": "en",
+   "words": {
+    "PP RSR Regulated stock register": "Regulated stock register",
+    "PP RSR Stock counts to watch": "Stock counts to watch",
+    "PP RSR Register entries": "Register entries",
+    "PP RSR Losses and disposals": "Losses and disposals",
+    "PP RSR Counts due after a loss": "Counts due after a loss",
+    "PP RSR Periods open": "Periods open",
+    "PP RSR Entries entered late": "Entries entered late",
+    "PP RSR Entries incomplete": "Entries incomplete",
+    "PP RSR Entries below zero": "Entries below zero",
+    "PP RSR Register entries a day": "Register entries a day",
+    "PP RSR Register": "Register"
+   }
   }
  ]
 }

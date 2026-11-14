@@ -25,7 +25,7 @@ import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP, PREFIX, FPREFIX, VERSION = "pp_rsr", "PP RSR", "pp_rsr_", "0.2.2"
+APP, PREFIX, FPREFIX, VERSION = "pp_rsr", "PP RSR", "pp_rsr_", "0.2.3"
 ROLE = "PP RSR Register Approver"
 LINE, STATE, PERIOD = "Retail Register Line", "Retail Register State", "Retail Register Period"  # the door's record types
 # The line's own columns (the door's REGISTER_LINE_COLUMNS). Routing and layouts may name only these, or a declared detail.
@@ -560,7 +560,16 @@ def build_manifest(sets=None, books=None):
             ] + [{"type": "shortcut", "data": {"shortcut_name": s["label"], "col": 3}} for s in SHORTCUTS],
             "shortcuts": SHORTCUTS,
         }],
+        "translations": [{"language": "en", "words": plain_words()}],
     }
+
+
+def plain_words():
+    """Desk's plain words for what the register's people read by name (the workspace's heading, the saved lists, the
+    cards, the chart and the dashboard): each name without the prefix. Nothing is renamed."""
+    names = [f"{PREFIX} Regulated stock register", f"{PREFIX} Stock counts to watch"] + [r["name"] for r in LISTS] \
+        + [c["name"] for c in CARDS] + [CHART["name"], DASHBOARD["name"]]
+    return {n: n[len(PREFIX) + 1:] for n in names}
 
 
 # Desk makes a workspace before the manifest's own reports, so a shortcut links a record type's list, never a report.
