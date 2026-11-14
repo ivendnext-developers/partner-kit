@@ -129,9 +129,20 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(rights("Retail Manager"), {"read", "report", "print"})   # reads the whole sheet
 
     def test_the_project_opens_its_help(self):
-        (ps,) = MANIFEST["property_setters"]
-        self.assertEqual((ps["doc_type"], ps["property"]), (PROJECT, "documentation"))
-        self.assertTrue(ps["value"].endswith("project_quotes.html#projects"))
+        ps = {x["property"]: x for x in MANIFEST["property_setters"]}
+        self.assertEqual(set(ps), {"documentation", "default_print_format"})
+        self.assertTrue(all(x["doc_type"] == PROJECT for x in ps.values()))
+        self.assertTrue(ps["documentation"]["value"].endswith("project_quotes.html#projects"))
+
+    def test_print_opens_the_project_sheet_by_default(self):   # Print opens the sheet, not the plain record
+        ps = next(x for x in MANIFEST["property_setters"] if x["property"] == "default_print_format")
+        self.assertEqual((ps["doc_type"], ps["value"]), (PROJECT, PF["name"]))
+
+    def test_the_english_words_cover_every_name_the_store_sees(self):   # Desk shows people's words, never the code
+        (en,) = [t["words"] for t in MANIFEST["translations"] if t["language"] == "en"]
+        names = set(DT) | {PF["name"]}
+        self.assertEqual(sorted(names - set(en)), [])
+        self.assertTrue(all(w and not w.startswith(P) for w in en.values()))
 
 
 if __name__ == "__main__":
