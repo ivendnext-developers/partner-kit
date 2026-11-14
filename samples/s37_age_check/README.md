@@ -17,6 +17,7 @@ ivn new acme_age_check --from s37
 What a partner usually changes:
 
 - **The words the cashier reads:** `on_scan` and `on_check` in `agecheck.py`.
+- **The length of a message:** the till takes at most 140 characters, so keep each sentence within it (`TEXT_MAX`; `plain` cuts a longer one, and `on_check` shortens the item's name first).
 - **The settings record:** `hours_from_utc` and `look_under` on `PP AGE Settings` in `manifest.json` (the retailer's hours from UTC; ask for ID from anyone who looks under that age).
 - **The age:** the field *Customers must be at least this old* on Item Group and on Item, in `custom_fields`.
 - **The sale detail:** `PP AGE ID Checked` in `sale_attributes`.
@@ -35,11 +36,16 @@ ivn try
 
 ## Try it at the till
 
+- First, in iVendNext Desk, set *Customers must be at least this old* on the wine's item group (21, say), and add that group to the scan service's settings (`item_groups`), as *The customer sets* says.
 - Scan a bottle of wine; the till shows the date of birth to check. Press Add with these details.
 - Pick a restricted item from the list instead of scanning it; the till stops it at Pay.
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.1.3
+
+- At Pay, an age typed in *Sale details* under the item's age (*19* for a wine at 21) is refused with *the customer is under 21: take it off*, no longer *enter 21*; every refusal names the item by its name, not its code. The service changes; the manifest is unchanged. *Try it at the till* starts with the age on the item group.
 
 ### 1.1.2
 

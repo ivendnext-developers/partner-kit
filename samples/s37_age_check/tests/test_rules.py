@@ -35,8 +35,8 @@ SETTINGS = {"hours_from_utc": 4, "look_under": 25}
 G, I = agecheck.groups_of(GROUPS, "PP AGE"), agecheck.items_of(ITEMS, "PP AGE")
 
 
-def line(code, group, qty=1, n=1):
-    return {"line_no": n, "item_code": code, "item_name": code, "item_group": group, "qty_milli": int(qty * 1000), "uom": "Nos",
+def line(code, group, qty=1, n=1, name=None):
+    return {"line_no": n, "item_code": code, "item_name": name or code, "item_group": group, "qty_milli": int(qty * 1000), "uom": "Nos",
             "rate_minor": 100, "amount_minor": 100, "discount_minor": 0, "line_attributes": []}
 
 
@@ -136,9 +136,14 @@ class Scan(unittest.TestCase):
 
 class Check(unittest.TestCase):
     def test_a_restricted_line_with_no_check_is_refused_naming_it_and_the_age(self):
-        ctx = context([line("BREAD", "Food", n=1), line("WHISKY", "Spirits", n=2)])
-        self.assertEqual(agecheck.on_check(ctx, ages(ctx), agecheck.checked_age(ctx, "PP AGE")), {"verdict": "refuse", "reason":
-                         "Line 2: WHISKY is for customers 18 or over. See their ID, then enter 18 in Sale details, or take it off."})
+        ctx = context([line("BREAD", "Food", n=1), line("WHISKY", "Spirits", n=2, name="Glen Moray 12 Year")])
+        out = agecheck.on_check(ctx, ages(ctx), agecheck.checked_age(ctx, "PP AGE"))
+        self.assertEqual(out["verdict"], "refuse")
+        reason = out["reason"]
+        self.assertTrue(reason.startswith("Line 2: Glen Moray 12 Year is for customers 18 or over."), reason)  # the name
+        self.assertNotIn("WHISKY", reason)                                                                    # not the code
+        self.assertIn("enter 18 in Sale details", reason)
+        self.assertTrue(reason.endswith("or take it off."), reason)
 
     def test_a_recorded_check_at_the_age_or_above_allows(self):
         for checked in ("18 or over", "18", " 21 ", "25 or over"):
@@ -146,9 +151,29 @@ class Check(unittest.TestCase):
             self.assertEqual(agecheck.on_check(ctx, ages(ctx), agecheck.checked_age(ctx, "PP AGE")), {"verdict": "allow"}, checked)
 
     def test_a_lower_check_is_refused_naming_the_highest_age_needed(self):
-        ctx = context([line("LAGER", "Beer", n=1), line("WHISKY", "Spirits", n=2), line("VAPE", "Vapes", n=3)], checked="16")
-        self.assertEqual(agecheck.on_check(ctx, ages(ctx), agecheck.checked_age(ctx, "PP AGE"))["reason"],
-                         "Line 3: VAPE is for customers 21 or over; the sale's ID check says 16. See their ID, then enter 21 in Sale details.")
+        ctx = context([line("LAGER", "Beer", n=1), line("WHISKY", "Spirits", n=2), line("VAPE", "Vapes", n=3)], checked="16 or over")
+        reason = agecheck.on_check(ctx, ages(ctx), agecheck.checked_age(ctx, "PP AGE"),
+                                   agecheck.checked_as_read(ctx, "PP AGE"))["reason"]
+        self.assertTrue(reason.startswith("Line 3: VAPE is for customers 21 or over;"), reason)
+        self.assertIn("the sale's ID check says 16.", reason)
+        self.assertTrue(reason.endswith("enter 21 in Sale details."), reason)   # a band was confirmed, not an age read
+
+    def test_an_age_read_on_the_id_under_the_lines_age_says_take_it_off_never_enter_the_age(self):
+        ctx = context([line("EHW-RW-001", "Spirits", n=1, name="Cabernet Sauvignon 750ml")], checked="19")
+        self.assertTrue(agecheck.checked_as_read(ctx, "PP AGE"))
+        out = agecheck.on_check(ctx, [21], agecheck.checked_age(ctx, "PP AGE"), agecheck.checked_as_read(ctx, "PP AGE"))
+        reason = out["reason"]
+        self.assertEqual(out["verdict"], "refuse")
+        self.assertTrue(reason.startswith("Line 1: Cabernet Sauvignon 750ml is for customers 21 or over."), reason)
+        self.assertIn("says 19, so the customer is under 21", reason)
+        self.assertTrue(reason.endswith("take it off."), reason)
+        self.assertNotIn("enter", reason)
+        self.assertNotIn("EHW-RW-001", reason)
+
+    def test_only_an_age_typed_alone_is_an_age_read_on_the_id(self):
+        for checked, read in (("19", True), (" 19 ", True), ("19 or over", False), ("19+", False), ("yes", False), ("", False)):
+            self.assertEqual(agecheck.checked_as_read(context(checked=checked), "PP AGE"), read, checked)
+        self.assertFalse(agecheck.checked_as_read(context(), "PP AGE"))
 
     def test_only_a_whole_age_alone_is_a_check(self):
         for checked, age in (("18 or over", 18), ("18", 18), (" 21+ ", 21), ("21 OR OVER", 21), ("18/03/2010", 0),
@@ -182,11 +207,12 @@ class Check(unittest.TestCase):
 
     def test_every_refusal_is_plain_and_at_most_140(self):
         long = "W" * 200
-        for checked in (0, 18):
+        for checked, as_read in ((0, False), (18, False), (18, True), (119, True)):
             ctx = context([line(long, "Vapes", n=123)])
-            reason = agecheck.on_check(ctx, [21], checked)["reason"]
+            reason = agecheck.on_check(ctx, [120 if checked == 119 else 21], checked, as_read)["reason"]
             self.assertLessEqual(len(reason), 140)
-            self.assertTrue(reason.endswith("in Sale details.") or reason.endswith("or take it off."), reason)   # never cut
+            self.assertTrue(reason.endswith(("in Sale details.", "take it off.")), reason)   # the name is cut, never what to do
+            self.assertIn("Line 123: W", reason)
 
 
 class Asked(unittest.TestCase):
