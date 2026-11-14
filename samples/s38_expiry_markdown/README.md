@@ -1,6 +1,6 @@
 # S38 — Expiry markdown (`pp_exm`): mark down stock as its expiry date nears
 
-A grocery, bakery or pharmacy marks down stock whose expiry date is near, so it sells before it is thrown away. The retailer sets its markdown steps once on its item groups: 25% off from 5 days before expiry, 50% off from 2 days, say. Each morning a manager ticks the lots in the Batch list and presses **Mark down**. Every ticked lot inside a step gets its own price on the retailer's selling price list, valid until its expiry date. The till already rings a lot at its own price, so the cashier does nothing new.
+A grocery, bakery or pharmacy marks down stock whose expiry date is near, so it sells before it is thrown away. The retailer sets its markdown steps once on its item groups: 25% off from 5 days before expiry, 50% off from 2 days, say. Each morning a manager ticks the lots in the Batch list and presses **Mark down**. Every ticked lot inside a step gets its own price on the retailer's selling price list, valid until its expiry date, and on every other selling price list in that currency that prices the item (a member, regional, trade or payer list), the same step's percent off that list's own price. The till already rings a lot at its own price, so the cashier does nothing new.
 
 ![What the install will change, read before you agree](screenshots/01_install.png)
 
@@ -42,6 +42,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.1.2
+
+- A member pays a marked-down price too: every other selling price list in the same currency that prices the item (a member, regional, trade or payer list) gets the lot's own price, the same step's percent off that list's own price, and loses it with the markdown. A price set for one customer alone is read first and is not marked down. After you change a list's price, press Mark down again on lots already marked down; after the first press on this version, press it once more on lots already marked down and restart each store's tills, so their offline price check knows the new lot prices. Manifest 0.2.2.
 
 ### 1.1.1
 
