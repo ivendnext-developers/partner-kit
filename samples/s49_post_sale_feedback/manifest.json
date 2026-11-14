@@ -3,7 +3,7 @@
  "app": "pp_psf",
  "prefix": "PP PSF",
  "title": "Post-sale feedback",
- "version": "0.2.1",
+ "version": "0.2.2",
  "publisher": "Partner Programme sample",
  "description": "After a till sale, the retailer's own message asks the customer how the visit was, with a link to a one-page answer. A rule, PP PSF Rule, holds the name customers read, the question and three answers in the retailer's words, the days back a press reaches, the days a link stays open and the POS Profiles it covers. A Desk button, Send feedback requests, on one or more rules: the service reads each rule's submitted till sales of its last days received since its last press, and writes one PP PSF Request per customer to ask, named by the sale, holding the customer's mobile number and e-mail and a signed link. Never the walk-in customer, a return, a sale already asked or a customer who asked to stop. The retailer's own Notification on the request sends the message by SMS, e-mail or WhatsApp. The customer's answer, an optional comment and stop these messages are written on the request, once. A report lists the answers. The service reads the rules, the POS Profiles, the till sales and the customers' mobile number and e-mail with its own user, and writes the requests and each rule's place. The install makes the roles PP PSF Manager and PP PSF Integration; the install gives the second to the app's own user and, from role_rights, read on POS Invoice, POS Profile and Customer, and PP PSF Manager select on POS Profile; the retailer makes the Notification. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
@@ -390,5 +390,18 @@
   {"doctype": "POS Profile", "role": "PP PSF Integration", "rights": ["read"]},
   {"doctype": "Customer", "role": "PP PSF Integration", "rights": ["read"]},
   {"doctype": "POS Profile", "role": "PP PSF Manager", "rights": ["select"]}
+ ],
+ "translations": [
+  {
+   "language": "en",
+   "words": {
+    "PP PSF Rule": "Feedback rule",
+    "PP PSF Rule Profile": "Feedback rule register",
+    "PP PSF Request": "Feedback request",
+    "PP PSF Answers": "Feedback answers",
+    "PP PSF Manager": "Feedback manager",
+    "PP PSF Feedback feed": "Feedback feed"
+   }
+  }
  ]
 }

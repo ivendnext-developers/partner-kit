@@ -44,6 +44,12 @@ ivn try
 
 ## Versions
 
+### 1.1.3
+
+Manifest 0.2.2.
+
+- Desk shows plain names (*Feedback rule*, *Feedback request*, *Feedback answers*, *Feedback manager*) through the manifest's `translations` block. The stored names are unchanged: an installed site keeps its records.
+
 ### 1.1.2
 
 Manifest 0.2.1 (unchanged: the page is served by the hosted service).
