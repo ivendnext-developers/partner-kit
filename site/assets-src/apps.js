@@ -321,10 +321,9 @@
   // a try still moving: the page asks again until it is done or stopped
   function tryRunning(s) { return !!(s && s.step && s.step !== "done" && s.step !== "stopped"); }
   // a newer draft than the one tried, a try that stopped, or another site picked: Try installs it again (J4-05 after a fix)
-  function offerAgain(s, site) {
-    return !s || !s.step || s.step === "stopped" || (s.step === "done" && ((s.latest && s.latest !== s.version) ||
-      (!!site && !!s.site && s.site !== site)));
-  }
+  // W227 (the walk after phase E): every Try press tries; only a try still running is shown as it stands. A finished
+  // try's "Installed" may be old (the app since uninstalled there): the doors test a site that has the version already
+  function offerAgain(s) { return !tryRunning(s); }
   // J4-01's line with no site, its "Request one" a link to the sandbox page
   function noSandboxParts(words) {
     var i = String(words || "").indexOf(T.request);
@@ -1415,7 +1414,7 @@
     call("POST", "/try/status", { app: app }).then(function (s) {
       if (s.step) data.tryS = s;
       if (tryRunning(s)) { data.trySite = s.site || data.trySite; render(); pollTry(); return; }
-      if (!offerAgain(s, data.trySite)) { render(); return; }
+      if (!offerAgain(s)) { render(); return; }
       return startTry(app);
     }).then(null, fail);
   }
