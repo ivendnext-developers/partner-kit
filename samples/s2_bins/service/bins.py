@@ -117,3 +117,13 @@ def point_rows(tenant, context) -> list[dict]:
         return []
     return tenant.list(ITEM_IN_BIN, ["name", "item", "bin", "qty", "kind"],
                        [["item", "in", codes], ["store", "=", context["store"]]])
+
+
+def point_names(tenant, context) -> dict:
+    """The items' names, as the basket shows them (the press carries only codes); none when they cannot be read."""
+    codes = sorted({line["item_code"] for line in context.get("lines") or []})
+    try:
+        got = tenant.list("Item", ["name", "item_name"], [["name", "in", codes]]) if codes else []
+    except TenantError:
+        return {}
+    return {r["name"]: r["item_name"] for r in got if r.get("item_name")}

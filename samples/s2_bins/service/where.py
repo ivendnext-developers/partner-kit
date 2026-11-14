@@ -15,7 +15,10 @@ records are read fresh on every press, with the app's integration user's key, in
     <prefix> Location      the locations that serve the till's store
     <prefix> Item In Bin   the items on the sale (the first CODES_MAX of them), with a quantity above 0, at those
                            locations (its Location fills itself from its bin when the record is saved)
-Both share one deadline inside the till's 3 seconds. When the app has no user's key yet, the shop refuses that key, the
+and a third for the items' names, as the basket shows them (the press carries only codes):
+    Item                   the same items' item_name (the manifest's role_rights give the app's role read on Item)
+All share one deadline inside the till's 3 seconds. The names are a help, not the answer: when they cannot be read (a
+shop on a version before the read was granted, or no time left), each item is named by its code. When the app has no user's key yet, the shop refuses that key, the
 shop cannot be read in time, or there are more records than one answer can take, the cashier is told so in words (200, a
 warning message), never a guess. The till's message holds about ten items, so only the first CODES_MAX items of a sale
 are looked up; the rest are counted in the message's "and N more" (bound: such a sale is coloured as a warning).
@@ -144,6 +147,15 @@ def bin_rows(read, prefix: str, context: dict) -> list[dict]:
             for r in held if r.get("location") in kind_of]     # held again: never another store's bin
 
 
+def item_names(read, context: dict) -> dict:
+    """``{item code: item name}`` for the items on the sale, the names the basket shows."""
+    codes = sorted(first_codes(context))
+    if not codes:
+        return {}
+    got = read("Item", ["name", "item_name"], [["name", "in", codes]])
+    return {r["name"]: r["item_name"] for r in got if r.get("name") in codes and r.get("item_name")}
+
+
 def verified(secrets: list[str], headers, raw: bytes) -> bool:
     """base64(HMAC-SHA256(secret, "<timestamp>.<raw body>")), a timestamp within five minutes (the template's check)."""
     ts, sig = headers.get("X-iVendNext-Timestamp") or "", headers.get("X-iVendNext-Signature") or ""
@@ -214,8 +226,9 @@ class Service:
         if not shop:
             note["shop"] = "no user"
             return 200, _warning(NOT_SET_UP)
+        read = self._read(shop, self.clock() + DEADLINE)
         try:
-            rows = bin_rows(self._read(shop, self.clock() + DEADLINE), self.prefix, context)
+            rows = bin_rows(read, self.prefix, context)
         except TooMany:
             note["shop"] = "too many"
             return 200, _warning(TOO_MANY)
@@ -226,7 +239,13 @@ class Service:
         except (KeyError, TypeError):
             note["shop"] = "bad answer"
             return 200, _warning(UNREADABLE)
-        return 200, core.where_answer(context, rows)
+        try:
+            names = item_names(read, context)
+        except ShopUnreadable as e:         # each item is named by its code, as before the names were read
+            names, note["names"] = {}, e.code or "unreadable"
+        except (KeyError, TypeError):
+            names, note["names"] = {}, "bad answer"
+        return 200, core.where_answer(context, rows, names)
 
     def handle(self, method: str, path: str, headers, raw: bytes, note: dict | None = None) -> tuple[int, dict]:
         """One call: (status, answer). The web server below and the function entry both call this. ``note`` gets why a
