@@ -40,6 +40,10 @@ ivn try
 
 ## Versions
 
+### 0.1.3
+
+- Desk shows plain names (Alteration ticket, Taken, With the tailor) through the manifest's `translations` block, so a search for *alteration ticket* finds the record. The stored names are unchanged: an installed site keeps its records.
+
 ### 0.1.2
 
 - The slip says *Collect at* with the store's own name (a read-only *Store name* field), not the warehouse's record name with the company suffix. A slip saved before the update prints the old name until it is saved again.
