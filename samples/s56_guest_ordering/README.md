@@ -45,6 +45,12 @@ The hosted service reserves 10 of the account's concurrent copies, shared by eve
 
 ## Versions
 
+### 1.3.1
+
+Manifest 0.2.5.
+
+- Desk shows plain names (*Code*, *Guest ordering settings*, *Guest ordering manager*, *Table card*) through the manifest's `translations` block. The stored names are unchanged: an installed site keeps its records.
+
 ### 1.3.0
 
 Manifest 0.2.4. Needs POS build `2.1.0.697` or later.
