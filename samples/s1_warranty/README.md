@@ -28,7 +28,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/point_handler.md).
 
-**The customer sets:** the warranty terms, and the role **PP WRC Integration** with read on Sales Invoice, POS Invoice, Serial and Batch Bundle and Item, and read and create on Comment. Until then no comment comes.
+**The customer sets:** the warranty terms. The install makes the role **PP WRC Integration** and the app's own user, and gives the role read on Sales Invoice, POS Invoice, Serial and Batch Bundle and Item, and read and create on Comment (`role_rights`), so the retailer's administrator grants none. **Needs POS build `2.1.0.691` or later**, and `2.1.0.696` or later for an update to add these rights to an app installed before 0.3.3.
 
 ## Run it
 
@@ -41,10 +41,13 @@ ivn try
 
 - In Desk, add a warranty term for an item. Start a sale with that item and press Warranty; the till names the item and its months.
 - Sell it and scan its serial number. Within a few minutes the warranty's comment is on the sale in Desk.
-- The Warranty key was pressed through the released key over HTTPS from a console as the cashier, not from the till's screen or a physical till; a press from the till itself has not been tried.
 - Close the till day when you are done.
 
 ## Versions
+
+### 0.3.3
+
+- The role's rights move into the manifest (`role_rights`): read on Sales Invoice, POS Invoice, Serial and Batch Bundle and Item, and read and create on Comment, so a sale gets its warranty comment right after the install, with nothing for the retailer's administrator to grant. Needs POS build `2.1.0.691` or later; an update adds them from `2.1.0.696`.
 
 ### 0.3.2
 
