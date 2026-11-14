@@ -138,7 +138,7 @@ CANARIES = [
     ("the prescription sheet formats its values", "manifest.json", '<td>{{ doc.get_formatted(\\"l_sph\\") }}</td><td>{{ doc.get_formatted(\\"l_cyl\\") }}</td><td>{{ doc.l_axis }}</td><td>{{ doc.get_formatted(\\"l_add\\") }}</td><td>{{ doc.get_formatted(\\"l_prism\\") }}</td><td>{{ doc.l_base or \\"\\" }}</td><td>',
      '<td>{{ doc.l_sph }}</td><td>{{ doc.get_formatted(\\"l_cyl\\") }}</td><td>{{ doc.l_axis }}</td><td>{{ doc.get_formatted(\\"l_add\\") }}</td><td>{{ doc.get_formatted(\\"l_prism\\") }}</td><td>{{ doc.l_base or \\"\\" }}</td><td>',
      M + "test_the_prescription_prints_on_its_own_sheet_by_default_with_each_eye_named"),
-    ("a spectacle prescription prints no contact-lens values", "manifest.json", '{% if doc.kind == \\"Contact lenses\\" %}', '{% if true %}',
+    ("a spectacle prescription prints no contact-lens values", "manifest.json", '{% if doc.kind == \\"Contact lenses\\" %}', '{% if doc.kind %}',
      M + "test_the_prescription_prints_on_its_own_sheet_by_default_with_each_eye_named"),
     ("the prescription opens on its own sheet", "manifest.json", '"value": "PP OPT Prescription Sheet"', '"value": "Standard"',
      M + "test_the_prescription_prints_on_its_own_sheet_by_default_with_each_eye_named"),

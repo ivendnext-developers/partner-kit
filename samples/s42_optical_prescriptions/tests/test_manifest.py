@@ -3,6 +3,7 @@ fields are the ones the service reads; the integration role only reads (the sett
 prescriptions are written by the optometrist and read by store staff; the lab order's workflow sets the two ticks the
 report and the shop's own messages read; each record type opens its help."""
 import json
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -136,10 +137,14 @@ class ManifestTest(unittest.TestCase):
             self.assertNotIn(bare, html)
         self.assertTrue(html.startswith('<div dir="auto"'))
         # a contact lens's base curve and diameter print only on a contact-lens prescription, never as 0 on spectacles
-        cl = html.index('{% if doc.kind == "Contact lenses" %}')
         self.assertIn("Contact lenses", rx["kind"]["options"].split("\n"))
-        self.assertTrue(cl < html.index('get_formatted("r_bc")') < html.index("{% endif %}"))
-        self.assertLess(html.index("{% endif %}"), html.index("doc.notes"))
+        (block,) = re.findall(r"\{%-? *if (.*?) *-?%\}(.*?)\{%-? *endif *-?%\}", html, re.S)
+        self.assertEqual(block[0], 'doc.kind == "Contact lenses"')
+        for f in ("r_bc", "r_dia", "l_bc", "l_dia", "cl_lens"):
+            self.assertIn(f"doc.{f}" if f == "cl_lens" else f'get_formatted("{f}")', block[1], f)
+            self.assertNotIn(f, html.replace(block[1], ""), f)          # nowhere outside the contact-lens block
+        for f in ("examined_by", "registration", "notes"):              # who examined, under which registration
+            self.assertIn(f"{{{{ doc.{f} or \"\" }}}}", html.replace(block[1], ""), f)
 
     def test_desk_names_the_records_states_and_buttons_in_plain_words(self):
         (tr,) = MANIFEST["translations"]
