@@ -4,6 +4,7 @@ are read by the claims clerk and the service only, never a till role; the record
 service reads and writes."""
 import json
 import sys
+import os
 import unittest
 from pathlib import Path
 
@@ -39,7 +40,7 @@ class ManifestTest(unittest.TestCase):
         for s in subs.values():
             self.assertEqual(app.ROUTES[s["endpoint_url"].split("8142", 1)[1]][0], s["key"])
             self.assertIn(s["endpoint_url"], MANIFEST["allowed_urls"])
-        self.assertEqual(MANIFEST["version"], "0.5.1")
+        self.assertEqual(MANIFEST["version"], "0.5.2")
 
     def test_the_payer_service_carries_only_settings_the_door_takes_and_never_a_clearing_mode(self):
         payer = next(s for s in MANIFEST["extension_subscriptions"] if s["point"] == "payer")
@@ -100,6 +101,21 @@ class ManifestTest(unittest.TestCase):
     def test_nothing_is_required_on_the_shops_own_records(self):
         for c in MANIFEST["custom_fields"]:
             self.assertFalse(c.get("reqd"))
+
+    def test_the_english_words_cover_every_name_the_store_sees(self):   # Desk shows people's words, never the code
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "manifest.json"), encoding="utf-8") as f:
+            m = json.load(f)
+        names = {d["name"] for d in m.get("doctypes", [])}
+        for key in ("print_formats", "reports", "registered_applications", "sale_attributes", "workspaces",
+                    "number_cards", "notifications", "dashboard_charts"):
+            names |= {x["name"] for x in m.get(key, [])}
+        for wf in m.get("workflows", []):
+            names |= {wf["name"]} | {s["state"] for s in wf["states"]} | {t["action"] for t in wf["transitions"]}
+        for d in m.get("doctypes", []):
+            names |= {p["role"] for p in d.get("permissions", []) if not p["role"].endswith(" Integration")}
+        (en,) = [t["words"] for t in m["translations"] if t["language"] == "en"]
+        self.assertEqual(sorted(n for n in names if n.startswith(m["prefix"]) and n not in en), [])
+        self.assertTrue(all(w and not w.startswith(m["prefix"]) for w in en.values()))
 
 
 if __name__ == "__main__":

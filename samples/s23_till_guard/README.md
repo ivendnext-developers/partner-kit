@@ -26,7 +26,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/till_guard.md).
 
-**The customer sets:** the rules it wants in the `Default` record of *PP TGR Settings* (0 or blank is off), the items to confirm at the scan, a price list of lowest prices, and, for a manager's approval, who may approve.
+**The customer sets:** the rules it wants in the `Default` record of *Till guard settings* (`PP TGR Settings`) (0 or blank is off), the items to confirm at the scan, a price list of lowest prices, and, for a manager's approval, who may approve.
 
 ## Run it
 
@@ -42,6 +42,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.4.1
+
+- Desk shows plain names (Till guard settings) through the manifest's `translations` block, so a search for *till guard* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.5.1.
 
 ### 1.4.0
 

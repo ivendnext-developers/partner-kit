@@ -3,6 +3,7 @@ on the sale when down; the rule record is one per customer group with a table of
 role only, and opens its help."""
 import json
 import sys
+import os
 import unittest
 from pathlib import Path
 
@@ -67,6 +68,21 @@ class ManifestTest(unittest.TestCase):
         (ps,) = MANIFEST["property_setters"]
         self.assertEqual((ps["doc_type"], ps["property"]), (MANIFEST["prefix"] + " Rule", "documentation"))
         self.assertTrue(ps["value"].startswith("https://") and ps["value"].endswith("#rules"))
+
+    def test_the_english_words_cover_every_name_the_store_sees(self):   # Desk shows people's words, never the code
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "manifest.json"), encoding="utf-8") as f:
+            m = json.load(f)
+        names = {d["name"] for d in m.get("doctypes", [])}
+        for key in ("print_formats", "reports", "registered_applications", "sale_attributes", "workspaces",
+                    "number_cards", "notifications", "dashboard_charts"):
+            names |= {x["name"] for x in m.get(key, [])}
+        for wf in m.get("workflows", []):
+            names |= {wf["name"]} | {s["state"] for s in wf["states"]} | {t["action"] for t in wf["transitions"]}
+        for d in m.get("doctypes", []):
+            names |= {p["role"] for p in d.get("permissions", []) if not p["role"].endswith(" Integration")}
+        (en,) = [t["words"] for t in m["translations"] if t["language"] == "en"]
+        self.assertEqual(sorted(n for n in names if n.startswith(m["prefix"]) and n not in en), [])
+        self.assertTrue(all(w and not w.startswith(m["prefix"]) for w in en.values()))
 
 
 if __name__ == "__main__":

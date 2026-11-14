@@ -26,7 +26,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/payment_method_rules.md).
 
-**The customer sets:** the rules in *PP PMR Rule*, one per customer group that needs one, with its own *Mode of Payment* records. The role **PP PMR Integration** has its read on Customer Group from the manifest (`role_rights`). Loyalty Points must be one of the till's payment methods for a minimum sale to apply to it.
+**The customer sets:** the rules in *Payment method rule* (`PP PMR Rule`), one per customer group that needs one, with its own *Mode of Payment* records. The role **PP PMR Integration** has its read on Customer Group from the manifest (`role_rights`). Loyalty Points must be one of the till's payment methods for a minimum sale to apply to it.
 
 ## Run it
 
@@ -41,6 +41,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.2.1
+
+- Desk shows plain names (Payment method rule) through the manifest's `translations` block, so a search for *payment method rule* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.3.1.
 
 ### 1.2.0
 
