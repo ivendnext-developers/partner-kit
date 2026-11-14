@@ -41,14 +41,13 @@ ivn try
 
 - In Desk, add a warranty term for an item. Start a sale with that item and press Warranty; the till names the item and its months.
 - Sell it and scan its serial number. Within a few minutes the warranty's comment is on the sale in Desk.
-- On our test site the Warranty key has been pressed from the till's own screen, answering from the app's own term.
 - Close the till day when you are done.
 
 ## Versions
 
 ### 0.3.3
 
-- The role's rights move into the manifest (`role_rights`): read on Sales Invoice, POS Invoice, Serial and Batch Bundle and Item, and read and create on Comment, so a sale gets its warranty comment right after the install, with nothing for the retailer's administrator to grant. The README says the Warranty key has now been pressed from the till's own screen. Needs POS build `2.1.0.691` or later; an update adds them from `2.1.0.696`.
+- The role's rights move into the manifest (`role_rights`): read on Sales Invoice, POS Invoice, Serial and Batch Bundle and Item, and read and create on Comment, so a sale gets its warranty comment right after the install, with nothing for the retailer's administrator to grant. Needs POS build `2.1.0.691` or later; an update adds them from `2.1.0.696`.
 
 ### 0.3.2
 
