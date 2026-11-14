@@ -27,7 +27,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/refund_rules.md).
 
-**The customer sets:** the settings record *PP RFR Settings*, named `Default`: *Refund by the sale's own methods*, the *Store credit method* (a Mode of Payment of type Store Credit, kept enabled), any *Always allowed* methods, and the methods for a return *Without its sale*. On each POS Profile, tick *Allowed in Returns* for the store credit method and each card method a refund may go back to.
+**The customer sets:** the settings record *Refund rules settings* (`PP RFR Settings`), named `Default`: *Refund by the sale's own methods*, the *Store credit method* (a Mode of Payment of type Store Credit, kept enabled), any *Always allowed* methods, and the methods for a return *Without its sale*. On each POS Profile, tick *Allowed in Returns* for the store credit method and each card method a refund may go back to.
 
 ## Run it
 

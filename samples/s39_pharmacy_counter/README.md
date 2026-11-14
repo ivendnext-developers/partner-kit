@@ -28,7 +28,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/pharmacy_counter.md).
 
-**The customer sets:** its drug schedules (one per class, each with its rules); who gets **PP RXC Pharmacist**, and the pharmacist in charge, who gets **PP RXC Pharmacist in Charge**, adds each pharmacist with their licence number and *valid until*, and enters the premises licence; and each patient's identity and consent on their *PP RXC Patient* record, entered on the Desk (the till cannot take them). The app's role has its reads from the manifest (`role_rights`); the administrator gives none.
+**The customer sets:** its drug schedules (one per class, each with its rules); who gets **Pharmacist** (`PP RXC Pharmacist`), and the pharmacist in charge, who gets **Pharmacist in charge** (`PP RXC Pharmacist in Charge`), adds each pharmacist with their licence number and *valid until*, and enters the premises licence; and each patient's identity and consent on their *Pharmacy patient* (`PP RXC Patient`) record, entered on the Desk (the till cannot take them). The app's role has its reads from the manifest (`role_rights`); the administrator gives none.
 
 **Sale details in the shop's words:** the till shows a sale detail by its name (*PP RXC Rx Number*). On the dispensary's till theme, in POS Studio's **Fields** tab, relabel the five on the *Sale details* screen: *Prescription number*, *Prescriber*, *Prescriber's licence*, *Directions*, *Prescription date*. Hide *Prescriber*, *Prescriber's licence* and *Directions* where the pharmacists never type over what the prescription says: the check reads them from the prescription. Keep *Prescription date* shown: the check fills it.
 

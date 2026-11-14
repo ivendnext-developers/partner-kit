@@ -29,7 +29,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/expiry_recall.md).
 
-**The customer sets:** the settings record **Default** (the quarantine stores, each ticked *Is Rejected Warehouse* on its Warehouse, the ERP connector's own users, the minimum shelf life and the clocks) and the role *PP RCL Recall Officer* for whoever runs recalls: the role shows **Block these batches**, which the site's administrator also sees, so the first recall needs no grant. The customers supplied are health data, so give the role with care.
+**The customer sets:** the *Expiry and recall settings* (`PP RCL Settings`) record **Default** (the quarantine stores, each ticked *Is Rejected Warehouse* on its Warehouse, the ERP connector's own users, the minimum shelf life and the clocks) and the role *Recall officer* (`PP RCL Recall Officer`) for whoever runs recalls: the role shows **Block these batches**, which the site's administrator also sees, so the first recall needs no grant. The customers supplied are health data, so give the role with care.
 
 ## Run it
 

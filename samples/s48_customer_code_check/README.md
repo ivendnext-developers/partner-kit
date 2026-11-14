@@ -27,7 +27,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/customer_code_check.md).
 
-**The customer sets:** the retailer's SMS gateway in *SMS Settings*; one **Notification** on *PP CCC Code* (*Send Alert On* New, *Channel* SMS, the receiver the field `mobile`, a message holding `{{ doc.code }}`); one *PP CCC Rule* for each customer group that needs one; and who may change a customer's group and phone number.
+**The customer sets:** the retailer's SMS gateway in *SMS Settings*; one **Notification** on *Customer check code* (`PP CCC Code`) (*Send Alert On* New, *Channel* SMS, the receiver the field `mobile`, a message holding `{{ doc.code }}`); one *Customer code rule* (`PP CCC Rule`) for each customer group that needs one; and who may change a customer's group and phone number.
 
 ## Run it
 

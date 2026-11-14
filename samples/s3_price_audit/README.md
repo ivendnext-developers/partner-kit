@@ -29,7 +29,7 @@ What a partner usually changes:
 
 More: the [event feed recipe](../../recipes/event_feed.md).
 
-**The customer sets:** the threshold, as the `PP PDO Settings` record titled **Default** (a System Manager makes it). The role `PP PDO Integration` needs no read from the retailer's administrator: the install gives it read on POS Invoice and Sales Invoice, the two record types the feed follows. **Needs POS build `2.1.0.691` or later:** on an earlier site the install gives the feed's user no read, so the events wait; the service's log says which record type was refused (`ivn logs`).
+**The customer sets:** the threshold, as the *Price-deviation audit settings* (`PP PDO Settings`) record titled **Default** (a System Manager makes it). The role `PP PDO Integration` needs no read from the retailer's administrator: the install gives it read on POS Invoice and Sales Invoice, the two record types the feed follows. **Needs POS build `2.1.0.691` or later:** on an earlier site the install gives the feed's user no read, so the events wait; the service's log says which record type was refused (`ivn logs`).
 
 ## Run it
 

@@ -22,7 +22,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/price_checker.md).
 
-**The customer sets:** one **PP PRC Kiosk** record per screen, with the store's till profile. On the tablet, open the app's address with `#shop=` and the site's **key address** (the App library shows it at its top: *This site's key address: …*, with **Copy**), then `&kiosk=` and the record's name, in full screen. A domain of the retailer's own that points at the site is not the key address: a kiosk given another address answers *This kiosk is not set up*. A barcode scanner connected as a keyboard scans into the page. **It reads an item's own barcode:** a pre-packed label that carries the price or the weight (a scale's label for a meat pack) is not decoded, and the kiosk says it could not find the item.
+**The customer sets:** one **Price-checker kiosk** (`PP PRC Kiosk`) record per screen, with the store's till profile. On the tablet, open the app's address with `#shop=` and the site's **key address** (the App library shows it at its top: *This site's key address: …*, with **Copy**), then `&kiosk=` and the record's name, in full screen. A domain of the retailer's own that points at the site is not the key address: a kiosk given another address answers *This kiosk is not set up*. A barcode scanner connected as a keyboard scans into the page. **It reads an item's own barcode:** a pre-packed label that carries the price or the weight (a scale's label for a meat pack) is not decoded, and the kiosk says it could not find the item.
 
 ## Run it
 

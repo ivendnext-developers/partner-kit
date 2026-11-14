@@ -26,7 +26,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/required_sale_details.md).
 
-**The customer sets:** the sale details themselves (one **Sale Attribute** for each, switched on, with no default value and its own *Required* left off), one *PP RSD Rule* for each customer group that needs one, and who may change a customer's group.
+**The customer sets:** the sale details themselves (one **Sale Attribute** for each, switched on, with no default value and its own *Required* left off), one *Required sale details rule* (`PP RSD Rule`) for each customer group that needs one, and who may change a customer's group.
 
 ## Run it
 

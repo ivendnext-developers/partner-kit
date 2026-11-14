@@ -26,7 +26,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/till_guard.md).
 
-**The customer sets:** the rules it wants in the `Default` record of *PP TGR Settings* (0 or blank is off), the items to confirm at the scan, a price list of lowest prices, and, for a manager's approval, who may approve.
+**The customer sets:** the rules it wants in the `Default` record of *Till guard settings* (`PP TGR Settings`) (0 or blank is off), the items to confirm at the scan, a price list of lowest prices, and, for a manager's approval, who may approve.
 
 ## Run it
 
