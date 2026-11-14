@@ -1,6 +1,6 @@
 # S19 — Unit codes at the scan (a scan source)
 
-The retailer's own unit codes, read by the till's scan: one record per unit (its unique code, its item, its batch, *Available* or *Sold*) and a scan source over that table. A scanned unit lands as its item with its batch; a sold unit is refused. Data only: no service, nothing leaves the retailer's iVendNext.
+The retailer's own unit codes, read by the till's scan: one record per unit (its unique code, its item, its batch, *Available* or *Sold*) and a scan source over that table. A scanned unit lands as its item with its batch; a unit marked *Sold* is refused. Data only: no service, nothing leaves the retailer's iVendNext.
 
 ![A unit's code scanned onto a sale with its batch and its code, and a sold unit refused](screenshots/01_unit_scanned.png)
 
@@ -38,6 +38,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 0.1.2
+
+- The README's first lines say a unit marked *Sold* is refused: nothing marks a unit *Sold* until the retailer's own step or service does. The manifest changes only its version.
 
 ### 0.1.1
 
