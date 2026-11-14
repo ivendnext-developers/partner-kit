@@ -3,13 +3,13 @@
  "app": "pp_pdo",
  "prefix": "PP PDO",
  "title": "Price-deviation audit",
- "version": "0.3.0",
+ "version": "0.3.1",
  "publisher": "Partner Programme sample",
  "description": "S3 rebuilt so that the partner's service runs outside the shop, reads booked sales from the event feed with its own user (the role PP PDO Integration, which the install makes), and writes each line sold below list by more than the shop's threshold (PP PDO Settings, record Default; 10 when there is none) into this record type. No partner code runs inside the shop.",
  "allowed_urls": ["https://pdo.partner.example"],
  "doctypes": [
   {"name": "PP PDO Deviation", "autoname": "field:line_key", "track_changes": 1, "title_field": "item_code",
-   "sort_field": "posting_date", "sort_order": "DESC",
+   "sort_field": "deviation_percent", "sort_order": "DESC",
    "fields": [
     {"fieldname": "line_key", "fieldtype": "Data", "label": "Sale line", "reqd": 1, "unique": 1, "read_only": 1,
      "description": "The sale's line id: one record per line, so a second delivery writes nothing"},

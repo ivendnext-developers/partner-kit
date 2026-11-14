@@ -40,6 +40,10 @@ ivn try
 
 ## Versions
 
+### 1.1.2
+
+- The deviations list and its report open largest first (the record type sorts by *Below list*, manifest 0.3.1); before, Desk's sort read *Date* and the report opened in date order.
+
 ### 1.1.1
 
 - Its two record types give a guide address, so an app with it can be listed for every retailer.
