@@ -117,8 +117,8 @@ class OneShop(unittest.TestCase):
         self.assertEqual(self.scan(scan(sale_ref="sale-9"))[1], {"verdict": "allow"})
 
     def test_a_variant_is_judged_by_its_templates_age_read_in_a_second_step(self):
-        out = self.check(context([line("POD-MINT", "Food", n=1)]))[1]
-        self.assertTrue(out["reason"].startswith("Line 1: POD-MINT is for customers 21 or over."), out)
+        out = self.check(context([line("POD-MINT", "Food", n=1, name="Mint pods")]))[1]
+        self.assertTrue(out["reason"].startswith("Line 1: Mint pods is for customers 21 or over."), out)
         self.assertEqual([c[3] for c in self.api.calls if c[0] == "items"], [("POD-MINT",), ("POD",)])
         self.assertEqual(self.check(context([line("POD-MINT", "Food")], checked="21"))[1], {"verdict": "allow"})
         self.assertEqual(len([c for c in self.api.calls if c[0] == "items"]), 2)          # both kept a minute
@@ -127,9 +127,14 @@ class OneShop(unittest.TestCase):
         self.assertEqual(self.scan(scan("BREAD", "Food"))[1], {"verdict": "allow"})
 
     def test_the_check_refuses_a_restricted_line_the_sale_has_no_check_for(self):
-        out = self.check(context([line("WHISKY", "Spirits", n=1)]))[1]
+        out = self.check(context([line("WHISKY", "Spirits", n=1, name="Glen Moray 12 Year")]))[1]
         self.assertEqual(out["verdict"], "refuse")
-        self.assertTrue(out["reason"].startswith("Line 1: WHISKY is for customers 18 or over."))
+        self.assertTrue(out["reason"].startswith("Line 1: Glen Moray 12 Year is for customers 18 or over."), out)
+
+    def test_an_age_typed_from_the_id_under_the_lines_age_is_refused_with_take_it_off(self):
+        out = self.check(context([line("VAPE", "Vapes", n=1, name="Mint vape")], checked="19"))[1]
+        self.assertEqual(out["verdict"], "refuse")
+        self.assertIn("The ID check says 19: under 21, take it off; if their ID shows 21 or over, enter 21.", out["reason"])
 
     def test_the_check_allows_a_recorded_check_that_covers_every_line(self):
         ctx = context([line("WHISKY", "Spirits", n=1), line("VAPE", "Vapes", n=2)], checked="21 or over")

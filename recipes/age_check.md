@@ -35,12 +35,13 @@ Alcohol, tobacco, vapes, knives and some medicines may be sold only to customers
 
 6. **Ask once a sale.** Remember, per retailer and per the scan's `sale_ref`, the highest age you asked about, and answer `allow` to a later scan of that sale needing that age or less. The till does not tell you what the cashier answered, so a check you remember may have been refused at the sheet: the check at Pay catches that. The reference is empty on a sale's first scan; remember nothing for it.
 
-7. **Answer the check** (`check/1`) at Pay. A sale with no line of a positive quantity is a refund: allow, reading nothing. Otherwise read the sale detail `<PREFIX> ID Checked` in `sale_attributes` as a whole age alone (*18 or over*, *18*, *18+*; anything else, a date of birth typed in included, is 0), and find the lines the sale sells whose age is above it. None: allow. Else refuse, naming the highest age needed and its first line:
+7. **Answer the check** (`check/1`) at Pay. A sale with no line of a positive quantity is a refund: allow, reading nothing. Otherwise read the sale detail `<PREFIX> ID Checked` in `sale_attributes` as a whole age alone (*18 or over*, *18*, *18+*; anything else, a date of birth typed in included, is 0), and find the lines the sale sells whose age is above it. None: allow. Else refuse, naming the highest age needed and its first line by the item's name (`item_name`; cut the name, never what to do, to keep within 140 characters). An age typed alone (*19*) is most likely the age the cashier read on the ID: under the line's age, say to take the line off first, and to enter the line's age only if the ID shows it (a cashier told *enter 18* on an earlier line may have typed that). A band (*18 or over*, *18+*) is what the cashier confirmed: they may see the ID again and enter the higher age.
 
    | The sale | Answer |
    |---|---|
-   | no check recorded | `{"verdict": "refuse", "reason": "Line 2: WHISKY-70 is for customers 18 or over. See their ID, then enter 18 in Sale details, or take it off."}` |
-   | a lower check | `{"verdict": "refuse", "reason": "Line 3: VAPE-01 is for customers 21 or over; the sale's ID check says 18. See their ID, then enter 21 in Sale details."}` |
+   | no check recorded | `{"verdict": "refuse", "reason": "Line 2: Glen Moray 12 Year is for customers 18 or over. See their ID, then enter 18 in Sale details, or take it off."}` |
+   | a lower band (*18 or over*) | `{"verdict": "refuse", "reason": "Line 3: Mint vape is for customers 21 or over; the sale's ID check says 18. See their ID, then enter 21 in Sale details."}` |
+   | a lower age typed (*19*) | `{"verdict": "refuse", "reason": "Line 1: Cabernet Sauvignon 750ml is for 21 or over. The ID check says 19: under 21, take it off; if their ID shows 21 or over, enter 21."}` |
 
 8. **When iVendNext cannot be read,** answer 503, so the till applies your down answer: no answer, an error answer (a refused key included), an answer cut short, not records, or an item iVendNext does not return. Never follow a redirect with the key.
 

@@ -195,7 +195,7 @@ class Service:
             return {"verdict": "allow"}                 # a refund: nothing leaves the shop, nothing to read
         _settings, groups, items = self.ages(name, shop, sorted({x["item_code"] for x in ctx["lines"]}))
         ages = [agecheck.age_of(x["item_code"], x["item_group"], items, groups) for x in ctx["lines"]]
-        return agecheck.on_check(ctx, ages, agecheck.checked_age(ctx, self.prefix))
+        return agecheck.on_check(ctx, ages, agecheck.checked_age(ctx, self.prefix), agecheck.checked_as_read(ctx, self.prefix))
 
     def answer(self, path: str, headers, raw: bytes) -> tuple[int, dict]:
         if path not in ROUTES:

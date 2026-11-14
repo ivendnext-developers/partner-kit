@@ -9,7 +9,9 @@ Two extension points, one app:
   these details** puts the item on the sale and records the check; **Don't add it** leaves both off.
 - **a check before payment** (``check/1``): when the cashier presses Pay, ``on_check`` refuses the sale when a line it
   sells needs an age the sale's recorded check does not cover: no check recorded (an item picked from a list, or a
-  *Don't add it* earlier), or a lower age than the line needs. The cashier can type the age in *Sale details*.
+  *Don't add it* earlier), or a lower age than the line needs. The cashier can type the age in *Sale details*. A check
+  typed as an age alone (*19*) is most likely the age the ID shows: under the line's age, the refusal says to take the
+  line off, or, if their ID shows the line's age or over (a cashier may have typed an earlier line's age), to enter it.
 
 An item's age is its own *Customers must be at least this old* when above 0, else the nearest item group above it (itself
 included) that has one (``age_of``). A return is judged only for what it sells (an exchange's new lines).
@@ -166,13 +168,24 @@ def checked_value(age: int) -> str:
     return f"{age} or over"
 
 
+def _checked(ctx: dict, prefix: str):
+    want = f"{prefix} {CHECKED}"
+    value = next((a["value"] for a in ctx["sale_attributes"] if a["name"] == want), "")
+    return re.fullmatch(r"\s*(\d{1,3})\s*(\+|or over)?\s*", value, re.IGNORECASE)
+
+
 def checked_age(ctx: dict, prefix: str) -> int:
     """The age the sale's *ID Checked* detail records: a whole age alone, as the scan writes it (*"18 or over"*) or the
     cashier types it (*18*, *18+*), else 0. Anything else, such as a date of birth typed in, is no check."""
-    want = f"{prefix} {CHECKED}"
-    value = next((a["value"] for a in ctx["sale_attributes"] if a["name"] == want), "")
-    m = re.fullmatch(r"\s*(\d{1,3})\s*(\+|or over)?\s*", value, re.IGNORECASE)
+    m = _checked(ctx, prefix)
     return _age(int(m.group(1))) if m else 0
+
+
+def checked_as_read(ctx: dict, prefix: str) -> bool:
+    """Whether the check is an age typed alone (*19*: the age the cashier read on the ID), not a band the cashier
+    confirmed (*18 or over*, as the scan writes it, or *18+*)."""
+    m = _checked(ctx, prefix)
+    return bool(m and not m.group(2))
 
 
 def on_scan(ctx: dict, age: int, settings: dict, today: datetime.date, prefix: str) -> dict:
@@ -188,23 +201,29 @@ def on_scan(ctx: dict, age: int, settings: dict, today: datetime.date, prefix: s
             "sale_attributes": [{"sale_attribute": f"{prefix} {CHECKED}", "attribute_value": checked_value(age)}]}
 
 
-def on_check(ctx: dict, ages: list, checked: int) -> dict:
+def on_check(ctx: dict, ages: list, checked: int, as_read: bool = False) -> dict:
     """``ages`` is each line's age, in the order of ``ctx["lines"]``. The highest age a sold line needs above the recorded
-    check is refused, naming its first line; otherwise allow."""
+    check is refused, naming its first line by the item's name; otherwise allow. ``as_read``: the check is an age typed
+    alone (``checked_as_read``), most likely the age the ID shows, so the line comes off unless the ID shows its age."""
     short = [(age, i) for i, (line, age) in enumerate(zip(ctx["lines"], ages)) if line["qty_milli"] > 0 and age > checked]
     if not short:
         return {"verdict": "allow"}
     age = max(a for a, _ in short)
     i = next(i for a, i in short if a == age)
     line = ctx["lines"][i]
-    n, item = line.get("line_no") or i + 1, plain(line["item_code"], 24)   # 24: the whole sentence fits the till's 140
-    if checked:
-        text = (f"Line {n}: {item} is for customers {age} or over; the sale's ID check says {checked}. "
-                f"See their ID, then enter {age} in Sale details.")
+    n = line.get("line_no") or i + 1
+    if checked and as_read:
+        text = ("Line {n}: {item} is for {age} or over. "
+                "The ID check says {checked}: under {age}, take it off; if their ID shows {age} or over, enter {age}.")
+    elif checked:
+        text = ("Line {n}: {item} is for customers {age} or over; the sale's ID check says {checked}. "
+                "See their ID, then enter {age} in Sale details.")
     else:
-        text = (f"Line {n}: {item} is for customers {age} or over. "
-                f"See their ID, then enter {age} in Sale details, or take it off.")
-    return {"verdict": "refuse", "reason": plain(text)}
+        text = ("Line {n}: {item} is for customers {age} or over. "
+                "See their ID, then enter {age} in Sale details, or take it off.")
+    room = TEXT_MAX - len(text.format(n=n, item="", age=age, checked=checked))   # the name is cut, never what to do
+    item = plain(line.get("item_name") or line["item_code"], max(room, 1))
+    return {"verdict": "refuse", "reason": plain(text.format(n=n, item=item, age=age, checked=checked))}
 
 
 class Asked:
