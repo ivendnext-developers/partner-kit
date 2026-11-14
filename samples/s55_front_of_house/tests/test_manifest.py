@@ -121,6 +121,17 @@ class ManifestTest(unittest.TestCase):
         ]:
             self.assertIn((doctype, role, tuple(rights)), have)
 
+    def test_l1_the_reservations_open_on_the_latest_date_with_the_date_in_view(self):   # F-HOSP-16
+        self.assertEqual((self.dt[RES]["sort_field"], self.dt[RES]["sort_order"]), ("booking_date", "DESC"))
+        listed = [f["fieldname"] for f in self.dt[RES]["fields"] if f.get("in_list_view")]
+        self.assertEqual(listed[:2], ["booking_date", "booking_time"])
+
+    def test_w1_desk_shows_the_host_plain_words(self):   # F-HOSP-4
+        (en,) = [t["words"] for t in self.m["translations"] if t["language"] == "en"]
+        seen = set(self.dt) | {HOST} | {a["name"] for a in self.m["registered_applications"]}
+        self.assertEqual(sorted(seen - set(en)), [])
+        self.assertTrue(all(w and not w.startswith(self.m["prefix"]) for w in en.values()))
+
 
 if __name__ == "__main__":
     unittest.main()

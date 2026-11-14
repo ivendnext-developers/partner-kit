@@ -2,7 +2,7 @@
 
 A restaurant's host keeps the evening in iVendNext Desk: a **reservation** for each booking (the store, the date and time, the party size, the guest, a table if chosen) and a **waiting list** of walk-ins. **Book** holds the table for the party's stay and refuses an overlapping booking, naming the other one. **Seat** opens the party's check on the till at its table, once, never twice. **No-show** and **Cancel booking** free the table, and a waiting party set to *Table ready* can text the guest. Each press writes the next booking of every table at the store on the till's own tables, so the till's floor shows each booked table *Booked* with its time and a server does not seat a walk-in there. A guest's details are seen only by the host role, and the service never reads them.
 
-![The diary: the evening's reservations by time](screenshots/01_list.png)
+![Reservations: each booking's date, time, guest, party size and table, the latest date first](screenshots/01_list.png)
 
 **Industries:** Hospitality
 
@@ -41,6 +41,14 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.3.1
+
+Manifest 0.4.1.
+
+- *Reservations* opens on the latest date first and shows each booking's date beside its time, so a host reads tonight's parties without mixing them with last week's; the *Date* filter still shows one evening.
+- *Cancel booking* says the table is free again only when the booking held it: a reservation never booked leaves its table to the booking that holds it, and the answer no longer says otherwise.
+- Desk shows plain names (*Reservation*, *Waitlist entry*, *Host*, *Front of house settings*) through the manifest's `translations` block. The stored names are unchanged: an installed site keeps its records.
 
 ### 1.3.0
 

@@ -422,6 +422,13 @@ class ServiceTest(unittest.TestCase):
         self.press(s, "/press/book", RES, "R3")
         self.assertEqual(shop.res["R3"]["status"], "Booked")                     # a cancelled booking holds nothing
 
+    def test_n4_cancelling_a_booking_that_never_held_its_table_says_nothing_of_the_table(self):
+        shop = fs.FakeTenant([fs.booking("R1", "19:00:00"), fs.booking("R2", "19:00:00", status="Requested")])
+        s = self.svc(shop)
+        self.assertNotIn("table", self.said(self.press(s, "/press/cancel", RES, "R2")))   # T12 is still R1's
+        self.assertEqual(self.hold(shop)[0], "2026-10-29 19:00:00")
+        self.assertIn("table is free again", self.said(self.press(s, "/press/noshow", RES, "R1")))
+
     # ── the till's floor: each press writes the table's next booking on its place ──
     def hold(self, shop, place=fs.T12):
         return shop.places[place]["held_from"], shop.places[place]["held_to"]

@@ -3,7 +3,7 @@
  "app": "pp_foh",
  "prefix": "PP FOH",
  "title": "Front of house",
- "version": "0.4.0",
+ "version": "0.4.1",
  "publisher": "Partner Programme sample",
  "description": "A restaurant's front of house in Desk: reservations and a waiting list, a double-booking guard, no-shows, the deposit's sale, and seating that opens the table's check on the till through the open-check door. Book, on a reservation, holds its table when no other booking overlaps it (each from its start for its length). Seat, on a reservation or a waiting party, refuses a table booked for someone else within the party's stay or one with an open check (unless the store's row allows a second check), then opens the check at the table with the party's size and the booking's number. No-show and Cancel booking close a booking and free its table; a no-show writes the store's deposit rule on it. Once booked, the time, the length and the table are read-only in the form: Change booking releases the hold so they can change, and Book holds them again. Each press writes every table's next booking (its start and end, never the guest) on its place where it changed, so the till's floor shows the store's booked tables; with none left, it clears them. A booking's time is the store's own, read in its time zone where the store has one. A guest's name, phone, customer and notes are read and written only by PP FOH Host and System Manager: the app's own user never reads them, so they never leave the retailer's iVendNext. Each press sends the record's name, the pressing user and the language. Table ready on a waiting party is the retailer's own SMS Notification, made in Desk. The install makes the roles PP FOH Host and PP FOH Integration and the app's own user and, from role_rights, gives PP FOH Host read on Retail Floor Place and select on Warehouse, POS Invoice and Customer, and PP FOH Integration read and write on Retail Floor Place (the table's next booking) and read on Warehouse (the store's time zone); from app_user_rights, the install gives that user its own Retail Permission with only open a check and see the checks, Is POS User, a row at every store and a Shift Profile; the feed PP FOH Front of house feed is on from the install. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
@@ -134,8 +134,8 @@
   {
    "name": "PP FOH Reservation",
    "autoname": "format:FOH-RES-{#####}",
-   "sort_field": "booking_time",
-   "sort_order": "ASC",
+   "sort_field": "booking_date",
+   "sort_order": "DESC",
    "search_fields": "booking_date,place",
    "fields": [
     {
@@ -151,6 +151,7 @@
      "fieldtype": "Date",
      "label": "Date",
      "reqd": 1,
+     "in_list_view": 1,
      "in_standard_filter": 1,
      "read_only_depends_on": "eval:doc.status==\"Booked\"||doc.status==\"Seated\"||doc.seat_key"
     },
@@ -753,5 +754,18 @@
   {"doctype": "POS Invoice", "role": "PP FOH Host", "rights": ["select"]},
   {"doctype": "Customer", "role": "PP FOH Host", "rights": ["select"]}
  ],
- "app_user_rights": ["custom_mpos_check_open", "custom_mpos_check_read"]
+ "app_user_rights": ["custom_mpos_check_open", "custom_mpos_check_read"],
+ "translations": [
+  {
+   "language": "en",
+   "words": {
+    "PP FOH Settings": "Front of house settings",
+    "PP FOH Store": "Front of house store",
+    "PP FOH Reservation": "Reservation",
+    "PP FOH Waitlist Entry": "Waitlist entry",
+    "PP FOH Host": "Host",
+    "PP FOH Front of house feed": "Front of house feed"
+   }
+  }
+ ]
 }
