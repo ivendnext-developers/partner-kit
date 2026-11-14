@@ -53,7 +53,8 @@ import price  # noqa: E402
 import oneshop  # noqa: E402
 import shops  # noqa: E402
 
-KIOSK_TTL, READ_TIMEOUT = 60, 3.0
+KIOSK_TTL, READ_TIMEOUT, HOPS = 60, 3.0, 3
+DNS = "https://cloudflare-dns.com/dns-query?type=CNAME&name="
 SCAN_BARCODE = "/api/method/ivendnext_mpos.api.v1.scan_barcode"
 PRICER = "/api/method/ivendnext_mpos.api.v1.get_item_details"
 STATIC = {"/": ("kiosk.html", "text/html; charset=utf-8"), "/kiosk.js": ("kiosk.js", "text/javascript; charset=utf-8"),
@@ -61,15 +62,26 @@ STATIC = {"/": ("kiosk.html", "text/html; charset=utf-8"), "/kiosk.js": ("kiosk.
 
 
 def _bare(named):
-    """The site's name as the kiosk's address gives it, also when copied from a browser (https://…/): the shop is still
-    found by that name only, and called back at the address it connected with."""
+    """The site's name as the kiosk's address gives it, also when copied from a browser (https://…/…?…#…)."""
     if not isinstance(named, str):
         return named
     s = named.strip()
     for scheme in ("https://", "http://"):
         if s.lower().startswith(scheme):
             s = s[len(scheme):]
-    return s.split("/", 1)[0]
+    for mark in "/?#":
+        s = s.split(mark, 1)[0]
+    return s
+
+
+def points_at(name: str) -> str | None:
+    """Where a site's own domain points: its DNS CNAME, asked over HTTPS (a resolver's plain answer may hide it: a
+    flattened CNAME comes back as an address only). None when it points nowhere; an error when the lookup fails."""
+    req = urllib.request.Request(DNS + urllib.parse.quote(name), headers={"Accept": "application/dns-json"})
+    with urllib.request.build_opener(_NoRedirect).open(req, timeout=READ_TIMEOUT) as r:
+        answers = json.loads(r.read() or b"{}").get("Answer") or []
+    return next((a["data"].rstrip(".") for a in answers if isinstance(a, dict) and a.get("type") == 5
+                 and isinstance(a.get("data"), str)), None)
 
 
 class ShopUnreadable(Exception):
@@ -141,12 +153,12 @@ class ShopApi:
 
 
 class Service:
-    def __init__(self, conf: dict, store=None, api=None, clock=time.monotonic, today=None):
+    def __init__(self, conf: dict, store=None, api=None, clock=time.monotonic, today=None, resolve=points_at):
         self.prefix = (conf.get("PRC_PREFIX") or "PP PRC").strip()
         self.app = oneshop.value(conf, oneshop.MANY)
         self.api, self.clock = api or ShopApi(), clock
         self.today = today or (lambda: datetime.datetime.now(datetime.timezone.utc).date())
-        self.cache, self.lock = {}, threading.Lock()
+        self.cache, self.names, self.lock, self.resolve = {}, {}, threading.Lock(), resolve
         if self.app:                                    # many shops: each connects itself
             self.store = store or shops.open_store(conf)
             self.one = None
@@ -159,10 +171,36 @@ class Service:
         or one that has not handed over its integration user's key yet."""
         if self.one:
             return "-", self.one
-        site = shops.site_of(_bare(named))
+        site = self.site(shops.site_of(_bare(named)))
         record = self.store.get(site) if site else None
         users = sorted(k for k in (record or {}).get("secrets") or {} if k.startswith("user:"))
         return site or "", ({"url": record["url"], "key": record["secrets"][users[0]]} if record and users else None)
+
+    def site(self, name: str | None) -> str | None:
+        """The connected shop a kiosk's address names: that name, or the shop a domain of the site's own points at
+        (DNS, up to HOPS steps; kept KIOSK_TTL seconds by the typed name). Only a connected shop is ever found, and it
+        is called back at the address it connected with; a lookup that fails finds none."""
+        if not name or self.store.get(name) is not None:
+            return name
+        now = self.clock()
+        with self.lock:
+            hit = self.names.get(name)
+        if hit and now - hit[0] < KIOSK_TTL:
+            return hit[1]
+        found, step = None, name
+        for _ in range(HOPS):
+            try:
+                step = shops.site_of(self.resolve(step))
+            except Exception:           # noqa: BLE001 — the lookup failed: not set up, as for any unknown name
+                step = None
+            if not step or self.store.get(step) is not None:
+                found = step
+                break
+        with self.lock:
+            if len(self.names) > 1000:
+                self.names.clear()
+            self.names[name] = (now, found)
+        return found
 
     def kiosk(self, name: str, shop: dict, code: str) -> dict | None:
         """The shop's Kiosk record, as the pricer needs it, kept KIOSK_TTL seconds (so switching it off stops it within a

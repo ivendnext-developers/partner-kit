@@ -37,7 +37,7 @@ What the retailer does after install, in its own words:
 
 - **After install:** the install makes the app's own user, `pp_prc@integration.invalid`, and names it on your feed registration. Nothing is left for the retailer to switch on.
 - Make one Kiosk record per screen: where it stands, and the store's till profile. The record's name is the screen's code. Changed the profile's price list later? Save the Kiosk again: its fields are fetched when it is saved.
-- On the tablet, open your app's address with `#shop=` and the retailer's site and `&kiosk=` and the record's name, in full screen. A barcode scanner connected to the tablet as a keyboard (USB or Bluetooth) scans into the page.
+- On the tablet, open your app's address with `#shop=` and any address of the retailer's site, as the browser shows it, and `&kiosk=` and the record's name, in full screen. If it answers that the kiosk is not set up, use the address the App library shows at its top as *This site's key address*. A barcode scanner connected to the tablet as a keyboard (USB or Bluetooth) scans into the page.
 - To stop a screen, switch its record off or delete it.
 
 ## What iVendNext needs from you
