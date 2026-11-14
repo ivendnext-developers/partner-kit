@@ -41,6 +41,10 @@ ivn try
 
 ## Versions
 
+### 1.1.3
+
+- The till's Sale details row reads *Boarding pass* and the settings read *Duty-free allowance settings*, through the manifest's `translations` block. The stored names are unchanged: an installed site keeps its records. Manifest 0.2.3.
+
 ### 1.1.2
 
 - The manifest, its Registered Application line and the refusal *…cannot read your store…* say store where they said shop. Manifest 0.2.2.
