@@ -3,7 +3,7 @@
  "app": "pp_rbo",
  "prefix": "PP RBO",
  "title": "Restaurant back office",
- "version": "0.3.1",
+ "version": "0.3.2",
  "publisher": "Partner Programme sample",
  "description": "A restaurant's back office. A dish is a plain item that is not stocked, with the retailer's own recipe on it (a Bill of Materials). Issue ingredients, a button on the company's settings record for Stock Managers and Stock Users, takes the ingredients of the till sales booked since the settings' start moment off stock: one issue record per store and day, written first and naming its sales so no sale is taken twice, then the retailer's own Material Issue of the recipes' parts (a recipe inside a recipe opened, a part that is not stocked and has none skipped and named), from the store or the settings' kitchen store, dated at the day's last sale, or at the press when the stock came in after the sales. A store short of a part books nothing for that day and the issue names every short part; the next press after a delivery or a count books it. A manager may set an issue Left out instead. A press repeated, or one that stopped half way, books nothing twice; a sale made offline is taken up once it posts. A hold (No Onion) leaves its ingredient out of the dish it is rung under, from a row under Holds on the settings. The issue's lines feed a report of sales by item, by who rang them (a check's server) and by day part, and its sales a report of covers, table turns and tips. Work out food cost, on a food cost record for a store and a period, reads the stock ledger and counts: by recipe, sold as it is, other issues, missing at the count, and both costs as a share of sales. Check allergens, on the Item list or an item, writes a check record of each dish that leaves out an allergen of its recipe's ingredients, each variant with none of its template's, and each word not on the retailer's list, and opens it; the till shows the Allergens field on the line and the receipt once the retailer adds two field rules in POS Studio. Each press sends the record's name and the fields it names, the pressing user and the language. The install makes the role PP RBO Integration and gives it to the app's own user, and, from role_rights, gives the role read on POS Invoice, POS Profile, Item, BOM, Bin, Stock Ledger Entry, Stock Reconciliation, Retail Open Check and Retail Floor Place, read, create and submit on Stock Entry, and read, write, create and submit on Serial and Batch Bundle; the feed PP RBO Back office feed is on from the install. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
@@ -990,8 +990,14 @@
     "lines.server",
     "lines.day_part"
    ],
+   "filters": [
+    [
+     "posting_date",
+     "Timespan",
+     "yesterday"
+    ]
+   ],
    "order_by": "posting_date desc",
-   "add_total_row": 1,
    "roles": [
     "Stock Manager",
     "Accounts User",
@@ -1041,8 +1047,14 @@
     "checks.service_mode",
     "checks.tip"
    ],
+   "filters": [
+    [
+     "posting_date",
+     "Timespan",
+     "yesterday"
+    ]
+   ],
    "order_by": "posting_date desc",
-   "add_total_row": 1,
    "roles": [
     "Stock Manager",
     "Accounts User",
@@ -1142,9 +1154,9 @@
    "words": {
     "PP RBO Settings": "Restaurant back office settings",
     "PP RBO Issue": "Ingredient issue",
-    "PP RBO Issue Line": "Ingredient issue sale line",
+    "PP RBO Issue Line": "Sale line",
     "PP RBO Issue Part": "Ingredient issue part",
-    "PP RBO Issue Sale": "Ingredient issue check",
+    "PP RBO Issue Sale": "Check",
     "PP RBO Day Part": "Day part",
     "PP RBO Hold": "Hold",
     "PP RBO Food Cost": "Food cost",
