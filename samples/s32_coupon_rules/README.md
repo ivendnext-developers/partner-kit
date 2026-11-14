@@ -18,7 +18,7 @@ What a partner usually changes:
 
 - **The rules:** `on_check` in `coupons.py`, and `rules_of`, which reads the retailer's rule records.
 - **The rule's fields:** the record type `PP CPN Rule` in `manifest.json`, one per coupon, named by it. Desk shows it as *Coupon rule* through the manifest's `translations` block.
-- **The words the cashier reads:** the messages in `coupons.py`. The tests check each refusal's facts (the coupon, the group, the amounts, and that it fits the till's 140 characters whole), not its sentence, so a new wording keeps them green.
+- **The words the cashier reads:** the messages in `coupons.py`; what the cashier does next ends each one and is named once at the top (`IN_GROUP`, `ADD_CUSTOMER`, `NEW_CUSTOMER`, `ADD_TO_SALE`, `ON_REFUND`, `ON_REFUND_MANY`). The tests check each refusal's facts (its next step, the coupon, the group, the amounts in order, and that it fits the till's 140 characters whole), not its sentence, so a new wording keeps them green.
 - **The app's id:** `IVN_LIBRARY_APP` in `app.json`.
 
 More: the [recipe](../../recipes/coupon_rules.md).
@@ -45,7 +45,7 @@ ivn try
 ### 1.2.2
 
 - Desk shows the rules as *Coupon rule* (and the feed as *Coupon rules feed*) through the manifest's `translations` block. No name changed: installed rules keep theirs.
-- The tests check each refusal's facts, not its sentence: a partner who rewords what the cashier reads keeps them green.
+- The tests check each refusal's facts, not its sentence: a partner who rewords what the cashier reads keeps them green. Each next step is named once in `coupons.py`, and the tests check that each refusal ends with the right one. The cashier's words are unchanged.
 - The README says the feed reads no events yet, so *Last read: never* on a connection test is expected.
 
 ### 1.2.1

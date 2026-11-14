@@ -111,7 +111,7 @@ CANARIES = [
     ("the function checks the signature too", "service/app.py", "    code, out = svc.handle(method, path, headers, raw)\n",
      "    code, out = (200, {'verdict': 'allow'}) if path != '/health' else svc.handle(method, path, headers, raw)\n",
      S + "AsAFunction.test_health_a_signed_check_either_body_form_and_a_refusal"),
-    ("the integration role carries the prefix", "manifest.json", '"role": "PP CPN Integration"', '"role": "PP Integration"',
+    ("the integration role carries the prefix", "manifest.json", '{"role": "PP CPN Integration", "read": 1', '{"role": "PP Integration", "read": 1',
      M + "test_the_integration_role_only_reads_the_rules"),
     ("the check lets the sale go on when down", "manifest.json", '"down_answer": "allow_and_flag"', '"down_answer": "refuse"',
      M + "test_one_check_switched_off_that_lets_the_sale_go_on_when_down"),

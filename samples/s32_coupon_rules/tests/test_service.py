@@ -26,6 +26,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path[:0] = [str(HERE.parent), str(HERE.parent / "service"), str(HERE)]
 import app  # noqa: E402
+import coupons  # noqa: E402
 import shops  # noqa: E402
 from test_rules import RECORDS, context, refused  # noqa: E402
 
@@ -95,7 +96,7 @@ class OneShop(unittest.TestCase):
         self.api.sales_by = {"https://shop.example": {("POS Invoice", "CUST-1"): 2}}
         code, out = self.check(context(["WELCOME10"]))
         self.assertEqual(code, 200)
-        refused(self, out, "WELCOME10")
+        refused(self, out, coupons.NEW_CUSTOMER, "WELCOME10")
 
     def test_a_new_customer_is_counted_at_the_till_and_in_the_back_office(self):
         self.assertEqual(self.check(context(["WELCOME10"])), (200, {"verdict": "allow"}))
@@ -120,7 +121,7 @@ class OneShop(unittest.TestCase):
              "spend_per_use": 1000.0}]}
         code, out = self.check(context(["C100"]))                       # one line of 12.50
         self.assertEqual(code, 200)
-        refused(self, out, "C100", "AED 1,000.00", "AED 12.50")
+        refused(self, out, coupons.ADD_TO_SALE, "C100", amounts=("AED 1,000.00", "AED 12.50"))
         self.assertEqual([c[0] for c in self.api.calls], ["rules"])
 
     def test_a_retailer_on_1_0_1_is_answered_as_before(self):
