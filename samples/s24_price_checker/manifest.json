@@ -17,7 +17,7 @@
    "show_title_field_in_link": 1,
    "search_fields": "title,pos_profile",
    "track_changes": 1,
-   "description": "One record per price-checker screen. Its name is the kiosk's code: the tablet opens the app's kiosk address followed by #shop= and any address of this site, as the browser shows it, then &kiosk= and this record's name. If the kiosk answers that it is not set up, use the address the App library shows at its top as This site's key address.",
+   "description": "One record per price-checker screen. Its name is the kiosk's code: the tablet opens the app's kiosk address followed by #shop= and this site's key address (the App library shows it at its top: This site's key address, with Copy), then &kiosk= and this record's name. A domain of your own that points at this site is not the key address: a kiosk given another address answers that it is not set up.",
    "fields": [
     {"fieldname": "title", "fieldtype": "Data", "label": "Where it stands", "reqd": 1, "in_list_view": 1,
      "description": "For example: Aisle 4, by the door."},

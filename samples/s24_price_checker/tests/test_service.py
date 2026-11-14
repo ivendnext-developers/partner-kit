@@ -196,18 +196,8 @@ class ManyShops(unittest.TestCase):
         self.store = shops.FileStore(os.path.join(self.tmp.name, "shops.json"))
         self.api = Api()
         self.api.kiosks[("https://b.example.com", CODE)] = dict(KIOSK, currency="ZAR")
-        self.dns, self.asked = {}, []      # a stand-in for DNS: a name → where it points (an exception: the lookup fails)
-
-        def resolve(name):
-            self.asked.append(name)
-            hit = self.dns.get(name)
-            if isinstance(hit, Exception):
-                raise hit
-            return hit
-
-        self.clock = Clock()
         self.svc = app.Service({"IVN_LIBRARY_APP": "ivendnext_prc", "PRC_PREFIX": "IVENDNEXT PRC"}, store=self.store,
-                               api=self.api, clock=self.clock, today=lambda: TODAY, resolve=resolve)
+                               api=self.api, clock=Clock(), today=lambda: TODAY)
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -241,25 +231,6 @@ class ManyShops(unittest.TestCase):
             self.assertEqual(self.svc.price(body(shop=named))[1]["status"], "found", named)
         self.assertEqual({c[1] for c in self.api.calls}, {"https://shop.example"})
         self.assertEqual(self.svc.price(body(shop="https://a.example.com"))[0], 403)   # still only a shop that connected
-
-    def test_a_domain_of_the_sites_own_finds_the_shop_it_points_at(self):
-        self.connect("sandbox-cd-06.staging.ivendnext.com", **{"user:apps@a": "ka:sa"})
-        self.api.kiosks[("https://sandbox-cd-06.staging.ivendnext.com", CODE)] = dict(KIOSK)
-        self.dns["cd-06.sandbox.ivend.co"] = "sandbox-cd-06.staging.ivendnext.com"
-        out = self.svc.price(body(shop="https://cd-06.sandbox.ivend.co/"))[1]
-        self.assertEqual((out["status"], out["image"]), ("found", "https://sandbox-cd-06.staging.ivendnext.com/files/pen.jpg"))
-        self.assertEqual({c[1] for c in self.api.calls}, {"https://sandbox-cd-06.staging.ivendnext.com"})   # never the typed name
-        self.svc.price(body(shop="cd-06.sandbox.ivend.co"))
-        self.assertEqual(self.asked, ["cd-06.sandbox.ivend.co"])        # kept by the typed name
-
-    def test_a_name_that_points_at_no_connected_shop_or_a_failed_lookup_is_not_set_up(self):
-        self.connect("shop.example", **{"user:apps@a": "ka:sa"})
-        self.dns.update({"other.example": "unknown.example", "unknown.example": "far.example",
-                         "broken.example": OSError("no answer"), "loop.example": "loop.example"})
-        for named in ("other.example", "nowhere.example", "broken.example", "loop.example"):
-            self.assertEqual(self.svc.price(body(shop=named)), (403, app.price.refusal("not_set_up")), named)
-        self.assertEqual(self.api.calls, [])
-        self.assertEqual(self.asked.count("loop.example"), app.HOPS)    # a name that points at itself stops
 
     def test_the_handshake_routes_are_the_templates(self):
         code, data, _ = self.svc.handle("POST", shops.CONNECT, {}, b"{}")
