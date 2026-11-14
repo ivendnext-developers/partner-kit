@@ -16,8 +16,8 @@ ivn new acme_field_rules --from s21
 
 What a partner usually changes:
 
-- **The theme:** `theme` on each rule in `manifest.json`. The sample names `PP Partner Till`; use the customer's own till theme, or **Check** refuses the rule.
-- **The words:** `label` on the `relabel` rules (`cart_line` · `item_name`, `customer_card` · `points`).
+- **The theme:** `theme` on each rule in `manifest.json`. Put the name of a till theme the customer's site has. The sample names `PP Partner Till`, and a copy made from it names that theme under your prefix, a theme no customer has. **Check** does not look at the site, so it passes any name; **Try** refuses a theme the site lacks (*no till theme named …*).
+- **The words:** `label` on the `relabel` rules (`cart_line` · `item_name`, `customer_card` · `points`). Choose them before the first install: a later version of the app cannot change or drop a field rule.
 - **What the new-customer sheet shows and asks for:** the `hide` rule on `email` and the `require` rule on `phone`, `surface` `customer_create`.
 
 A rule changes what the till shows and asks for, never what it charges.
@@ -40,6 +40,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 0.1.1
+
+- The README says the theme must be one the customer's site has (Try refuses a missing one; Check does not look at the site), and that a field rule's words are chosen before the first install, because a later version cannot change or drop a field rule. The manifest changes only its version.
 
 ### 0.1.0
 
