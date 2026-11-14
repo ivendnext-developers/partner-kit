@@ -46,7 +46,7 @@ ivn try
 ### 1.1.5
 
 - Manifest 0.2.5.
-- The prescription sheet prints each power to two places, signed as an optometrist writes it (*-1.00*, *+2.00*, *0.00*), the prism to two places and the axis as a whole number: a field's own format dropped a whole number's decimals (*-1*).
+- The prescription sheet and the lab job sheet print each power to two places, signed as an optometrist writes it (*-1.00*, *+2.00*, *0.00*), the prism to two places and the axis as a whole number: a field's own format dropped a whole number's decimals (*-1*).
 
 ### 1.1.4
 

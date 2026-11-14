@@ -125,12 +125,21 @@ class ManifestTest(unittest.TestCase):
         for f in ("ready_to_collect", "closed"):
             self.assertEqual(fields(f"{P} Lab Order")[f]["read_only"], 1)
 
-    def test_the_job_sheet_prints_each_lens_value_in_its_fields_format(self):     # run 11's walk: -0.5, not -0.50
+    @unittest.skipUnless(jinja2, "jinja2 is not installed: the job sheet's rendering test did not run")
+    def test_the_job_sheet_prints_each_lens_value_in_its_fields_format(self):     # run 11's walk: -0.5; F-OP-7: -1
         pf = PF[f"{P} Job Sheet"]
         for side in ("r", "l"):
-            for f in ("sph", "cyl", "add", "prism"):
-                self.assertIn(f'doc.get_formatted("{side}_{f}")', pf["html"])
-                self.assertNotIn(f"{{{{ doc.{side}_{f} }}}}", pf["html"])
+            for f in ("sph", "cyl", "add"):
+                self.assertIn(f"{{{{ power(doc.{side}_{f}) }}}}", pf["html"])
+            self.assertIn(f"{{{{ amount(doc.{side}_prism) }}}}", pf["html"])
+        doc = Doc(name="OPT-LAB-00023", customer_name="Ingrid Solberg", prescription="RX-00028", due_date="2026-11-21",
+                  r_sph=-1.25, r_cyl=-0.5, r_axis=90, r_add=2.0, r_prism=0.0, l_sph=-1.0, l_cyl=-0.25, l_axis=85,
+                  l_add=2.0, l_prism=0.0, pd_distance=63.0, pd_near=60.0, r_height=22.0, l_height=22.0, store_name="SoHo")
+        out = SandboxedEnvironment(autoescape=True).from_string(pf["html"]).render(doc=doc, _=lambda t: t)
+        text = " ".join(re.sub(r"<[^>]+>", " ", out).split())
+        self.assertIn("Right eye -1.25 -0.50 90 +2.00 0.00", text)      # what the lab reads
+        self.assertIn("Left eye -1.00 -0.25 85 +2.00 0.00", text)       # a whole power, -1.00 not -1
+        self.assertIn("Collect at SoHo", text)
 
     def test_the_job_sheet_prints_the_stores_own_name_and_names_the_eyes(self):
         pf = PF[f"{P} Job Sheet"]
