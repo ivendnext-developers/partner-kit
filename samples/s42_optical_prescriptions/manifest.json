@@ -3,9 +3,9 @@
  "app": "pp_opt",
  "prefix": "PP OPT",
  "title": "Optical prescriptions and lab orders",
- "version": "0.2.3",
+ "version": "0.2.4",
  "publisher": "Partner Programme sample",
- "description": "An optical store's prescriptions and lab orders, and a check at the till. A Prescription holds a customer's eye test: Spectacles or Contact lenses, the test date and Valid until, each eye's values, the distances between pupils, a contact lens's fit, notes and a scan. A Lab Order is made from a prescription (its customer and lens values copied, read only) and moves Ordered, Sent to lab, Ready to collect, Collected (or Cancelled) by a workflow; it prints as a job sheet. Each record keeps the customer's e-mail, so your own Notifications can tell the customer when the glasses are ready and when an eye test is due. Item groups and items carry Sold against a prescription: Spectacles, Contact lenses or Not needed (blank: the group above). When the cashier presses Pay, the service refuses a sold line marked Spectacles or Contact lenses when the sale's customer has no prescription of that kind valid until today or later. A refund is never judged. The service reads the customer's prescriptions' kind and Valid until with the app's integration user, never their values, and writes nothing. The install makes the roles PP OPT Optometrist and PP OPT Integration; the install gives the integration role to the app's own user and, from role_rights, a plain read on Item Group and Item. The check is on from the install; when its service is down the sale is paid and flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
+ "description": "An optical store's prescriptions and lab orders, and a check at the till. A Prescription holds a customer's eye test: Spectacles or Contact lenses, the test date and Valid until, each eye's values, the distances between pupils, a contact lens's fit, notes and a scan. A Lab Order is made from a prescription (its customer and lens values copied, read only) and moves Ordered, Sent to lab, Ready to collect, Collected (or Cancelled) by a workflow; it prints as a job sheet. A prescription prints on its own prescription sheet. Each record keeps the customer's e-mail, so your own Notifications can tell the customer when the glasses are ready and when an eye test is due. Item groups and items carry Sold against a prescription: Spectacles, Contact lenses or Not needed (blank: the group above). When the cashier presses Pay, the service refuses a sold line marked Spectacles or Contact lenses when the sale's customer has no prescription of that kind valid until today or later. A refund is never judged. The service reads the customer's prescriptions' kind and Valid until with the app's integration user, never their values, and writes nothing. The install makes the roles PP OPT Optometrist and PP OPT Integration; the install gives the integration role to the app's own user and, from role_rights, a plain read on Item Group and Item. The check is on from the install; when its service is down the sale is paid and flagged for review. To link the till sale on a lab order, the customer gives PP OPT Optometrist Select on POS Invoice in Role Permissions Manager. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
   "https://host.docker.internal:8125/opt/check"
  ],
@@ -827,6 +827,12 @@
    "doc_type": "PP OPT Lab Order",
    "print_format_type": "Jinja",
    "html": "<div dir=\"auto\" style=\"font-family: Arial, sans-serif; font-size: 11pt;\">\n<h2 style=\"margin: 0 0 4px;\">{{ _(\"Lab job sheet\") }} {{ doc.name }}</h2>\n<p style=\"margin: 0 0 10px;\">{{ doc.customer_name or \"\" }} · {{ _(\"Prescription\") }} {{ doc.prescription }} · {{ _(\"Due\") }} {{ doc.get_formatted(\"due_date\") }}</p>\n<table style=\"width: 100%; border-collapse: collapse;\" border=\"1\" cellpadding=\"4\">\n<tr><th></th><th style=\"text-align: start;\">{{ _(\"SPH\") }}</th><th style=\"text-align: start;\">{{ _(\"CYL\") }}</th><th style=\"text-align: start;\">{{ _(\"Axis\") }}</th><th style=\"text-align: start;\">{{ _(\"ADD\") }}</th><th style=\"text-align: start;\">{{ _(\"Prism\") }}</th><th style=\"text-align: start;\">{{ _(\"Base\") }}</th></tr>\n<tr><th style=\"text-align: start;\">{{ _(\"Right eye\") }}</th><td>{{ doc.get_formatted(\"r_sph\") }}</td><td>{{ doc.get_formatted(\"r_cyl\") }}</td><td>{{ doc.r_axis }}</td><td>{{ doc.get_formatted(\"r_add\") }}</td><td>{{ doc.get_formatted(\"r_prism\") }}</td><td>{{ doc.r_base or \"\" }}</td></tr>\n<tr><th style=\"text-align: start;\">{{ _(\"Left eye\") }}</th><td>{{ doc.get_formatted(\"l_sph\") }}</td><td>{{ doc.get_formatted(\"l_cyl\") }}</td><td>{{ doc.l_axis }}</td><td>{{ doc.get_formatted(\"l_add\") }}</td><td>{{ doc.get_formatted(\"l_prism\") }}</td><td>{{ doc.l_base or \"\" }}</td></tr>\n</table>\n<p>{{ _(\"Distance PD\") }} {{ doc.pd_distance }} {{ _(\"mm\") }} · {{ _(\"Near PD\") }} {{ doc.pd_near }} {{ _(\"mm\") }} · {{ _(\"Fitting heights\") }} {{ _(\"Right eye\") }} {{ doc.r_height }} / {{ _(\"Left eye\") }} {{ doc.l_height }} {{ _(\"mm\") }}</p>\n<p>{{ _(\"Frame\") }} {{ doc.frame or \"\" }} {{ doc.frame_size or \"\" }} · {{ _(\"Lenses\") }} {{ doc.lens or \"\" }} {{ doc.lens_type or \"\" }} · {{ doc.coatings or \"\" }}</p>\n<p>{{ _(\"Lab\") }} {{ doc.lab or \"\" }} {{ doc.lab_reference or \"\" }} · {{ _(\"Collect at\") }} {{ doc.store_name or doc.store or \"\" }}</p>\n<p>{{ doc.notes or \"\" }}</p>\n</div>"
+  },
+  {
+   "name": "PP OPT Prescription Sheet",
+   "doc_type": "PP OPT Prescription",
+   "print_format_type": "Jinja",
+   "html": "<div dir=\"auto\" style=\"font-family: Arial, sans-serif; font-size: 11pt;\">\n<h2 style=\"margin: 0 0 4px;\">{{ _(\"Prescription\") }} {{ doc.name }}</h2>\n<p style=\"margin: 0 0 10px;\">{{ doc.customer_name or \"\" }} · {{ _(doc.kind) }} · {{ _(\"Test date\") }} {{ doc.get_formatted(\"test_date\") }} · {{ _(\"Valid until\") }} {{ doc.get_formatted(\"valid_until\") }}</p>\n<table style=\"width: 100%; border-collapse: collapse;\" border=\"1\" cellpadding=\"4\">\n<tr><th></th><th style=\"text-align: start;\">{{ _(\"SPH\") }}</th><th style=\"text-align: start;\">{{ _(\"CYL\") }}</th><th style=\"text-align: start;\">{{ _(\"Axis\") }}</th><th style=\"text-align: start;\">{{ _(\"ADD\") }}</th><th style=\"text-align: start;\">{{ _(\"Prism\") }}</th><th style=\"text-align: start;\">{{ _(\"Base\") }}</th><th style=\"text-align: start;\">{{ _(\"Visual acuity\") }}</th></tr>\n<tr><th style=\"text-align: start;\">{{ _(\"Right eye\") }}</th><td>{{ doc.get_formatted(\"r_sph\") }}</td><td>{{ doc.get_formatted(\"r_cyl\") }}</td><td>{{ doc.r_axis }}</td><td>{{ doc.get_formatted(\"r_add\") }}</td><td>{{ doc.get_formatted(\"r_prism\") }}</td><td>{{ doc.r_base or \"\" }}</td><td>{{ doc.r_va or \"\" }}</td></tr>\n<tr><th style=\"text-align: start;\">{{ _(\"Left eye\") }}</th><td>{{ doc.get_formatted(\"l_sph\") }}</td><td>{{ doc.get_formatted(\"l_cyl\") }}</td><td>{{ doc.l_axis }}</td><td>{{ doc.get_formatted(\"l_add\") }}</td><td>{{ doc.get_formatted(\"l_prism\") }}</td><td>{{ doc.l_base or \"\" }}</td><td>{{ doc.l_va or \"\" }}</td></tr>\n</table>\n<p>{{ _(\"Distance PD\") }} {{ doc.get_formatted(\"pd_distance\") }} {{ _(\"mm\") }} · {{ _(\"Near PD\") }} {{ doc.get_formatted(\"pd_near\") }} {{ _(\"mm\") }}</p>\n{% if doc.kind == \"Contact lenses\" %}\n<table style=\"width: 100%; border-collapse: collapse;\" border=\"1\" cellpadding=\"4\">\n<tr><th></th><th style=\"text-align: start;\">{{ _(\"Base curve (BC)\") }}</th><th style=\"text-align: start;\">{{ _(\"Diameter (DIA)\") }}</th></tr>\n<tr><th style=\"text-align: start;\">{{ _(\"Right eye\") }}</th><td>{{ doc.get_formatted(\"r_bc\") }}</td><td>{{ doc.get_formatted(\"r_dia\") }}</td></tr>\n<tr><th style=\"text-align: start;\">{{ _(\"Left eye\") }}</th><td>{{ doc.get_formatted(\"l_bc\") }}</td><td>{{ doc.get_formatted(\"l_dia\") }}</td></tr>\n</table>\n<p>{{ _(\"Lens brand and type\") }} {{ doc.cl_lens or \"\" }}</p>\n{% endif %}\n<p>{{ _(\"Examined by\") }} {{ doc.examined_by or \"\" }} · {{ _(\"Registration number\") }} {{ doc.registration or \"\" }}</p>\n<p>{{ doc.notes or \"\" }}</p>\n</div>"
   }
  ],
  "reports": [
@@ -893,6 +899,12 @@
    "value": "PP OPT Job Sheet"
   },
   {
+   "doc_type": "PP OPT Prescription",
+   "property": "default_print_format",
+   "property_type": "Data",
+   "value": "PP OPT Prescription Sheet"
+  },
+  {
    "doc_type": "PP OPT Settings",
    "property": "documentation",
    "property_type": "Data",
@@ -921,5 +933,28 @@
  "role_rights": [
   {"doctype": "Item Group", "role": "PP OPT Integration", "rights": ["read"]},
   {"doctype": "Item", "role": "PP OPT Integration", "rights": ["read"]}
+ ],
+ "translations": [
+  {
+   "language": "en",
+   "words": {
+    "PP OPT Prescription": "Prescription",
+    "PP OPT Lab Order": "Lab order",
+    "PP OPT Settings": "Optical settings",
+    "PP OPT Ordered": "Ordered",
+    "PP OPT Sent to lab": "Sent to lab",
+    "PP OPT Ready to collect": "Ready to collect",
+    "PP OPT Collected": "Collected",
+    "PP OPT Cancelled": "Cancelled",
+    "PP OPT Send to lab": "Send to lab",
+    "PP OPT Back from lab": "Back from lab",
+    "PP OPT Hand over": "Hand over",
+    "PP OPT Send back to lab": "Send back to lab",
+    "PP OPT Cancel": "Cancel",
+    "PP OPT Lab Orders To Chase": "Lab orders to chase",
+    "PP OPT Job Sheet": "Lab job sheet",
+    "PP OPT Prescription Sheet": "Prescription sheet"
+   }
+  }
  ]
 }

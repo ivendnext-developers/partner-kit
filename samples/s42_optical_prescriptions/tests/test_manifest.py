@@ -3,6 +3,7 @@ fields are the ones the service reads; the integration role only reads (the sett
 prescriptions are written by the optometrist and read by store staff; the lab order's workflow sets the two ticks the
 report and the shop's own messages read; each record type opens its help."""
 import json
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -15,6 +16,7 @@ MANIFEST = json.loads((HERE.parent / "manifest.json").read_text())
 P = MANIFEST["prefix"]
 DT = {d["name"]: d for d in MANIFEST["doctypes"]}
 (SUB,) = MANIFEST["extension_subscriptions"]
+PF = {p["name"]: p for p in MANIFEST["print_formats"]}
 
 
 def fields(dt):
@@ -105,18 +107,55 @@ class ManifestTest(unittest.TestCase):
             self.assertEqual(fields(f"{P} Lab Order")[f]["read_only"], 1)
 
     def test_the_job_sheet_prints_each_lens_value_in_its_fields_format(self):     # run 11's walk: -0.5, not -0.50
-        (pf,) = MANIFEST["print_formats"]
+        pf = PF[f"{P} Job Sheet"]
         for side in ("r", "l"):
             for f in ("sph", "cyl", "add", "prism"):
                 self.assertIn(f'doc.get_formatted("{side}_{f}")', pf["html"])
                 self.assertNotIn(f"{{{{ doc.{side}_{f} }}}}", pf["html"])
 
     def test_the_job_sheet_prints_the_stores_own_name_and_names_the_eyes(self):
-        (pf,) = MANIFEST["print_formats"]
+        pf = PF[f"{P} Job Sheet"]
         self.assertEqual(fields(f"{P} Lab Order")["store_name"]["fetch_from"], "store.warehouse_name")
         self.assertIn('{{ doc.store_name or doc.store or "" }}', pf["html"])
         for bare in ('_("Right")', '_("Left")'):      # the shared language files read a bare Right or Left as a right, to leave
             self.assertNotIn(bare, pf["html"])
+
+    def test_the_prescription_prints_on_its_own_sheet_by_default_with_each_eye_named(self):   # F-OP-7: the plain layout
+        pf = PF[f"{P} Prescription Sheet"]
+        self.assertEqual((pf["doc_type"], pf["print_format_type"]), (f"{P} Prescription", "Jinja"))
+        default = {ps["doc_type"]: ps["value"] for ps in MANIFEST["property_setters"] if ps["property"] == "default_print_format"}
+        self.assertEqual(default, {f"{P} Lab Order": f"{P} Job Sheet", f"{P} Prescription": f"{P} Prescription Sheet"})
+        html, rx = pf["html"], fields(f"{P} Prescription")
+        for f in ("sph", "cyl", "add", "prism", "bc", "dia"):             # -1.00, not -1
+            for side in ("r", "l"):
+                self.assertIn(f'doc.get_formatted("{side}_{f}")', html)
+                self.assertIn(f"{side}_{f}", rx)
+                self.assertNotIn(f"{{{{ doc.{side}_{f} }}}}", html)
+        self.assertEqual(html.count('_("Right eye")'), 2)
+        self.assertEqual(html.count('_("Left eye")'), 2)
+        for bare in ('_("Right")', '_("Left")'):
+            self.assertNotIn(bare, html)
+        self.assertTrue(html.startswith('<div dir="auto"'))
+        # a contact lens's base curve and diameter print only on a contact-lens prescription, never as 0 on spectacles
+        self.assertIn("Contact lenses", rx["kind"]["options"].split("\n"))
+        (block,) = re.findall(r"\{%-? *if (.*?) *-?%\}(.*?)\{%-? *endif *-?%\}", html, re.S)
+        self.assertEqual(block[0], 'doc.kind == "Contact lenses"')
+        for f in ("r_bc", "r_dia", "l_bc", "l_dia", "cl_lens"):
+            self.assertIn(f"doc.{f}" if f == "cl_lens" else f'get_formatted("{f}")', block[1], f)
+            self.assertNotIn(f, html.replace(block[1], ""), f)          # nowhere outside the contact-lens block
+        for f in ("examined_by", "registration", "notes"):              # who examined, under which registration
+            self.assertIn(f"{{{{ doc.{f} or \"\" }}}}", html.replace(block[1], ""), f)
+
+    def test_desk_names_the_records_states_and_buttons_in_plain_words(self):
+        (tr,) = MANIFEST["translations"]
+        self.assertEqual(tr["language"], "en")
+        (wf,) = MANIFEST["workflows"]
+        named = ({d["name"] for d in MANIFEST["doctypes"]} | {s["state"] for s in wf["states"]}
+                 | {t["action"] for t in wf["transitions"]} | {r["name"] for r in MANIFEST["reports"]} | set(PF))
+        self.assertEqual(set(tr["words"]), named)
+        self.assertEqual(tr["words"][f"{P} Prescription"], "Prescription")
+        self.assertEqual(tr["words"][f"{P} Lab Order"], "Lab order")
+        self.assertFalse([w for w in tr["words"].values() if P in w])
 
     def test_no_notification_or_address_reaches_a_customer_from_the_manifest(self):
         self.assertNotIn("notifications", MANIFEST)        # the shop's own Notifications do (the guide)
