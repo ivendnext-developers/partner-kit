@@ -83,6 +83,15 @@ class ManifestTest(unittest.TestCase):
         (r,) = self.m["registered_applications"]
         self.assertLessEqual(len(r["description"]), 140)      # the shop refuses a longer one at install (bench, run 1)
 
+    def test_m8_the_morning_reports_open_on_yesterday_with_no_short_total(self):   # F-HOSP-19
+        reps = {r["name"]: r for r in self.m["reports"]}
+        for name in ("PP RBO Sales by item", "PP RBO Covers, turns and tips"):
+            self.assertEqual(reps[name]["filters"], [["posting_date", "Timespan", "yesterday"]], name)
+            self.assertFalse(reps[name].get("add_total_row"), name)   # a total of the 20 rows loaded read as the day's
+        self.assertFalse(reps["PP RBO Food cost by ingredient"].get("add_total_row"))
+        (en,) = [t["words"] for t in self.m["translations"] if t["language"] == "en"]
+        self.assertEqual((en["PP RBO Issue Sale"], en["PP RBO Issue Line"]), ("Check", "Sale line"))
+
 
 if __name__ == "__main__":
     unittest.main()

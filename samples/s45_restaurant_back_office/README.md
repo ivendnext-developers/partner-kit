@@ -25,7 +25,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/restaurant_back_office.md).
 
-**The customer sets:** *Issue sales booked from* (now), the kitchen store where one kitchen cooks for several stores, the day parts, the holds and the allergen list in `PP RBO Settings`; a submitted default recipe on each dish; and the *Allergens* field shown on each till theme in POS Studio.
+**The customer sets:** *Issue sales booked from* (now), the kitchen store where one kitchen cooks for several stores, the day parts, the holds and the allergen list in `PP RBO Settings`; a submitted default recipe on each dish; and the *Allergens* field shown on each till theme in POS Studio. A recipe is the engine's Bill of Materials, made in Desk by whoever owns the menu: that person needs the role **Manufacturing User** (or **Manufacturing Manager**), and the site and that user must keep the **Manufacturing** module open, or Desk answers *Page bom not found*. The app's own role reads recipes without either.
 
 ## Run it
 
@@ -41,6 +41,14 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.2.2
+
+Manifest 0.3.2.
+
+- *Covers, turns and tips* and *Sales by item* open on yesterday, the day a manager reads in the morning; change the *Date* filter for another day. They and *Food cost by ingredient* no longer show a *Totals* row: it added up only the rows on screen. For a day's sums, use the report's *Group By* (Server or Store) with *Sum* of Tip or Covers: the database adds every row.
+- Their columns read *Check* and *Sale line* where they read *Ingredient issue check* and *Ingredient issue sale line*.
+- *The customer sets* names who makes the recipes: the menu's owner, with the role Manufacturing User and the Manufacturing module open.
 
 ### 1.2.1
 
