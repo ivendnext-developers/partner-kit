@@ -47,6 +47,8 @@ CANARIES = [
      T + "test_the_two_fields_are_on_the_delivery_note_and_settable_after_submit"),
     ("the report opens for the stock clerk", M, '"Retail Manager", "Stock User", "Stock Manager"', '"Retail Manager", "Stock Manager"',
      T + "test_the_report_and_its_page_open_for_the_store_manager_and_the_stock_clerk"),
+    ("the report stays open to the sales desk", M, '"Sales User", "Sales Manager", ', "",
+     T + "test_the_report_and_its_page_open_for_the_store_manager_and_the_stock_clerk"),
     ("the workspace opens the delivery notes", M,
      ',\n    {"type": "DocType", "link_to": "Delivery Note", "label": "Delivery notes"}', "",
      T + "test_the_workspace_opens_the_report_and_the_two_lists"),

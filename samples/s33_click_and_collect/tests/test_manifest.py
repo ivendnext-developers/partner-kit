@@ -60,8 +60,9 @@ class ManifestTest(unittest.TestCase):
 
     def test_the_report_and_its_page_open_for_the_store_manager_and_the_stock_clerk(self):
         # the installer opens the app's page for the roles the manifest names (and the administrator): none named,
-        # the store manager and the stock clerk meet Page not found
-        self.assertCountEqual(report(PICK)["roles"], ["Retail Manager", "Stock User", "Stock Manager", "System Manager"])
+        # the store manager and the stock clerk meet Page not found. Naming roles replaces the engine's own Sales Order
+        # readers on the report, so the sales desk that takes web orders is named too.
+        self.assertCountEqual(report(PICK)["roles"], ["Retail Manager", "Stock User", "Stock Manager", "Sales User", "Sales Manager", "System Manager"])
 
     def test_no_report_names_a_field_this_manifest_adds(self):
         added = {f["fieldname"] for f in MANIFEST["custom_fields"]}

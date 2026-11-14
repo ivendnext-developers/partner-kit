@@ -41,7 +41,7 @@
     ["po_no", "is", "set"]
    ],
    "order_by": "delivery_date asc",
-   "roles": ["Retail Manager", "Stock User", "Stock Manager", "System Manager"]
+   "roles": ["Retail Manager", "Stock User", "Stock Manager", "Sales User", "Sales Manager", "System Manager"]
   }
  ],
  "workspaces": [
