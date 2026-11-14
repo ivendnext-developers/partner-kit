@@ -432,5 +432,31 @@ check("MYSITES walk W1: Remove from my list says the site is off the list, or th
 check("no inline style on the page's elements (the policy has no unsafe-inline)", !/\bstyle:\s*"/.test(src));
 check("P-04: /hosting forwards to My apps", readFileSync(path.join(out, "hosting.html"), "utf8").includes("url=apps.html") &&
   !existsSync(path.join(out, "assets/hosting.js")));
+// W227 (the market walks, 11-14): the developer portal's findings
+check("W227 F-FA-15: a point's line is painted by the site's own verdict; a feed with nothing yet is plain, never red, and keeps Publish",
+  a.pointClass("cpn_coupons (a check at Pay): Passed: reached, signature accepted, answered in 0.1 s.") === "hosting-ok" &&
+  a.pointClass("X Feed (an event feed): Passed: Events waiting: 0 · Last read: 14 Nov 2026 13:00") === "hosting-ok" &&
+  a.pointClass("X Feed (an event feed): Inconclusive: Events waiting: 0 · Last read: never No events yet.") === "" &&
+  a.pointClass("X Feed (an event feed): Failed: Events waiting: 3 · Last read: never") === "hosting-bad" &&
+  a.pointClass("k (a till key): Not tested yet: the time for one test ran out. Press Test again.") === "hosting-bad" &&
+  src.includes('return pointClass(l) !== "hosting-bad"; });'));
+const vt = [{ version: "1.0.0", sites: [] }, { version: "1.0.1", sites: [], tried: ["cd-03.x"] }, { version: "1.0.2", sites: [] }];
+check("W227 F-FA-16: Versions says where each version was tried, and a new upload is on no site yet",
+  a.whereWent(vt[1], vt) === "Tried on cd-03.x" && /no site yet/.test(a.whereWent(vt[2], vt)) &&
+  a.versionsShown(vt).map((v) => v.version).join() === "1.0.1,1.0.2" && !src.includes("U.onSandboxOnly : whereWent(v)"));
+const vt2 = [{ version: "1.0.1", sites: [], tried: ["cd-03.x"] }, { version: "1.0.2", sites: ["shop.example"], tried: ["cd-03.x"] },
+  { version: "1.0.3", sites: [], shelved: ["acme-test.example"] }];
+check("W227 F-FA-16: a version Try replaced on a site says so; published sites as before; a shelf says whose",
+  a.whereWent(vt2[0], vt2) === "Tried on cd-03.x, replaced there by 1.0.2" &&
+  a.whereWent(vt2[1], vt2) === "shop.example, Tried on cd-03.x" &&
+  a.whereWent(vt2[2], vt2) === "On acme-test.example's shelf for its administrator");
+check("W227 F-FA-17: the app's Try names the site this app was tried on, while it is on the list; else the default",
+  src.includes("var def = triedOn(a) || (data.sites || {}).default;") && src.includes("var h = a && a.tried_on;"));
+check("W227 F-OP-9: Install now's state is per app as well as site and version",
+  a.instKey("s", "1.0.2", "app_one") !== a.instKey("s", "1.0.2", "app_two") && src.includes("instKey(x.site, version, data.appId)"));
+check("W227 F-HOSP-22: a refusal above the window is scrolled into view", src.includes('said.scrollIntoView({ block: "nearest" })'));
+check("W227: Download names its file; Add a site says it is checking; Logs says its times are UTC; a redraw waits for a press",
+  a.U.downloaded.includes("{file}") && a.S.checking === "Checking your key on {site}\u2026" && a.U.utc === "Times are UTC." &&
+  src.includes("if (pressing) { pending = true; return; }"));
 console.log(red ? `${red} FAILED` : "ALL PASS");
 process.exit(red ? 1 : 0);
