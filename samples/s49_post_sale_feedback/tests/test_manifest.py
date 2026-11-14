@@ -80,6 +80,15 @@ class ManifestTest(unittest.TestCase):
         ]:
             self.assertIn((doctype, role, tuple(rights)), have)
 
+    def test_w1_desk_shows_the_staff_plain_words(self):   # F-HOSP-4
+        (en,) = [t["words"] for t in self.m["translations"] if t["language"] == "en"]
+        seen = {d["name"] for d in self.m["doctypes"]}
+        for key in ("reports", "workspaces", "number_cards", "print_formats", "registered_applications"):
+            seen |= {x["name"] for x in self.m.get(key) or []}
+        seen |= {r for a in self.m.get("desk_actions") or [] for r in a.get("roles") or []} | set()
+        self.assertEqual(sorted(seen - set(en)), [])
+        self.assertTrue(all(w and not w.startswith(self.m["prefix"]) for w in en.values()))
+
 
 if __name__ == "__main__":
     unittest.main()
