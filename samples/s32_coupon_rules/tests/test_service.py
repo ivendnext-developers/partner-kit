@@ -26,8 +26,9 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path[:0] = [str(HERE.parent), str(HERE.parent / "service"), str(HERE)]
 import app  # noqa: E402
+import coupons  # noqa: E402
 import shops  # noqa: E402
-from test_rules import RECORDS, context  # noqa: E402
+from test_rules import RECORDS, context, refused  # noqa: E402
 
 CHECK = "check-secret-1"
 ONE = {"IVN_CHECK_SECRET": CHECK, "IVN_SHOP_URL": "https://shop.example", "IVN_SHOP_KEY": "k:s"}
@@ -94,8 +95,8 @@ class OneShop(unittest.TestCase):
     def test_a_returning_customer_is_refused_a_first_purchase_coupon(self):
         self.api.sales_by = {"https://shop.example": {("POS Invoice", "CUST-1"): 2}}
         code, out = self.check(context(["WELCOME10"]))
-        self.assertEqual((code, out["verdict"]), (200, "refuse"))
-        self.assertIn("has bought before", out["reason"])
+        self.assertEqual(code, 200)
+        refused(self, out, coupons.NEW_CUSTOMER, "WELCOME10")
 
     def test_a_new_customer_is_counted_at_the_till_and_in_the_back_office(self):
         self.assertEqual(self.check(context(["WELCOME10"])), (200, {"verdict": "allow"}))
@@ -119,9 +120,8 @@ class OneShop(unittest.TestCase):
             {"name": "C100", "coupon": "C100", "enabled": 1, "first_purchase_only": 0, "customer_group": None,
              "spend_per_use": 1000.0}]}
         code, out = self.check(context(["C100"]))                       # one line of 12.50
-        self.assertEqual((code, out["verdict"]), (200, "refuse"))
-        self.assertEqual(out["reason"], "Coupon C100 needs a sale of AED 1,000.00; this sale is AED 12.50. "
-                                        "Remove a coupon, or add to the sale.")
+        self.assertEqual(code, 200)
+        refused(self, out, coupons.ADD_TO_SALE, "C100", amounts=("AED 1,000.00", "AED 12.50"))
         self.assertEqual([c[0] for c in self.api.calls], ["rules"])
 
     def test_a_retailer_on_1_0_1_is_answered_as_before(self):

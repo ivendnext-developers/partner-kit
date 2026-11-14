@@ -40,6 +40,13 @@ from decimal import ROUND_CEILING, Decimal, InvalidOperation
 
 SKEW_S = 300          # a request stamped further than this from our clock is refused (a replay window, not a clock)
 TEXT_MAX = 140        # every sentence the till shows: plain text, 1 to 140 characters (the extension points' rule)
+# What the cashier does next, the end of each refusal: one place to reword it (the tests look for these, not the sentences)
+IN_GROUP = "Remove it, or add a customer in that group."
+ADD_CUSTOMER = "Add the customer to the sale first."
+NEW_CUSTOMER = "Remove it, or add the new customer."
+ADD_TO_SALE = "Remove a coupon, or add to the sale."
+ON_REFUND = "cannot be used on a refund. Remove it."
+ON_REFUND_MANY = "cannot be used on a refund. Remove them."
 RULE_FIELDS = ("name", "coupon", "enabled", "first_purchase_only", "customer_group", "spend_per_use")   # the manifest's fields (test_manifest pins them); the read takes every field
 
 
@@ -139,9 +146,9 @@ def over_cap(ctx: dict, rules: dict, mine: list) -> dict | None:
     cur = ctx.get("currency") or ""
     one = len(capped) == 1
     if refund:
-        tail = f" a sale of {money(need, exp, cur)} and cannot be used on a refund. Remove {'it' if one else 'them'}."
+        tail = f" a sale of {money(need, exp, cur)} and {ON_REFUND if one else ON_REFUND_MANY}"
     else:
-        tail = f" a sale of {money(need, exp, cur)}; this sale is {money(total, exp, cur)}. Remove a coupon, or add to the sale."
+        tail = f" a sale of {money(need, exp, cur)}; this sale is {money(total, exp, cur)}. {ADD_TO_SALE}"
     names = ", ".join(plain(c, 20) for c in capped)
     lead = f"Coupon {names} needs" if one else f"Coupons {names} need"
     if len(lead + tail) > TEXT_MAX:     # long names: the amounts and the instruction stay whole
@@ -157,8 +164,7 @@ def on_check(ctx: dict, rules: dict, prior_sales) -> dict:
         group = rules[c]["group"]
         if group and (ctx.get("customer_group") or "") != group:
             return {"verdict": "refuse", "reason": plain(
-                f"Coupon {plain(c, 30)} is only for customers in {plain(group, 30)}. "
-                "Remove it, or add a customer in that group.")}
+                f"Coupon {plain(c, 30)} is only for customers in {plain(group, 30)}. " + IN_GROUP)}
     capped = over_cap(ctx, rules, mine)
     if capped:
         return capped
@@ -167,9 +173,8 @@ def on_check(ctx: dict, rules: dict, prior_sales) -> dict:
         c, customer = firsts[0], ctx.get("customer") or ""
         if not customer:
             return {"verdict": "refuse", "reason": plain(
-                f"Coupon {plain(c, 40)} is for a first purchase only. Add the customer to the sale first.")}
+                f"Coupon {plain(c, 40)} is for a first purchase only. " + ADD_CUSTOMER)}
         if prior_sales(customer) > 0:
             return {"verdict": "refuse", "reason": plain(
-                f"Coupon {plain(c, 30)} is for a first purchase only; this customer has bought before. "
-                "Remove it, or add the new customer.")}
+                f"Coupon {plain(c, 30)} is for a first purchase only; this customer has bought before. " + NEW_CUSTOMER)}
     return {"verdict": "allow"}
