@@ -49,7 +49,7 @@ The hosted service reserves 10 of the account's concurrent copies, shared by eve
 
 Manifest 0.2.5.
 
-- Desk shows plain names (*Code*, *Guest ordering settings*, *Guest ordering manager*, *Table card*) through the manifest's `translations` block. The stored names are unchanged: an installed site keeps its records.
+- Desk shows plain names (*QR code*, *Guest ordering settings*, *Guest ordering manager*, *Table card*) through the manifest's `translations` block. The stored names are unchanged: an installed site keeps its records.
 
 ### 1.3.0
 
