@@ -65,7 +65,7 @@ CANARIES = [
     ("the refusal's item is cut to fit", "agecheck.py", 'line["item_code"], max(room, 1))', 'line["item_code"], 200)',
      R + "Check.test_every_refusal_is_plain_and_at_most_140"),
     ("an age read on the ID says take it off", "agecheck.py", "    if checked and as_read:\n", "    if False:\n",
-     R + "Check.test_an_age_read_on_the_id_under_the_lines_age_says_take_it_off_never_enter_the_age"),
+     R + "Check.test_an_age_typed_alone_under_the_lines_age_says_take_it_off_first"),
     ("the refusal names the item by its name", "agecheck.py", 'line.get("item_name") or line["item_code"]', 'line["item_code"]',
      R + "Check.test_a_restricted_line_with_no_check_is_refused_naming_it_and_the_age"),
     ("a lower ask never lowers the remembered age", "agecheck.py", "(now, max(age, kept))", "(now, age)",

@@ -45,7 +45,7 @@ ivn try
 
 ### 1.1.3
 
-- At Pay, an age typed in *Sale details* under the item's age (*19* for a wine at 21) is refused with *the customer is under 21: take it off*, no longer *enter 21*; every refusal names the item by its name, not its code. The service changes; the manifest is unchanged. *Try it at the till* starts with the age on the item group.
+- At Pay, an age typed in *Sale details* under the item's age (*19* for a wine at 21) is refused with *under 21, take it off; if their ID shows 21 or over, enter 21*, no longer *enter 21* alone; every refusal names the item by its name, not its code. The service changes; the manifest is unchanged. *Try it at the till* starts with the age on the item group.
 
 ### 1.1.2
 

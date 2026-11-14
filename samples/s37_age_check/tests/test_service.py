@@ -134,8 +134,7 @@ class OneShop(unittest.TestCase):
     def test_an_age_typed_from_the_id_under_the_lines_age_is_refused_with_take_it_off(self):
         out = self.check(context([line("VAPE", "Vapes", n=1, name="Mint vape")], checked="19"))[1]
         self.assertEqual(out["verdict"], "refuse")
-        self.assertIn("so the customer is under 21: take it off.", out["reason"])
-        self.assertNotIn("enter", out["reason"])
+        self.assertIn("The ID check says 19: under 21, take it off; if their ID shows 21 or over, enter 21.", out["reason"])
 
     def test_the_check_allows_a_recorded_check_that_covers_every_line(self):
         ctx = context([line("WHISKY", "Spirits", n=1), line("VAPE", "Vapes", n=2)], checked="21 or over")

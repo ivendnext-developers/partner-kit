@@ -158,16 +158,15 @@ class Check(unittest.TestCase):
         self.assertIn("the sale's ID check says 16.", reason)
         self.assertTrue(reason.endswith("enter 21 in Sale details."), reason)   # a band was confirmed, not an age read
 
-    def test_an_age_read_on_the_id_under_the_lines_age_says_take_it_off_never_enter_the_age(self):
+    def test_an_age_typed_alone_under_the_lines_age_says_take_it_off_first(self):
         ctx = context([line("EHW-RW-001", "Spirits", n=1, name="Cabernet Sauvignon 750ml")], checked="19")
         self.assertTrue(agecheck.checked_as_read(ctx, "PP AGE"))
         out = agecheck.on_check(ctx, [21], agecheck.checked_age(ctx, "PP AGE"), agecheck.checked_as_read(ctx, "PP AGE"))
         reason = out["reason"]
         self.assertEqual(out["verdict"], "refuse")
-        self.assertTrue(reason.startswith("Line 1: Cabernet Sauvignon 750ml is for customers 21 or over."), reason)
-        self.assertIn("says 19, so the customer is under 21", reason)
-        self.assertTrue(reason.endswith("take it off."), reason)
-        self.assertNotIn("enter", reason)
+        self.assertTrue(reason.startswith("Line 1: Cabernet Sauvignon 750ml is for 21 or over."), reason)   # the whole name
+        self.assertIn("says 19: under 21, take it off;", reason)                    # the under-age way first
+        self.assertTrue(reason.endswith("if their ID shows 21 or over, enter 21."), reason)   # a threshold typed earlier
         self.assertNotIn("EHW-RW-001", reason)
 
     def test_only_an_age_typed_alone_is_an_age_read_on_the_id(self):
@@ -211,7 +210,8 @@ class Check(unittest.TestCase):
             ctx = context([line(long, "Vapes", n=123)])
             reason = agecheck.on_check(ctx, [120 if checked == 119 else 21], checked, as_read)["reason"]
             self.assertLessEqual(len(reason), 140)
-            self.assertTrue(reason.endswith(("in Sale details.", "take it off.")), reason)   # the name is cut, never what to do
+            self.assertTrue(reason.endswith(("in Sale details.", "take it off.", "or over, enter 21.", "or over, enter 120.")),
+                            reason)                                                   # the name is cut, never what to do
             self.assertIn("Line 123: W", reason)
 
 

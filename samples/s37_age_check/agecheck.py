@@ -10,7 +10,8 @@ Two extension points, one app:
 - **a check before payment** (``check/1``): when the cashier presses Pay, ``on_check`` refuses the sale when a line it
   sells needs an age the sale's recorded check does not cover: no check recorded (an item picked from a list, or a
   *Don't add it* earlier), or a lower age than the line needs. The cashier can type the age in *Sale details*. A check
-  typed as an age alone (*19*) is the age the ID shows: under the line's age, the refusal says to take the line off.
+  typed as an age alone (*19*) is most likely the age the ID shows: under the line's age, the refusal says to take the
+  line off, or, if their ID shows the line's age or over (a cashier may have typed an earlier line's age), to enter it.
 
 An item's age is its own *Customers must be at least this old* when above 0, else the nearest item group above it (itself
 included) that has one (``age_of``). A return is judged only for what it sells (an exchange's new lines).
@@ -202,8 +203,8 @@ def on_scan(ctx: dict, age: int, settings: dict, today: datetime.date, prefix: s
 
 def on_check(ctx: dict, ages: list, checked: int, as_read: bool = False) -> dict:
     """``ages`` is each line's age, in the order of ``ctx["lines"]``. The highest age a sold line needs above the recorded
-    check is refused, naming its first line by the item's name; otherwise allow. ``as_read``: the check is the age the
-    ID shows (``checked_as_read``), so the customer is under the line's age and the line comes off."""
+    check is refused, naming its first line by the item's name; otherwise allow. ``as_read``: the check is an age typed
+    alone (``checked_as_read``), most likely the age the ID shows, so the line comes off unless the ID shows its age."""
     short = [(age, i) for i, (line, age) in enumerate(zip(ctx["lines"], ages)) if line["qty_milli"] > 0 and age > checked]
     if not short:
         return {"verdict": "allow"}
@@ -212,8 +213,8 @@ def on_check(ctx: dict, ages: list, checked: int, as_read: bool = False) -> dict
     line = ctx["lines"][i]
     n = line.get("line_no") or i + 1
     if checked and as_read:
-        text = ("Line {n}: {item} is for customers {age} or over. "
-                "The sale's ID check says {checked}, so the customer is under {age}: take it off.")
+        text = ("Line {n}: {item} is for {age} or over. "
+                "The ID check says {checked}: under {age}, take it off; if their ID shows {age} or over, enter {age}.")
     elif checked:
         text = ("Line {n}: {item} is for customers {age} or over; the sale's ID check says {checked}. "
                 "See their ID, then enter {age} in Sale details.")
