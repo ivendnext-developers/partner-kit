@@ -287,7 +287,9 @@ class Manifest(unittest.TestCase):
         text = build.build_manifest()["workspaces"][0]["blocks"][1]["data"]["text"]
         self.assertIn("Each day at close, print the day's pages of each book", text)  # the daily print (no reminder kind)
         self.assertIn("Erase persons' details", text)  # entries due for erasure (a date no filter can carry)
-        self.assertIn("PP RSR Register entries", text)  # the lists, which a workspace cannot link
+        self.assertIn("The saved lists: Register entries, Losses and disposals", text)  # the lists, which a workspace cannot link
+        # by the plain names Desk shows (the manifest's translations), never the prefixed ones
+        self.assertFalse([n for n in build.plain_words() if n in text])
 
     def test_the_approver_role_is_made_by_the_report_and_named_with_the_prefix(self):
         # the shop's install makes an app's own roles from a report's roles, never from a workspace

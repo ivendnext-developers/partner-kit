@@ -47,12 +47,11 @@ ivn try
 
 ### 0.2.3
 
-- Desk shows plain names (*Regulated stock register* on the register's page, *Register entries*, *Periods open*) through the manifest's `translations` block.
-- The 0.2.2 line now says that a till sale carries the engine's *No Remarks* too.
+- Desk shows plain names (*Regulated stock register* on the register's page, *Register entries*, *Periods open*) through the manifest's `translations` block, and the register's page names the dashboard and the saved lists by them.
 
 ### 0.2.2
 
-- Every data set but Kenya's (its six slots are taken) declares a *Note* slot (*Nota*, *ملاحظة* in the Spanish and Arabic books) read from the document's own Remarks: a loss written off by a stock entry prints its reason in the plain print's *Particulars*. A sale left without a remark, at the till or on the Desk, carries the engine's *No Remarks*, and the plain print shows it as *Note: No Remarks*. No market layout changes.
+- Every data set but Kenya's (its six slots are taken) declares a *Note* slot (*Nota*, *ملاحظة* in the Spanish and Arabic books) read from the document's own Remarks: a loss written off by a stock entry prints its reason in the plain print's *Particulars*. Until the POS app reads the engine's default remark as empty, a sale left without a remark, at the till or on the Desk, prints *Note: No Remarks* on the book. No market layout changes.
 
 ### 0.2.1
 
