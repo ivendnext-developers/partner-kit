@@ -41,6 +41,12 @@ ivn try
 
 ## Versions
 
+### 1.3.5
+
+Manifest 0.3.4.
+
+- Desk shows plain names (*Kitchen screen*, *Kitchen screen settings*, *Kitchen manager*) through the manifest's `translations` block. The stored names are unchanged: an installed site keeps its records.
+
 ### 1.3.4
 
 Needs POS build 2.1.0.682 or later. Manifest 0.3.3.
