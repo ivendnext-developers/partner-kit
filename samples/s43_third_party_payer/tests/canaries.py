@@ -177,6 +177,9 @@ CANARIES = [
      S + "Claims.test_a_remittance_pays_shorts_and_rejects_claims"),
     ("no door, no bill", SV, "        if got is None:\n", "        if False:\n",
      S + "Claims.test_without_the_payer_door_nothing_is_billed_and_the_claim_is_unchanged"),
+    ("the claims file is attached to its batch", SV, '            self.api.insert(shop["url"], shop["key"], "File", {',
+     '            (lambda *a: None)(shop["url"], shop["key"], "File", {',
+     S + "Claims.test_the_claims_file_puts_ready_claims_in_one_batch_and_marks_them_sent"),
     # the calls
     ("a bad signature", SV, "        if not secrets or all(verify(ts, sig, raw, s) for s in secrets):", "        if not secrets:",
      S + "Calls.test_a_bad_signature_an_old_one_and_a_wrong_route_secret_are_refused"),

@@ -3,7 +3,7 @@
  "app": "pp_icp",
  "prefix": "PP ICP",
  "title": "Third-party payer",
- "version": "0.5.0",
+ "version": "0.5.1",
  "publisher": "Partner Programme sample",
  "description": "A third party that pays part of a sale: an insurer, a company paying for its staff, an optical plan. Its payers, plans, formularies and members are records; it answers the till's Payer button line by line, makes a claim from each sale booked on a payer, sends claims as a file, follows each to payment, and bills a rejected claim back to the customer. Rebuilt from the co-pay rules of an iVend Retail pharmacy add-on.",
  "allowed_urls": [
@@ -665,7 +665,7 @@
      "fieldtype": "Long Text",
      "label": "The file (CSV)",
      "read_only": 1,
-     "description": "Copy it into a file named after this batch and send it to the payer."
+     "description": "The same file is attached to this batch, named after it (.csv): download it from the attachments and send it to the payer."
     }
    ],
    "permissions": [
