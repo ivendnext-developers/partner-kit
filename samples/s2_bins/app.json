@@ -1,6 +1,6 @@
 {
  "app": "bins",
- "version": "1.1.1",
+ "version": "1.1.2",
  "port": 8080,
  "health": "/health",
  "size": "small",
