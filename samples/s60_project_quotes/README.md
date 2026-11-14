@@ -36,6 +36,11 @@ ivn try
 
 ## Versions
 
+### 0.1.2
+
+- *Print* on a project opens the project sheet: the manifest makes *PP PQT Project sheet* the record's default print format (a `default_print_format` property setter), so the sheet prints without picking it from the list.
+- Desk shows plain names (Building project, Building project stage, Project sheet) through the manifest's `translations` block, so a search for *building project* finds the record. The stored names are unchanged: an installed site keeps its records.
+
 ### 0.1.1
 
 - The project sheet shows the store's own name (a read-only *Store name* field), not the warehouse's record name with the company suffix. A sheet saved before the update prints the old name until it is saved again.
