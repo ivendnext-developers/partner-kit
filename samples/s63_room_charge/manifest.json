@@ -3,7 +3,7 @@
  "app": "pp_rmc",
  "prefix": "PP RMC",
  "title": "Room charge",
- "version": "0.1.3",
+ "version": "0.1.4",
  "publisher": "Partner Programme sample",
  "description": "A hotel's restaurant or bar charges a meal to a guest's room. The server types the room and surname on the check's Sale details; at Pay the check asks the hotel system, fills the reservation as Folio, and dims the Room Charge tile with its reason for a room it cannot confirm. Within about a minute of the sale booking the service reads the event feed and posts the charge to the guest's folio, one post per sale, keeping the hotel's reference. A night auditor reads the Room charges workspace: posted, waiting and refused. The till books first and the folio follows. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
@@ -415,7 +415,6 @@
     "message"
    ],
    "order_by": "creation desc",
-   "add_total_row": 1,
    "roles": [
     "PP RMC Auditor",
     "System Manager"
@@ -457,7 +456,7 @@
     {
      "type": "paragraph",
      "data": {
-      "text": "Posted counts everything posted; Waiting and Refused count what is open now. Waiting charges go again every minute. Refused: read the hotel system's words, check the folio, settle it another way, then tick Done on its record with a note. For the day's clearing entry, filter the report by Posted on and Status Posted, and use the total of Clearing.",
+      "text": "Posted counts everything posted; Waiting and Refused count what is open now. Waiting charges go again every minute. Refused: read the hotel system's words, check the folio, settle it another way, then tick Done on its record with a note. For the day's clearing entry, filter the report by Status Posted, then Group By Posted on with Sum of Clearing: the database adds every row.",
       "col": 12
      }
     },
@@ -525,6 +524,22 @@
    "property": "documentation",
    "property_type": "Data",
    "value": "https://developer.ivendnext.com/samples/s63_room_charge/index.html"
+  }
+ ],
+ "translations": [
+  {
+   "language": "en",
+   "words": {
+    "PP RMC Settings": "Room charge settings",
+    "PP RMC Store": "Room charge store",
+    "PP RMC Post": "Room charge",
+    "PP RMC Room charges": "Room charges",
+    "PP RMC Posted": "Posted",
+    "PP RMC Waiting": "Waiting",
+    "PP RMC Refused": "Refused",
+    "PP RMC Auditor": "Night auditor",
+    "PP RMC Sales": "Room charge feed"
+   }
   }
  ]
 }
