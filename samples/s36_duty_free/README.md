@@ -43,7 +43,7 @@ ivn try
 
 ### 1.1.3
 
-- Desk shows plain names (Duty-free allowance settings, Boarding pass) through the manifest's `translations` block, so a search for *boarding pass* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.2.3.
+- The till's Sale details row reads *Boarding pass* and the settings read *Duty-free allowance settings*, through the manifest's `translations` block. The stored names are unchanged: an installed site keeps its records. Manifest 0.2.3.
 
 ### 1.1.2
 

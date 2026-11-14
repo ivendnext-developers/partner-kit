@@ -1,6 +1,0 @@
-.env.local
-.env
-.local/
-__pycache__/
-.ivn-state
-package.zip
