@@ -26,7 +26,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/optical_prescriptions.md).
 
-**The customer sets:** **Hours from UTC** in the settings record **Default** (the retailer's own day decides whether a prescription is in date), the mark on its lens item groups, the stores whose check is on, and the roles **PP OPT Optometrist** and **Sales User** for staff. Whoever chooses a lab needs a role that can see suppliers. Never enter a prescription on a walk-in customer: every walk-in sale would pass. A prescription is health-related personal data.
+**The customer sets:** **Hours from UTC** in the settings record **Default** (the retailer's own day decides whether a prescription is in date), the mark on its lens item groups, the stores whose check is on, and the roles **PP OPT Optometrist** and **Sales User** for staff. Whoever chooses a lab needs a role that can see suppliers. To link the till sale on a lab order (its **Sale**), give **PP OPT Optometrist** *Select* on **POS Invoice** in Role Permissions Manager: without it, *Sale* offers no sale and the order saves without one. Never enter a prescription on a walk-in customer: every walk-in sale would pass. A prescription is health-related personal data.
 
 ## Run it
 
@@ -42,6 +42,13 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.1.4
+
+- Manifest 0.2.4.
+- *Print* on a prescription opens its own sheet (the prescription's default print format): *Right eye* and *Left eye* rows with each value in its field's format (*-1.00*, not *-1*), and a contact lens's base curve, diameter and brand only on a contact-lens prescription.
+- Desk shows plain names (*Prescription*, *Lab order*, *Sent to lab*, *Lab orders to chase*) through the manifest's `translations` block.
+- *The customer sets* says how to let an optometrist link the till sale on a lab order.
 
 ### 1.1.3
 
