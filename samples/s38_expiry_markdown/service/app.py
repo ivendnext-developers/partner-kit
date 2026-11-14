@@ -9,8 +9,9 @@ answers presses.
 
 For the ticked lots it reads, with the app's own integration user's key (that user's rights, never the pressing user's),
 the shop's settings (the price list, the hours from UTC), the lots, their items, the item group tree with its markdown
-steps, the list's currency and those items' prices on the list. Then, lot by lot, it writes each lot's own price (the
-item's price less the step's percent, valid until the lot's expiry date, noted as the app's own), changes it when the lot
+steps, the list's currency, the shop's other selling lists in that currency and those items' prices on them. Then, lot
+by lot, it writes each lot's own price (the item's price less the step's percent, valid until the lot's expiry date,
+noted as the app's own; the same price on each other list whose own price is higher), changes it when the lot
 reached its last step, and removes it when the lot is past its date, out of stock or out of every step. A price the shop
 typed for a lot is never changed. Then it removes up to ``SWEEP`` of its own prices whose date has passed, anywhere, and
 answers. A press repeated (a retry, a second click, two copies of the function) finds the prices already right and
@@ -150,7 +151,7 @@ def _warning(body: str) -> dict:
     return {"message": {"title": APP_NAME, "body": body, "level": "warning"}}
 
 
-PRICE_FIELDS = ["name", "item_code", "uom", "packing_unit", "batch_no", "customer", "supplier", "price_list_rate",
+PRICE_FIELDS = ["name", "item_code", "price_list", "uom", "packing_unit", "batch_no", "customer", "supplier", "price_list_rate",
                 "valid_from", "valid_upto", "note", "modified"]
 
 
@@ -223,6 +224,10 @@ class Service:
             if e.code == 404:
                 return _warning(bad_list(price_list))
             raise
+        # the shop's other selling lists in the same currency (a member list): a customer on one is priced from it alone
+        others = tuple(sorted({r["name"] for r in door.rows("Price List", ["name"], [
+            ["selling", "=", 1], ["enabled", "=", 1], ["currency", "=", pl.get("currency") or "-"]])
+            if isinstance(r, dict) and isinstance(r.get("name"), str) and r["name"] != price_list}))
         hours = settings.get("hours_from_utc")
         today = markdown.today_at(hours if isinstance(hours, (int, float)) else 0, self.now)
         got = {r["name"]: r for r in door.rows("Batch", ["name", "item", "expiry_date", "batch_qty", "disabled"],
@@ -231,15 +236,15 @@ class Service:
         item_rows = {r["name"]: r for r in door.rows("Item", ["name", "item_group"], [["name", "in", items]])
                      if isinstance(r, dict) and r.get("name")} if items else {}
         groups = markdown.groups_of(door.rows("Item Group", ["name", "lft", "rgt", *markdown.DAYS, *markdown.PCT], []))
-        prices = door.rows("Item Price", PRICE_FIELDS, [["price_list", "=", price_list], ["item_code", "in", items]]) \
-            if items else []
+        prices = door.rows("Item Price", PRICE_FIELDS, [["price_list", "in", [price_list, *others]],
+                                                        ["item_code", "in", items]]) if items else []
         outcomes, done = {}, 0
         for name in lots:
             if done and self.clock() - t0 > BUDGET_S:
                 break
             lot = got.get(name) or {"name": name}
             outcome, writes = markdown.plan(lot, item_rows.get(lot.get("item")), prices, groups, today, price_list,
-                                            exponent)
+                                            exponent, others)
             for w in writes:
                 why = self.write(door, w)
                 if why:
