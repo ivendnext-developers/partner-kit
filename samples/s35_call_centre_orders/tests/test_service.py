@@ -55,7 +55,8 @@ class FakeTenant:
     """The shop's record API: orders, territories, and the shop's refusal of a write whose ``modified`` is stale."""
 
     def __init__(self, orders=None, tree=None, refuse=None, refuse_write=None, edit_before_write=0, warehouses=None,
-                 reprice=None, routed_before_write=None):
+                 reprice=None, routed_before_write=None, reads=None):
+        self.reads_given = reads    # the record types the app's role may read; None: not modelled
         self.orders = {o["name"]: o for o in (orders or [order()])}
         self.warehouses = warehouses if warehouses is not None else WAREHOUSES
         self.reprice = reprice      # {store: new grand total}: the store's own item tax re-rates the order on save
@@ -95,6 +96,10 @@ class FakeTenant:
             self._touch(name)
         if self.refuse_write:
             raise app.TenantError("PUT -> HTTP %s" % self.refuse_write[0], *self.refuse_write)
+        o = self.orders[name]
+        if self.reads_given is not None and "Address" not in self.reads_given and (
+                o.get("customer_address") or o.get("shipping_address_name")):
+            raise app.TenantError("PUT -> HTTP 403", 403)  # the order's save re-reads its customer's addresses as the app's user
         o = self.orders[name]
         if body.get("modified") != o["modified"]:
             raise app.TenantError("PUT -> HTTP 417", 417, "TimestampMismatchError")
@@ -264,6 +269,21 @@ class ServiceTest(unittest.TestCase):
             self.use(FakeTenant(refuse=refuse))
             code, out = self.press()
             self.assertEqual((code, out["message"]["body"]), (200, app.REFUSED))
+
+    def test_s9b_an_order_with_the_customers_address_is_sent_with_the_manifests_reads(self):
+        """The shop's save of an order re-reads its customer's billing and shipping addresses as the app's user: with
+        the reads the manifest gives the app's role, an order with addresses is sent, as an agent's every order is."""
+        m = json.load(open(os.path.join(os.path.dirname(HERE), "manifest.json")))
+        reads = {r["doctype"] for r in m["role_rights"] if r["role"] == "PP CCO Integration" and "read" in r["rights"]}
+        with_address = dict(order(), customer_address="C1-Billing", shipping_address_name="C1-Shipping")
+        self.use(FakeTenant(orders=[copy.deepcopy(with_address)], reads=reads))
+        code, out = self.press()
+        self.assertEqual((code, out["message"]["level"]), (200, "success"), out)
+        self.assertEqual(self.tenant.orders["SO-0001"]["set_warehouse"], "Maadi Store - S")
+        self.use(FakeTenant(orders=[copy.deepcopy(with_address)], reads=reads - {"Address"}))   # the walk's refusal, without the read
+        code, out = self.press()
+        self.assertEqual(out["message"]["body"], app.REFUSED)
+        self.assertEqual(self.tenant.writes, [])
 
     def test_s10_an_order_deleted_meanwhile_is_said_in_words(self):
         code, out = self.press("SO-9999")
