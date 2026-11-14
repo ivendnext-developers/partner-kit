@@ -19,8 +19,9 @@ ivn new acme_collect --from s33
 What a partner usually changes:
 
 - **The two fields on Delivery Note:** `pp_ccb_handed_over` and `pp_ccb_collected_by` in `custom_fields` in `manifest.json`.
-- **The pick list:** the report's filters in `reports` in `manifest.json`.
-- **The workspace:** `workspaces` in `manifest.json`, the two lists and the line that names the waiting filter.
+- **The pick list:** the report's filters, and the roles it and the workspace open for (`roles`), in `reports` in `manifest.json`.
+- **The workspace:** `workspaces` in `manifest.json`, the report, the two lists and the line that names the waiting filter.
+- **The words Desk shows:** `translations` in `manifest.json` (*Click and collect*, *Web orders to pick*).
 
 More: the [recipe](../../recipes/click_and_collect.md).
 
@@ -34,6 +35,12 @@ ivn try
 ```
 
 ## Versions
+
+### 0.1.2
+
+- The store manager (Retail Manager) and the stock clerk (Stock User) open the workspace and the report: the report names its roles (with Stock Manager, the sales desk's Sales User and Sales Manager, who read it before, and System Manager), and the workspace opens for the roles the manifest names. The workspace opens *Web orders to pick* itself, where its line said to search Desk for it.
+- *Handed over* and *Collected by* sit on the delivery note's *Details* tab, under *Is Return*, where they were inside the folded *More Info*.
+- Desk shows the workspace and the report as *Click and collect* and *Web orders to pick* through the manifest's `translations` block.
 
 ### 0.1.1
 

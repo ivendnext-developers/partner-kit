@@ -15,7 +15,7 @@ A store that sells on the web and lets its customers collect in store needs two 
    ```json
    "custom_fields": [
      {"dt": "Delivery Note", "fieldname": "pp_ccb_handed_over", "fieldtype": "Check", "label": "Handed over",
-      "insert_after": "po_no", "allow_on_submit": 1, "in_list_view": 1, "in_standard_filter": 1},
+      "insert_after": "return_against", "allow_on_submit": 1, "in_list_view": 1, "in_standard_filter": 1},
      {"dt": "Delivery Note", "fieldname": "pp_ccb_collected_by", "fieldtype": "Data", "label": "Collected by",
       "insert_after": "pp_ccb_handed_over", "allow_on_submit": 1}]
    ```
@@ -27,7 +27,8 @@ A store that sells on the web and lets its customers collect in store needs two 
      {"name": "PP CCB Web Orders To Pick", "ref_doctype": "Sales Order", "report_type": "Report Builder",
       "columns": ["name", "customer_name", "set_warehouse", "delivery_date", "po_no", "status"],
       "filters": [["docstatus", "=", 1], ["status", "in", ["To Deliver and Bill", "To Deliver"]], ["po_no", "is", "set"]],
-      "order_by": "delivery_date asc"}]
+      "order_by": "delivery_date asc",
+      "roles": ["Retail Manager", "Stock User", "Stock Manager", "Sales User", "Sales Manager", "System Manager"]}]
    ```
 
    It names the store's warehouse (`set_warehouse`), so a store filters its own. ⚠ On today's iVendNext it does not apply a manifest report's `columns`: the report opens with the record type's usual list columns, and the store adds the others from the column settings (asked of the product).
@@ -36,7 +37,7 @@ A store that sells on the web and lets its customers collect in store needs two 
 
    ⚠ **Not a report for the waiting list.** A report on Delivery Note filtered on `pp_ccb_handed_over` looks right, but iVendNext refuses it: its install checks a report's columns and filters (and a card's or chart's field) against the record type as it is before the install, so a field the same manifest adds is *not a field* yet. `ivn check` refuses it too (`tools/manifest/site_rules.py`). The waiting list is the Delivery Note list itself, where *Handed over* is a list column and a standard filter (`in_list_view`, `in_standard_filter`).
 
-3. **Add the workspace**: a header, a line naming the report and the waiting list's filter, and shortcuts to the **Sales Order** and **Delivery Note** lists. ⚠ Not a shortcut to the report: iVendNext makes a workspace before the manifest's own reports, so that link cannot be saved, and `site_rules.py` refuses it.
+3. **Add the workspace**: a header, a line pointing at the report and naming the waiting list's filter, and shortcuts to the report and to the **Sales Order** and **Delivery Note** lists (iVendNext makes a manifest's workspaces after its reports, so a shortcut may open the app's own report). The workspace opens for the roles the manifest names and the administrator, so the report's `roles` decide who opens it: name every role that works the board. Naming roles replaces the record type's own readers on the report, so keep the sales desk's roles in it.
 
    ![The Click and collect workspace on a demo store: its line and the two lists](../samples/s33_click_and_collect/screenshots/01_workspace.png)
 
@@ -48,7 +49,7 @@ A store that sells on the web and lets its customers collect in store needs two 
 
    ![The Delivery Note list's Filter panel with the waiting list's conditions, each added under + Add a Filter](../samples/s33_click_and_collect/screenshots/03_waiting_filter.png)
 
-2. When the customer comes, it opens the note, and on its **More Info** tab under **Customer PO Details** ticks **Handed over**, writes **Collected by** and saves. The note leaves the list, and its history (*Activity*) records who ticked it and when.
+2. When the customer comes, it opens the note, and on its **Details** tab, under **Is Return**, ticks **Handed over**, writes **Collected by** and saves. The note leaves the list, and its history (*Activity*) records who ticked it and when.
 
    ![A delivery note's Customer PO Details: the web order number, Handed over ticked, Collected by filled in](../samples/s33_click_and_collect/screenshots/04_handed_over.png)
 

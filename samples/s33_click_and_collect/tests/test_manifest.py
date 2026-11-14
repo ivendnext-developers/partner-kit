@@ -1,6 +1,6 @@
 """S33's laptop tests: the manifest passes the kit's checker, its two fields can be set after a delivery note is submitted
 and *Handed over* is a list column and filter (the Delivery Note list filtered on it is the waiting list), its report lists
-exactly the web orders to pick, its workspace opens the sales orders and the delivery notes (never its own report), and nothing leaves the shop. The
+exactly the web orders to pick and opens for the store manager and the stock clerk, its workspace opens the report, the sales orders and the delivery notes, and nothing leaves the shop. The
 shop's install refuses a report that names a field the same manifest adds, and so does the kit (site_rules.py). Data only: no service.
 
     python3 -m unittest discover -s samples/s33_click_and_collect/tests -p 'test_*.py'
@@ -40,6 +40,8 @@ class ManifestTest(unittest.TestCase):
             self.assertEqual(f.get("allow_on_submit"), 1, f["fieldname"])   # a submitted note is where they are set
             self.assertNotIn("default", f)
         self.assertEqual(fields["pp_ccb_handed_over"]["fieldtype"], "Check")
+        # the Details tab's first section, where the counter sees them; never the folded More Info (after po_no)
+        self.assertEqual(fields["pp_ccb_handed_over"]["insert_after"], "return_against")
 
     def test_handed_over_is_a_list_column_and_a_list_filter_so_the_list_is_the_waiting_list(self):
         f = next(f for f in MANIFEST["custom_fields"] if f["fieldname"] == "pp_ccb_handed_over")
@@ -56,20 +58,26 @@ class ManifestTest(unittest.TestCase):
                                              ["po_no", "is", "set"]])
         self.assertIn("set_warehouse", r["columns"])     # the store, so each store filters its own
 
+    def test_the_report_and_its_page_open_for_the_store_manager_and_the_stock_clerk(self):
+        # the installer opens the app's page for the roles the manifest names (and the administrator): none named,
+        # the store manager and the stock clerk meet Page not found. Naming roles replaces the engine's own Sales Order
+        # readers on the report, so the sales desk that takes web orders is named too.
+        self.assertCountEqual(report(PICK)["roles"], ["Retail Manager", "Stock User", "Stock Manager", "Sales User", "Sales Manager", "System Manager"])
+
     def test_no_report_names_a_field_this_manifest_adds(self):
         added = {f["fieldname"] for f in MANIFEST["custom_fields"]}
         for r in MANIFEST["reports"]:
             named = set(r["columns"]) | {f[0] for f in r["filters"]}
             self.assertFalse(named & added, r["name"])     # the shop refuses it at install (live record type)
 
-    def test_the_workspace_opens_the_two_lists_and_never_its_own_report(self):
+    def test_the_workspace_opens_the_report_and_the_two_lists(self):
         ws = MANIFEST["workspaces"][0]
         targets = {(s["type"], s["link_to"]) for s in ws["shortcuts"]}
-        self.assertEqual(targets, {("DocType", "Sales Order"), ("DocType", "Delivery Note")})
-        # the shop makes a workspace before the manifest's reports, so a shortcut to PICK fails at install (APPF run 5)
-        self.assertNotIn(("Report", PICK), targets)
+        # the installer makes the pages after the reports, so a shortcut may open the app's own report
+        self.assertEqual(targets, {("Report", PICK), ("DocType", "Sales Order"), ("DocType", "Delivery Note")})
         line = next(b["data"]["text"] for b in ws["blocks"] if b["type"] == "paragraph")
-        self.assertIn("Web orders to pick", line)        # the line names the report to search for
+        self.assertIn("open Web orders to pick", line)   # the line points at the report's shortcut
+        self.assertNotIn("search Desk", line)
         labels = {s["label"] for s in ws["shortcuts"]}
         placed = {b["data"]["shortcut_name"] for b in ws["blocks"] if b["type"] == "shortcut"}
         self.assertEqual(placed, labels)                  # every shortcut is placed on the page
@@ -79,6 +87,10 @@ class ManifestTest(unittest.TestCase):
         for kind in OUTSIDE:
             self.assertFalse(MANIFEST.get(kind), kind)
         self.assertNotIn("doctypes", MANIFEST)            # no record type of its own: nothing to export but the fields
+
+    def test_desk_shows_the_page_and_the_report_by_their_plain_names(self):
+        words = next(t["words"] for t in MANIFEST["translations"] if t["language"] == "en")
+        self.assertEqual(words, {"PP CCB Click and collect": "Click and collect", PICK: "Web orders to pick"})
 
     def test_the_checker_refuses_what_the_product_would(self):
         m = copy.deepcopy(MANIFEST)

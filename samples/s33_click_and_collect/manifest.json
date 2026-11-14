@@ -3,9 +3,9 @@
  "app": "pp_ccb",
  "prefix": "PP CCB",
  "title": "Click and collect",
- "version": "0.1.1",
+ "version": "0.1.2",
  "publisher": "Partner Programme sample",
- "description": "A Desk board for web orders a store must pick and hand over. A report lists the web orders still to pick (submitted sales orders still to deliver that carry a web order number). On Delivery Note, two fields that can be set after the note is submitted: Handed over (a list column and a list filter: the Delivery Note list filtered on Status To Bill or Completed, Is Return No, % Returned less than 100, Handed over No, POS Pickup Handed At not set, Customer's Purchase Order No set, your store's warehouse and Date on or after the install day is the list of orders waiting for their customer) and Collected by (the name of who took it); the delivery note's history records who ticked it and when. A workspace, Click and collect, opens the sales orders and the delivery notes and says how to find the report and the waiting list. A manifest only: nothing leaves your site.",
+ "description": "A Desk board for web orders a store must pick and hand over. A report lists the web orders still to pick (submitted sales orders still to deliver that carry a web order number). On Delivery Note, two fields that can be set after the note is submitted: Handed over (a list column and a list filter: the Delivery Note list filtered on Status To Bill or Completed, Is Return No, % Returned less than 100, Handed over No, POS Pickup Handed At not set, Customer's Purchase Order No set, your store's warehouse and Date on or after the install day is the list of orders waiting for their customer) and Collected by (the name of who took it); the delivery note's history records who ticked it and when. A workspace, Click and collect, opens the sales orders, the delivery notes and the report, and says how to find the waiting list. A manifest only: nothing leaves your site.",
  "allowed_urls": [],
  "custom_fields": [
   {
@@ -13,7 +13,7 @@
    "fieldname": "pp_ccb_handed_over",
    "fieldtype": "Check",
    "label": "Handed over",
-   "insert_after": "po_no",
+   "insert_after": "return_against",
    "allow_on_submit": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
@@ -40,7 +40,8 @@
     ["status", "in", ["To Deliver and Bill", "To Deliver"]],
     ["po_no", "is", "set"]
    ],
-   "order_by": "delivery_date asc"
+   "order_by": "delivery_date asc",
+   "roles": ["Retail Manager", "Stock User", "Stock Manager", "Sales User", "Sales Manager", "System Manager"]
   }
  ],
  "workspaces": [
@@ -48,14 +49,25 @@
    "name": "PP CCB Click and collect",
    "blocks": [
     {"type": "header", "data": {"text": "<span class=\"h4\">Click and collect</span>", "col": 12}},
-    {"type": "paragraph", "data": {"text": "To pick: search Desk for Web orders to pick, then make each order's delivery note. Still to collect: open Delivery notes and filter Status To Bill or Completed, Is Return No, % Returned less than 100, Handed over No, POS Pickup Handed At not set, Customer's Purchase Order No set, your warehouse and Date on or after the install day; save that filter.", "col": 12}},
+    {"type": "paragraph", "data": {"text": "To pick: open Web orders to pick below, then make each order's delivery note. Still to collect: open Delivery notes and filter Status To Bill or Completed, Is Return No, % Returned less than 100, Handed over No, POS Pickup Handed At not set, Customer's Purchase Order No set, your warehouse and Date on or after the install day; save that filter.", "col": 12}},
+    {"type": "shortcut", "data": {"shortcut_name": "Web orders to pick", "col": 4}},
     {"type": "shortcut", "data": {"shortcut_name": "Sales orders", "col": 4}},
     {"type": "shortcut", "data": {"shortcut_name": "Delivery notes", "col": 4}}
    ],
    "shortcuts": [
+    {"type": "Report", "link_to": "PP CCB Web Orders To Pick", "label": "Web orders to pick"},
     {"type": "DocType", "link_to": "Sales Order", "label": "Sales orders"},
     {"type": "DocType", "link_to": "Delivery Note", "label": "Delivery notes"}
    ]
+  }
+ ],
+ "translations": [
+  {
+   "language": "en",
+   "words": {
+    "PP CCB Click and collect": "Click and collect",
+    "PP CCB Web Orders To Pick": "Web orders to pick"
+   }
   }
  ]
 }
