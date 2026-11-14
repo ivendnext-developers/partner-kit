@@ -1,0 +1,17 @@
+{
+ "app": "acme_zqx",
+ "prefix": "ACME ZQX",
+ "mounts": {
+  "alt": {
+   "sample": "s53_alteration_tickets",
+   "title": "Alterations and made-to-measure tickets",
+   "handler": null,
+   "prefix": "ACME ZQX",
+   "prefix_setting": "ALT_PREFIX",
+   "aliases": {},
+   "strip": false,
+   "points": {}
+  }
+ },
+ "schedules": {}
+}

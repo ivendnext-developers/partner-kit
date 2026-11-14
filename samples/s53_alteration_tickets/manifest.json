@@ -3,7 +3,7 @@
  "app": "pp_alt",
  "prefix": "PP ALT",
  "title": "Alterations and made-to-measure tickets",
- "version": "0.1.2",
+ "version": "0.1.3",
  "publisher": "Partner Programme sample",
  "description": "A fashion store's alteration and made-to-measure tickets, kept in Desk. Each PP ALT Ticket holds the kind (Alteration or Made to measure), the customer with its phone and e-mail (the customer's, read only), the store that hands it over, Taken on, Ready by, the next fitting and the tailor; the till sale and the order it was paid on (each optional); the garments and what to do to each; the measurements; fitting notes; who collected it. A workflow moves it Taken, With the tailor, Fitting, Ready to collect, Handed over (or Cancelled): Ready ticks Ready to collect, which the store's own Notification reads to tell the customer, and Hand over or Cancel ticks Closed. It prints as the customer's slip with a garment tag, and the report Tickets Due lists every open ticket by Ready by. A customer's, a sale's and an order's tickets show under each. The charge and any deposit are rung at the till as before: the app moves no money. The app itself calls nothing outside: no service and no outside address.",
  "allowed_urls": [],
@@ -498,6 +498,29 @@
    "property": "documentation",
    "property_type": "Data",
    "value": "https://developer.ivendnext.com/recipes/alteration_tickets.html#tickets"
+  }
+ ],
+ "translations": [
+  {
+   "language": "en",
+   "words": {
+    "PP ALT Garment": "Garment",
+    "PP ALT Measure": "Measurement",
+    "PP ALT Ticket": "Alteration ticket",
+    "PP ALT Taken": "Taken",
+    "PP ALT With the tailor": "With the tailor",
+    "PP ALT Fitting": "Fitting",
+    "PP ALT Ready to collect": "Ready to collect",
+    "PP ALT Handed over": "Handed over",
+    "PP ALT Cancelled": "Cancelled",
+    "PP ALT Send to tailor": "Send to tailor",
+    "PP ALT Book a fitting": "Book a fitting",
+    "PP ALT Back to tailor": "Back to tailor",
+    "PP ALT Ready": "Ready",
+    "PP ALT Hand over": "Hand over",
+    "PP ALT Cancel": "Cancel",
+    "PP ALT Tickets Due": "Tickets due"
+   }
   }
  ]
 }
