@@ -24,6 +24,15 @@ class ManifestTest(unittest.TestCase):
         feed, = self.m["registered_applications"]
         self.assertEqual(feed["events"], [task["name"]])       # the checker refuses a feed with none; it records nothing
 
+    def test_a_task_line_shows_the_items_name_and_the_order_lines_unit(self):
+        line = next(d for d in self.m["doctypes"] if d["name"] == f"{self.m['prefix']} Pick Task Line")
+        shown = [f["fieldname"] for f in line["fields"] if f.get("in_list_view")]
+        self.assertEqual(shown, ["stop", "item_code", "item_name", "qty", "uom", "warehouse"])
+        # the grid shows a column only while the widths add up to ten or less: every one of the six is shown
+        self.assertLessEqual(sum(f["columns"] for f in line["fields"] if f.get("in_list_view")), 10)
+        action, = self.m["desk_actions"]
+        self.assertIn("items(item_code, item_name, qty, uom, warehouse)", action["send_fields"])   # the service is sent both
+
 
 if __name__ == "__main__":
     unittest.main()

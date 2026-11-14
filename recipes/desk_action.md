@@ -24,7 +24,7 @@ A Desk action is a button on a record in iVendNext Desk. When a user presses it,
                      "on_draft": 0, "on_submitted": 1, "states": ["To Deliver and Bill", "To Deliver"],
                      "inputs": [{"fieldname": "picker", "label": "Picker", "fieldtype": "Link", "options": "User", "reqd": 1},
                                 {"fieldname": "priority", "label": "Priority", "fieldtype": "Select", "options": "Normal\nUrgent"}],
-                     "send_fields": "name, customer, set_warehouse, delivery_date, items(item_code, qty, warehouse)"}],
+                     "send_fields": "name, customer, set_warehouse, delivery_date, items(item_code, item_name, qty, uom, warehouse)"}],
    "links": [{"doctype": "Sales Order", "link_doctype": "PP PCK Pick Task", "link_fieldname": "sales_order", "group": "Picking"}]
    ```
 
@@ -55,7 +55,7 @@ A Desk action is a button on a record in iVendNext Desk. When a user presses it,
 
    ```python
    name = tenant.find_task(order, key) or tenant.create_task(plan(record, inputs, key))
-   return {"message": {"title": "Route assigned", "body": "2 lines across 2 warehouses for …", "level": "success"},
+   return {"message": {"title": "Route assigned", "body": "2 lines across 2 warehouses.", "level": "success"},
            "open_record": {"doctype": "PP PCK Pick Task", "name": name}}
    ```
 

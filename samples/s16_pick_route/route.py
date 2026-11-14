@@ -63,8 +63,9 @@ def plan(record: dict, inputs: dict, key: str) -> dict:
     f = record["fields"]
     rows = sorted(f.get("items") or [], key=lambda r: (r.get("warehouse") or f.get("set_warehouse") or "",
                                                      r.get("item_code") or ""))
-    lines = [{"item_code": r["item_code"], "qty": (r.get("qty") or 0) / 1000,
-              "warehouse": r.get("warehouse") or f.get("set_warehouse"), "stop": i + 1} for i, r in enumerate(rows)]
+    lines = [{"item_code": r["item_code"], "item_name": r.get("item_name"), "qty": (r.get("qty") or 0) / 1000,
+              "uom": r.get("uom"), "warehouse": r.get("warehouse") or f.get("set_warehouse"), "stop": i + 1}
+             for i, r in enumerate(rows)]
     return {"doctype": TASK, "sales_order": record["name"], "customer": f.get("customer"),
             "picker": inputs["picker"], "priority": inputs.get("priority") or "Normal",
             "pick_by": f.get("delivery_date"), "press_key": key, "lines": lines}
@@ -77,10 +78,9 @@ def summary(tasks: list[dict]) -> str:
 
 
 def answer(tasks: list[dict], names: list[str]) -> dict:
-    """The reply. One order: the message, then its task opens. Several (the list's bulk press): the message only."""
-    picker = tasks[0]["picker"]
+    """The reply. One order: the message, then its task opens. Several (the list's bulk press): the message only.
+    The message names no one: the person who pressed chose the picker in the dialog."""
     if len(tasks) > 1:
-        return {"message": {"title": f"{len(tasks)} routes assigned",
-                            "body": f"{summary(tasks)} for {picker}.", "level": "success"}}
-    msg = {"title": "Route assigned", "body": f"{summary(tasks)} for {picker}.", "level": "success"}
+        return {"message": {"title": f"{len(tasks)} routes assigned", "body": f"{summary(tasks)}.", "level": "success"}}
+    msg = {"title": "Route assigned", "body": f"{summary(tasks)}.", "level": "success"}
     return {"message": msg, "open_record": {"doctype": TASK, "name": names[0]}}

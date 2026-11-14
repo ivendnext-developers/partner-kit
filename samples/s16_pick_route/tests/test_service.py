@@ -43,7 +43,8 @@ class FakeTenant:
 def body(names=("SO-0001",), key="key-0001-abcdef", picker="pick@shop.example", **extra):
     recs = [{"doctype": "Sales Order", "name": n, "fields": {
         "name": n, "customer": "C1", "set_warehouse": "Main - S", "delivery_date": "2026-10-09",
-        "items": [{"item_code": "B", "qty": 2000, "warehouse": "Back - S"}, {"item_code": "A", "qty": 2500, "warehouse": "Main - S"}]}}
+        "items": [{"item_code": "B", "item_name": "Bottled water", "qty": 2000, "uom": "Case", "warehouse": "Back - S"},
+                  {"item_code": "A", "item_name": "Apple juice", "qty": 2500, "uom": "Nos", "warehouse": "Main - S"}]}}
         for n in names]
     ctx = {"v": 1, "action": "x", "label": "Assign pick route", "user": "u@shop.example", "lang": "en", "records": recs,
            "inputs": {"picker": picker, "priority": "Urgent"}, "idempotency_key": key, **extra}
@@ -82,15 +83,18 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertEqual(out["open_record"], {"doctype": route.TASK, "name": "PCK-00001"})
         self.assertEqual(out["message"]["title"], "Route assigned")
-        self.assertEqual(out["message"]["body"], "2 lines across 2 warehouses for pick@shop.example.")
+        self.assertEqual(out["message"]["body"], "2 lines across 2 warehouses.")   # names no one, never an e-mail
         task = self.tenant.tasks["PCK-00001"]
         self.assertEqual([(ln["item_code"], ln["qty"], ln["stop"]) for ln in task["lines"]], [("B", 2.0, 1), ("A", 2.5, 2)])
+        # each line says what to pick in the order line's own words: the item's name and its unit (2 Case, not 2)
+        self.assertEqual([(ln["item_name"], ln["uom"]) for ln in task["lines"]], [("Bottled water", "Case"), ("Apple juice", "Nos")])
         self.assertEqual((task["picker"], task["priority"], task["press_key"]), ("pick@shop.example", "Urgent", "key-0001-abcdef"))
 
     def test_s4_three_orders_one_message(self):
         raw = body(names=("SO-1", "SO-2", "SO-3"))
         code, out = self.post(raw, signed(raw))
         self.assertEqual((code, out["message"]["title"], len(self.tenant.tasks)), (200, "3 routes assigned", 3))
+        self.assertEqual(out["message"]["body"], "6 lines across 2 warehouses.")
         self.assertNotIn("open_record", out)
 
     def test_retry_with_the_same_key_makes_no_second_task(self):
@@ -106,7 +110,8 @@ class ServiceTest(unittest.TestCase):
         raw = body(picker="someone@else.example")      # the same key: the dialog kept it, the user changed the picker
         code, out = self.post(raw, signed(raw))
         self.assertEqual((code, len(self.tenant.tasks)), (200, 1))
-        self.assertIn("for pick@shop.example.", out["message"]["body"])
+        self.assertEqual(out["open_record"]["name"], "PCK-00001")
+        self.assertNotIn("@", out["message"]["body"])
 
     def test_a_forged_press_is_refused_and_writes_nothing(self):
         raw = body()

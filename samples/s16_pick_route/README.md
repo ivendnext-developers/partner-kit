@@ -36,6 +36,10 @@ ivn try
 
 ## Versions
 
+### 1.0.2
+
+- Each line of the pick task shows the item's name and the order line's unit (*2 Case*), as well as the item code; the button sends the service both (`item_name`, `uom` in `send_fields`). The answer no longer names the picker by e-mail: it says how many lines across how many warehouses.
+
 ### 1.0.1
 
 - A second press with the same key finds the first's task instead of being refused, and the press asks no confirmation.
