@@ -46,6 +46,10 @@ ivn try
 
 ## Versions
 
+### 1.3.2
+
+- Desk shows plain names (Customer loyalty plan, Customer loyalty member, Cash back) through the manifest's `translations` block, so a search for *loyalty* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.5.1.
+
 ### 1.3.1
 
 - A sale with a total and nothing paid on it (an order placed for another store: it takes no payment at the till) earns no cash back; the sale record that takes the payment earns it. No change to a sale paid in any tender, a gift card included.

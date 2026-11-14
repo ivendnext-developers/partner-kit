@@ -36,6 +36,10 @@ ivn try
 
 ## Versions
 
+### 0.1.3
+
+- Desk shows plain names (UAE tax invoice) through the manifest's `translations` block, so a search for *tax invoice* finds the record. The stored names are unchanged: an installed site keeps its records.
+
 ### 0.1.2
 
 - First version in the kit: a UAE tax invoice on the till sale, as a receipt pack.

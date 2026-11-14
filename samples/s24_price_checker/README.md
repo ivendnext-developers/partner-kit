@@ -33,6 +33,10 @@ ivn try
 
 ## Versions
 
+### 1.1.3
+
+- Desk shows plain names (Price-checker kiosk) through the manifest's `translations` block, so a search for *kiosk* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.2.3.
+
 ### 1.1.2
 
 - The kiosk finds its store when the key address is pasted as the browser shows it, with `https://`, a closing `/`, or a page after it; before, it answered *This kiosk is not set up*. Manifest 0.2.2: the Kiosk record says which address to use: the site's key address, shown at the top of the App library, not a domain of the retailer's own.

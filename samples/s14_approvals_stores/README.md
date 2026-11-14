@@ -42,6 +42,10 @@ BASE=https://shop.example AP_KEY=… AP_SECRET=… LIMIT_PCT=10 python3 approval
 
 ## Versions
 
+### 0.3.4
+
+- Desk shows plain names (Price change request, Requested, Approve for the store, Applied) through the manifest's `translations` block, so a search for *price change* finds the record. The stored names are unchanged: an installed site keeps its records.
+
 ### 0.3.3
 
 - The requester can pick the price list: the install gives *PP APS Requester* read and select on Price List (`role_rights`), where a requester with no sales or buying role met *No permission for Price List*. Read lets the form fill the currency from the price list picked.

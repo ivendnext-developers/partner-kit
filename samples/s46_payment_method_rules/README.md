@@ -42,6 +42,10 @@ ivn try
 
 ## Versions
 
+### 1.2.1
+
+- Desk shows plain names (Payment method rule) through the manifest's `translations` block, so a search for *payment method rule* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.3.1.
+
 ### 1.2.0
 
 - The role's rights beyond the feed's reads move into the manifest (`role_rights`): the install gives the feed's user its reads and the manifest the rest, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later.

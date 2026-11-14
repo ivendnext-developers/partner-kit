@@ -46,6 +46,10 @@ ivn try
 
 ## Versions
 
+### 1.1.3
+
+- Desk shows plain names (Recall notice, Disposal record, Expiry worklist, Visit recorded) through the manifest's `translations` block, so a search for *recall* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.2.3.
+
 ### 1.1.2
 
 - Manifest 0.2.2. A goods receipt with a short-dated lot and no supplier's number shows the shelf-life reason, with the missing number counted after it (*+1 more*), so the check's title and its reason agree. **Block these batches** also shows for the site's administrator, as the role *PP RCL Recall Officer* is empty after the install.

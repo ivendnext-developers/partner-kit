@@ -40,6 +40,10 @@ ivn try
 
 ## Versions
 
+### 1.1.3
+
+- Desk shows plain names (Price deviation, Price deviations this month) through the manifest's `translations` block, so a search for *price deviation* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.3.2.
+
 ### 1.1.2
 
 - The deviations list and its report open largest first (the record type sorts by *Below list*, manifest 0.3.1); before, Desk's sort read *Date* and the report opened in date order.

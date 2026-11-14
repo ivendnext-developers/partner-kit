@@ -43,6 +43,10 @@ ivn try
 
 ## Versions
 
+### 1.0.1
+
+- Desk shows plain names (Refund rules settings, Refund method) through the manifest's `translations` block, so a search for *refund* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.1.1.
+
 ### 1.0.0
 
 - First version in the kit: a refund goes back by the methods that paid its sale.
