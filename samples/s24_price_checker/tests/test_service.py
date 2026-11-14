@@ -224,6 +224,14 @@ class ManyShops(unittest.TestCase):
         self.assertEqual({(c[1], c[2]) for c in self.api.calls},
                          {("https://shop.example", "ka:sa"), ("https://b.example.com", "kb:sb")})
 
+    def test_the_sites_address_copied_from_a_browser_finds_the_same_shop(self):
+        self.connect("shop.example", **{"user:apps@a": "ka:sa"})
+        for named in ("https://shop.example", "https://Shop.Example/", "http://shop.example/app/kiosk", " shop.example/ ",
+                      "shop.example?x=1", "shop.example#top"):
+            self.assertEqual(self.svc.price(body(shop=named))[1]["status"], "found", named)
+        self.assertEqual({c[1] for c in self.api.calls}, {"https://shop.example"})
+        self.assertEqual(self.svc.price(body(shop="https://a.example.com"))[0], 403)   # still only a shop that connected
+
     def test_the_handshake_routes_are_the_templates(self):
         code, data, _ = self.svc.handle("POST", shops.CONNECT, {}, b"{}")
         self.assertEqual((code, json.loads(data)), (400, {"refused": "bad_request"}))

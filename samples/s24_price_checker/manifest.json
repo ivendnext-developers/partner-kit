@@ -3,7 +3,7 @@
  "app": "pp_prc",
  "prefix": "PP PRC",
  "title": "Price-checker kiosk",
- "version": "0.2.1",
+ "version": "0.2.2",
  "publisher": "Partner Programme sample",
  "description": "A price checker for the sales floor. A tablet opens the app's kiosk page; a customer scans an item and the page shows its name, picture and price: the store's price list price for one unit, in the scanned unit. Offers are worked out at the till, and the page says so. The service, outside your site, asks your site for each scan with the app's integration user: its barcode lookup, then its own line pricer for one unit on the store's price list, for the store's walk-in customer. It reads your site and writes nothing. allowed_urls is the service's own address, for the hosted handshake (the site connects to it after install, update, Finish and Connect again, and says goodbye at uninstall); a partner writes its own. Each screen is a PP PRC Kiosk record, named by a random code the kiosk's address carries; the record takes its company, price list, currency, walk-in customer and store from the till profile chosen on it, and switching it off stops that kiosk within a minute. Your site must have the role PP Integration before this is installed; after install the install has made the app's own user and named it on the feed registration PP PRC Kiosk feed. The install gives the app's user read on PP PRC Kiosk (the record the feed follows) and, from role_rights, read on Item and Item Price.",
  "allowed_urls": [
@@ -17,7 +17,7 @@
    "show_title_field_in_link": 1,
    "search_fields": "title,pos_profile",
    "track_changes": 1,
-   "description": "One record per price-checker screen. Its name is the kiosk's code: the tablet opens the app's kiosk address followed by #shop= and this site's address, then &kiosk= and this record's name.",
+   "description": "One record per price-checker screen. Its name is the kiosk's code: the tablet opens the app's kiosk address followed by #shop= and this site's key address (the App library shows it at its top: This site's key address, with Copy), then &kiosk= and this record's name. A domain of your own that points at this site is not the key address: a kiosk given another address answers that it is not set up.",
    "fields": [
     {"fieldname": "title", "fieldtype": "Data", "label": "Where it stands", "reqd": 1, "in_list_view": 1,
      "description": "For example: Aisle 4, by the door."},
