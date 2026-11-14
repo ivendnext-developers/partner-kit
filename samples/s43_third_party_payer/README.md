@@ -27,6 +27,14 @@ More: the [recipe](../../recipes/third_party_payer.md).
 
 **The customer sets:** the clearing mode (its own mode of payment of type Custom, named in the payer service's settings as `clearing_mode`, and on each payer till's POS Profile), *May Sell on a Payer* on the cashiers' Retail Permission, and the payers and members. The role **PP ICP Integration** needs no read from the retailer's administrator: the install gives it read on POS Invoice and Sales Invoice, the two record types the feed follows, and the manifest's `role_rights` give read on Retail Payer Record, Item, Item Price, Price List and Customer. **Needs POS build `2.1.0.691` or later:** on an earlier site the install warns `role_rights` as unknown and skips it, and gives the feed's user no read, so the events wait (a build older still stops the install at the payer service, whose `line_net` it does not know); the service's log says which record type was refused (`ivn logs`). Members and claims are health data for a pharmacy: run the service where the retailer's country's law lets that data go.
 
+**Switching the payer on (once, after the install):** the install leaves the payer service off until the store names its clearing mode, which a manifest may not carry. In Desk, open **Retail Extension Subscription** *Third-party payer* and add `clearing_mode` to **Settings for this extension point**, naming the store's own mode of payment. Keep the two settings already there (`bill_back_role`, `line_net`) as they are: changing `line_net` clears the consent. The settings then read:
+
+```json
+{"bill_back_role": "PP ICP Integration", "line_net": true, "clearing_mode": "Billed to payer"}
+```
+
+Then tick **Enabled** and save. Only one payer service may answer a POS Profile: if another payer service is on for the same tills, give each its own tills in **Only for these POS Profiles**, or switch the other off; otherwise the save says *One payer service per POS Profile*.
+
 **A discount on the whole sale:** on prices without tax the service asks the till for each line's net (`line_net` in `manifest.json`) and puts the discount on the amount's basis with the line's own ratio, so the plan is billed to the cent. This is exact when every tax on the line is a percentage of its net; a fixed charge's share over-states the discount's tax. A till that does not send the net gets the older reading, which under-reads the discount's tax by up to the co-pay on it.
 
 ## Run it
@@ -43,6 +51,11 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 0.5.1
+
+- **Make the claims file** also attaches the file to its claims batch as a private file named after the batch (`<batch>.csv`), so the claims clerk downloads it from the batch's attachments instead of copying it out of the field. The field keeps the same text. A site whose allowed file types leave out csv still gets the batch, and the press says to copy the file from the field.
+- The README shows the exact settings line that switches the payer on, and what to do when a second payer service answers the same tills.
 
 ### 0.5.0
 

@@ -7,7 +7,8 @@ for the claims clerk (standard library only).
     POST /icp/press/claims     Desk button *Build claims* on the Payer list (``desk_action/1``): reads the event feed's
                                booked sales and returns once, and makes or reduces each sale's claim
     POST /icp/press/file       Desk button *Make the claims file* on a Payer (``desk_action/1``): every Ready claim of
-                               that payer into one Claim Batch (a CSV), each then Submitted (Resubmitted if corrected)
+                               that payer into one Claim Batch (a CSV, also attached to the batch as a private file),
+                               each then Submitted (Resubmitted if corrected)
     POST /icp/press/remit      Desk button *Match* on a Remittance (``desk_action/1``): each line against its claim
     POST /icp/press/ready      Desk button *Mark ready* on a Claim: Ready once complete (a corrected rejection goes again)
     POST /icp/press/settle     Desk button *Settle as it stands* on a short-paid Claim: Paid, the shortfall left
@@ -475,8 +476,14 @@ class Service:
         for c in claims:
             self.api.update(shop["url"], shop["key"], self.dt("Claim"), c["name"],
                             {"status": K.filed_as(c), "batch": bname, "submitted_on": self.today()})
-        return {"text": f"{len(claims)} claims in {bname}, {total} to claim. Send its file to the payer.{out_text}",
-                "batch": bname}
+        send = f"Download {bname}.csv from its attachments and send it to the payer."
+        try:        # the same text as a private file on the batch, so the clerk downloads it instead of copying it out
+            self.api.insert(shop["url"], shop["key"], "File", {
+                "file_name": f"{bname}.csv", "attached_to_doctype": self.dt("Claim Batch"), "attached_to_name": bname,
+                "is_private": 1, "content": text})
+        except ShopUnreadable:      # e.g. the site's allowed file types leave out csv: the batch's own field still holds it
+            send = "Copy its file from The file (CSV) and send it to the payer."
+        return {"text": f"{len(claims)} claims in {bname}, {total} to claim. {send}{out_text}", "batch": bname}
 
     def sale_stands(self, shop, claim) -> bool:
         """The claim's sale is still booked with its payer journal: cancelled since, it owes the payer nothing."""

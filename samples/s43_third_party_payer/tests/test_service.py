@@ -647,8 +647,29 @@ class Claims(Base):
         rows = list(csv.DictReader(io.StringIO(batch["csv"])))
         self.assertEqual(len(rows), 4)
         self.assertEqual({c["status"] for c in self.shop.rows("PP ICP Claim")}, {"Submitted"})
+        f, = self.shop.rows("File")              # the same text, attached to the batch for the clerk to download
+        self.assertEqual((f["file_name"], f["attached_to_doctype"], f["attached_to_name"], f["is_private"], f["content"]),
+                         (f"{batch['name']}.csv", "PP ICP Claim Batch", batch["name"], 1, batch["csv"]))
+        self.assertIn(f"Download {batch['name']}.csv from its attachments", out["message"]["body"])
         code, out = self.call("/icp/press/file", press("PP ICP Payer", "GEN-INS"), "file")
         self.assertEqual(out["message"]["body"], "No claim of Generic Insurer is ready.")
+        self.assertEqual(len(self.shop.rows("File")), 1)
+
+    def test_a_file_the_site_refuses_leaves_the_batch_and_says_to_copy_it_from_the_field(self):
+        self.booked()
+        self.build()
+        insert = self.shop.insert
+
+        def no_file(url, key, doctype, doc):
+            if doctype == "File":
+                raise app.ShopUnreadable("the shop answered 417")
+            return insert(url, key, doctype, doc)
+        self.shop.insert = no_file
+        code, out = self.call("/icp/press/file", press("PP ICP Payer", "GEN-INS"), "file")
+        self.assertEqual(code, 200)
+        self.assertIn("Copy its file from The file (CSV)", out["message"]["body"])
+        self.assertEqual(len(self.shop.rows("PP ICP Claim Batch")), 1)
+        self.assertEqual({c["status"] for c in self.shop.rows("PP ICP Claim")}, {"Submitted"})
 
     def test_a_remittance_pays_shorts_and_rejects_claims(self):
         for n in ("A", "B", "C"):
