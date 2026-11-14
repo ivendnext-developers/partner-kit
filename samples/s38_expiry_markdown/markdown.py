@@ -193,9 +193,9 @@ def plan(lot: dict, item: dict | None, rows: list[dict], groups: dict, today: da
     (the item has no price on the list) · ``not_tracked`` (gone, or its item is not one the shop prices by lot).
 
     ``rows`` holds the item's prices on ``price_list`` and on ``others``, the shop's other selling lists in its currency (a
-    member list, say). The shop prices a sale from the customer's own list only, so the lot's price goes on each of them
-    too, the same price, wherever that list's own price for the item is higher: no customer pays more for a marked-down
-    lot than a walk-in. A lot price the shop typed on one of them leaves that list as it is."""
+    member, regional, trade or payer list). The shop prices a sale from the customer's own list only, so the lot gets its
+    own price on each of them too: the same step's percent off that list's own price for the item. A list with no price
+    for the item gets nothing; a lot price the shop typed on one of them leaves that list as it is."""
     name = lot.get("name")
 
     def on(pl):
@@ -225,7 +225,7 @@ def plan(lot: dict, item: dict | None, rows: list[dict], groups: dict, today: da
         if pl == price_list or any(not own(r) for r in lot_pl):
             continue
         base_pl = base_rows(theirs, lot["item"], today)
-        want = {k: p for k, p in prices.items() if k in base_pl and p < base_pl[k]["price_list_rate"]}
+        want = {k: marked(b["price_list_rate"], pct, exponent) for k, b in base_pl.items()}
         writes += _sync(lot, lot_pl, base_pl, want, upto, note, today, pl)
     marked_now = any(w[0] in ("create", "update") for w in writes)
     return ("marked" if marked_now else "already"), writes
