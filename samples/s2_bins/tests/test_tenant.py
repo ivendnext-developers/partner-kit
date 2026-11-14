@@ -10,6 +10,7 @@ from unittest import mock
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "service"))
+sys.path.insert(1, str(HERE.parent))               # core, for the own-server key
 import tenant  # noqa: E402
 
 
@@ -39,3 +40,22 @@ class AnswerCutShort(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class OwnServerNames(unittest.TestCase):
+    """The own-server key (``bins.point_names``): names it cannot read leave the codes, never a refusal."""
+
+    def test_a_refused_names_read_answers_with_codes(self):
+        import bins
+        import core
+
+        class Shop:
+            def list(self, doctype, fields, filters, **k):
+                if doctype == "Item":
+                    raise tenant.TenantError("not permitted", 403)
+                return [{"name": "x", "item": "LMK-PA-01", "bin": "AU-E1-49", "qty": 40, "kind": "Shop floor"}]
+
+        ctx = {"store": "Austin", "lines": [{"item_code": "LMK-PA-01", "qty": 1, "uom": "Nos", "luid": "1"}]}
+        self.assertEqual(bins.point_names(Shop(), ctx), {})
+        m = core.where_answer(ctx, bins.point_rows(Shop(), ctx), bins.point_names(Shop(), ctx))["message"]
+        self.assertEqual((m["body"], m["level"]), ("LMK-PA-01: shop floor AU-E1-49 (40)", "success"))

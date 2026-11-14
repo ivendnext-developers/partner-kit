@@ -80,6 +80,16 @@ class NamedAsTheBasketShows(unittest.TestCase):
         one = core.where_answer(ctx("OIL-0"), rows, {"OIL-0": long[:140]})["message"]["body"]
         self.assertEqual(one, long[:140] + ": shop floor AU-B0-00 (7)")   # one item: its whole name fits
 
+    def test_a_code_is_never_cut_the_last_items_are_left_out(self):
+        codes = [f"TSHIRT-RED-XL-ORGANIC-COTTON-{i}" for i in range(7)]
+        rows = [{"item": c, "bin": f"AU-C{i}-0{i}", "qty": 3, "kind": "Shop floor"} for i, c in enumerate(codes)]
+        body = core.where_answer(ctx(*codes), rows)["message"]["body"]
+        self.assertLessEqual(len(body), core.BODY_MAX)
+        self.assertNotIn("…:", body)                              # no code cut short
+        shown = [c for c in codes if f"{c}: shop floor" in body]
+        self.assertEqual(shown, codes[:len(shown)])
+        self.assertTrue(body.endswith(f"; … and {7 - len(shown)} more"))
+
 
 class SaleDecrements(unittest.TestCase):
     def test_takes_from_the_fullest_shop_floor_bin_then_the_next(self):

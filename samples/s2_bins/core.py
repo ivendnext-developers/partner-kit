@@ -26,12 +26,12 @@ def _cut(name: str, most: int | None) -> str:
     return name if most is None or len(name) <= most else name[:most - 1].rstrip() + "…"
 
 
-def _fit(parts: list[tuple[str, str]]) -> str:
-    """``parts`` are (the item's name, where it is). Over the till's cap, the names are cut first, never the bin; only
-    then are the last items left out ("… and N more")."""
+def _fit(parts: list[tuple[str, str, bool]]) -> str:
+    """``parts`` are (the item's name or code, where it is, whether it is a name). Over the till's cap, the names are cut
+    first, never a code or the bin; only then are the last items left out ("… and N more")."""
     def text(keep: int, most: int | None) -> str:
         rest = len(parts) - keep
-        return "; ".join(f"{_cut(name, most)}: {where}" for name, where in parts[:keep]) + (
+        return "; ".join(f"{_cut(name, most) if is_name else name}: {where}" for name, where, is_name in parts[:keep]) + (
             f"; … and {rest} more" if rest else "")
     for most in NAME_CUTS:
         if len(text(len(parts), most)) <= BODY_MAX:
@@ -52,19 +52,20 @@ def where_answer(context: dict, rows: list[dict], names: dict | None = None) -> 
             continue
         seen.add(code)
         name = str((names or {}).get(code) or code)
+        is_name = name != code
         mine = sorted((r for r in rows if r.get("item") == code and float(r.get("qty") or 0) > 0),
                       key=lambda r: (-float(r["qty"]), r["bin"]))
         floor = [r for r in mine if r.get("kind") == FLOOR]
         back = [r for r in mine if r.get("kind") == BACK]
         if floor:
             more = f" (+{len(floor) - 1} more bin)" if len(floor) > 1 else ""
-            parts.append((name, f"shop floor {floor[0]['bin']} ({_qty(floor[0]['qty'])}){more}"))
+            parts.append((name, f"shop floor {floor[0]['bin']} ({_qty(floor[0]['qty'])}){more}", is_name))
             found.append(FLOOR)
         elif back:
-            parts.append((name, f"back room {back[0]['bin']} ({_qty(back[0]['qty'])}), fetch it"))
+            parts.append((name, f"back room {back[0]['bin']} ({_qty(back[0]['qty'])}), fetch it", is_name))
             found.append(BACK)
         else:
-            parts.append((name, "no bin recorded"))
+            parts.append((name, "no bin recorded", is_name))
             found.append(None)
     if not parts:
         return {"message": {"title": TITLE, "body": "There are no items on this sale yet.", "level": "info"}}

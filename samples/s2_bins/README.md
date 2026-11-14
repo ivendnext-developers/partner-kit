@@ -43,7 +43,7 @@ ivn try
 
 ### 1.1.3
 
-- *Where is it?* calls each item by the name the sale shows, beside its bin (*Long-grain white rice: shop floor AU-E1-49 (40)*), where it gave only the item code; an item with no bin is named too. On a long sale the names are cut to fit the till's answer, never the bin. The press carries only codes, so the key reads the items' names, and the app's own role may read items (manifest 0.1.5, `role_rights`). Until a site has updated to it, the key answers with codes as before.
+- *Where is it?* calls each item by the name the sale shows, beside its bin (*Long-grain white rice: shop floor AU-E1-49 (40)*), where it gave only the item code; an item with no bin is named too. On a long sale the names are cut to fit the till's answer, never the bin. The press carries only codes, so the key reads the items' names, and the app's own role may read items (manifest 0.1.5, `role_rights`). Until a site has updated to it, the key answers with codes as before. Needs POS build `2.1.0.691` or later for the read on Item; an update adds it from `2.1.0.696`.
 
 ### 1.1.2
 

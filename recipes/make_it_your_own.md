@@ -69,10 +69,10 @@ The chain keeps stock in zones: a cold room, a cage, the shop floor. It wants ea
      ```python
      def _zone(row: dict) -> str:
          return f", {row['zone'].strip().lower()}" if (row.get("zone") or "").strip() else ""
-     # … (name, f"shop floor {floor[0]['bin']} ({_qty(floor[0]['qty'])}){_zone(floor[0])}{more}")
+     # … (name, f"shop floor {floor[0]['bin']} ({_qty(floor[0]['qty'])}){_zone(floor[0])}{more}", is_name)
      ```
 
-   The sample's test `test_the_shop_is_read_with_the_apps_key_and_only_read` (`tests/bln/test_where.py`) pins the records the key reads: add the third read, `ACME BINS Bin`'s, to its list. Add a test of your own for the zone. Then set your own `title` (*ACME Bins*) and `description` in the manifest.
+   The sample's test `test_the_shop_is_read_with_the_apps_key_and_only_read` (`tests/bln/test_where.py`) pins the records the key reads, in order: add `ACME BINS Bin`'s read to its list before `Item`'s, which stays the last read. Add a test of your own for the zone. Then set your own `title` (*ACME Bins*) and `description` in the manifest.
 
 5. **Check it, then try it on a site.** On My apps, **Try on** *your site* (**Change** picks another, or adds one). In a terminal:
 
