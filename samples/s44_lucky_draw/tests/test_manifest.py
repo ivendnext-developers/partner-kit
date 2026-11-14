@@ -65,6 +65,20 @@ class ManifestTest(unittest.TestCase):
     def test_the_addresses_are_the_services(self):
         self.assertEqual(self.m["allowed_urls"], [s["endpoint_url"] for s in self.m["extension_subscriptions"]])
 
+    def test_the_english_words_cover_every_name_the_store_sees(self):
+        (en,) = [t for t in self.m["translations"] if t["language"] == "en"]
+        words = en["words"]
+        names = {d["name"] for d in self.m["doctypes"]}
+        for key in ("print_formats", "reports", "registered_applications", "sale_attributes", "workspaces",
+                    "number_cards", "notifications"):
+            names |= {x["name"] for x in self.m.get(key, [])}
+        for wf in self.m.get("workflows", []):
+            names |= {s["state"] for s in wf["states"]} | {t["action"] for t in wf["transitions"]}
+        for d in self.m["doctypes"]:
+            names |= {p["role"] for p in d.get("permissions", []) if p["role"].endswith(" Manager") and p["role"].startswith(self.m["prefix"])}
+        self.assertEqual(sorted(names - set(words)), [])
+        self.assertTrue(all(w and not w.startswith(self.m["prefix"]) for w in words.values()))
+
 
 if __name__ == "__main__":
     unittest.main()

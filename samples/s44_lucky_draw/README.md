@@ -45,6 +45,10 @@ ivn try
 
 ## Versions
 
+### 1.1.1
+
+- Desk shows plain names (Lucky draw campaign, Lucky draw result) through the manifest's `translations` block, so a search for *lucky draw* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.2.1.
+
 ### 1.1.0
 
 - The role's rights beyond the feed's reads move into the manifest (`role_rights`): the install gives the feed's user its reads and the manifest the rest, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later. The manager's lookups are the same rights, now in the manifest (read, not select, on Company: the form fetches the currency from it).
