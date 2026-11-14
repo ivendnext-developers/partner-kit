@@ -35,11 +35,15 @@ ivn try
 
 ## Try it at the till
 
-- Start a till that wears the app's till theme: the sale's line reads Product and the customer's card says Stars.
+- Sign in at a till that wears the app's till theme (on a site with several stores, the theme may be on another store's till than the first cashier's): the sale's line reads Product and the customer's card says Stars.
 - Add a new customer with no phone; the till asks for one.
 - Close the till day when you are done.
 
 ## Versions
+
+### 0.1.2
+
+- *Try it at the till* says to sign in at a till that wears the app's theme, which on a site with several stores may be another store's till.
 
 ### 0.1.1
 
