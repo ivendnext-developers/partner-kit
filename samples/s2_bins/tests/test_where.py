@@ -144,9 +144,9 @@ class OneShop(unittest.TestCase):
         self.assertTrue(body(out).startswith("I00: shop floor S7-00 (1)"), body(out))
         self.assertNotIn("too many", body(out))
 
-    def test_a_store_with_no_location_reads_nothing_more(self):
+    def test_a_store_with_no_location_reads_no_bins(self):
         self.assertEqual(body(self.press(ctx("CASE", store="Store 9 - DR"))), "CASE: no bin recorded")
-        self.assertEqual([c[2] for c in self.reader.calls], ["IVENDNEXT BLN Location"])
+        self.assertEqual([c[2] for c in self.reader.calls], ["IVENDNEXT BLN Location", "Item"])   # the name, for its line
 
     def test_more_rows_than_one_answer_takes_is_said_never_cut(self):
         big = dict(SHOP, **{"IVENDNEXT BLN Item In Bin": SHOP["IVENDNEXT BLN Item In Bin"] +
@@ -213,7 +213,9 @@ class OneShop(unittest.TestCase):
     def test_the_shop_is_read_with_the_apps_key_and_only_read(self):
         self.press(ctx("CASE"))
         self.assertEqual(self.reader.calls, [("https://shop.example", "k:s", "IVENDNEXT BLN Location"),
-                                             ("https://shop.example", "k:s", "IVENDNEXT BLN Item In Bin")])
+                                             ("https://shop.example", "k:s", "IVENDNEXT BLN Item In Bin"),
+                                             ("https://shop.example", "k:s", "Item")])
+        self.assertEqual(self.reader.filters["Item"], [["name", "in", ["CASE"]]])     # only the sale's items
 
     def test_an_empty_sale_reads_nothing(self):
         code, out = self.press(ctx())
@@ -257,6 +259,48 @@ class OneShop(unittest.TestCase):
         self.assertLessEqual(max(len(w) for w in words), core.BODY_MAX)
 
 
+class NamedAsTheBasketShows(unittest.TestCase):
+    """Each item is called by the name the basket shows, read from the shop's items (the press carries codes)."""
+    WALK = {"IVENDNEXT BLN Location": [{"name": "Austin floor", "kind": "Shop floor", "store": STORE}],
+            "IVENDNEXT BLN Item In Bin": [{"item": "LMK-CD-01", "bin": "AU-E3-57", "location": "Austin floor", "qty": 40},
+                                          {"item": "LMK-PA-01", "bin": "AU-E1-49", "location": "Austin floor", "qty": 40},
+                                          {"item": "LMK-PR-4011", "bin": "AU-A1-01", "location": "Austin floor", "qty": 60}],
+            "Item": [{"name": "LMK-CD-01", "item_name": "Milk chocolate bar"},
+                     {"name": "LMK-PA-01", "item_name": "Long-grain white rice"},
+                     {"name": "LMK-PR-4011", "item_name": "Bananas"},
+                     {"name": "LMK-PT-06", "item_name": "Paper towels, 6 rolls"}]}
+
+    def press(self, reader, *codes):
+        raw, note = raw_of(ctx(*codes)), {}
+        out = where.Service(ONE, reader=reader).handle("POST", where.ROUTE, signed(raw, SECRET), raw, note)
+        return out, note
+
+    def test_the_walks_three_line_basket(self):
+        out, _ = self.press(Reader({"https://shop.example": self.WALK}), "LMK-CD-01", "LMK-PA-01", "LMK-PR-4011")
+        self.assertEqual(body(out), "Milk chocolate bar: shop floor AU-E3-57 (40); Long-grain white rice: shop floor "
+                                    "AU-E1-49 (40); Bananas: shop floor AU-A1-01 (60)")
+        if check.available():
+            self.assertEqual(check.errors("remote_till_key", "answer", out[1]), [])
+
+    def test_an_item_with_no_bin_is_named(self):
+        out, _ = self.press(Reader({"https://shop.example": self.WALK}), "LMK-PT-06")
+        self.assertEqual(body(out), "Paper towels, 6 rolls: no bin recorded")
+        nothing_here = dict(self.WALK, **{"IVENDNEXT BLN Location": []})     # a store with no locations yet
+        out, _ = self.press(Reader({"https://shop.example": nothing_here}), "LMK-PA-01")
+        self.assertEqual(body(out), "Long-grain white rice: no bin recorded")
+
+    def test_names_that_cannot_be_read_leave_the_codes_never_a_refusal(self):
+        """A shop still on the version before the read on Item was granted refuses it (403): the bins are answered."""
+        inner = Reader({"https://shop.example": self.WALK})
+        def no_items(url, key, doctype, fields, filters, timeout=None):
+            if doctype == "Item":
+                raise where.ShopUnreadable("refused", 403)
+            return inner(url, key, doctype, fields, filters, timeout)
+        out, note = self.press(no_items, "LMK-CD-01", "LMK-PA-01")
+        self.assertEqual(body(out), "LMK-CD-01: shop floor AU-E3-57 (40); LMK-PA-01: shop floor AU-E1-49 (40)")
+        self.assertEqual((out[1]["message"]["level"], note), ("success", {"names": 403}))
+
+
 class TheManifest(unittest.TestCase):
     """The service finds a record by its Location, so the manifest must fill it from the bin, and the role must read it."""
 
@@ -266,6 +310,10 @@ class TheManifest(unittest.TestCase):
         field = {f["fieldname"]: f for f in dt["PP BLN Item In Bin"]["fields"]}["location"]
         self.assertEqual((field["fieldtype"], field["options"], field["fetch_from"], field.get("read_only")),
                          ("Link", "PP BLN Location", "bin.location", 1))
+
+    def test_the_apps_own_role_reads_the_items_names(self):
+        m = json.loads((HERE.parent / "manifest.json").read_text())
+        self.assertIn({"doctype": "Item", "role": "PP BLN Integration", "rights": ["read"]}, m["role_rights"])
 
 
 class ShopApi(unittest.TestCase):

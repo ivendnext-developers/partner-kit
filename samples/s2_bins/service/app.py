@@ -123,7 +123,7 @@ class Handler(BaseHTTPRequestHandler):
                 if testcall.is_test(self.headers):      # checked as a real call; the bins are not read
                     return self._send(*testcall.answer("where_is_it"))
                 ctx = json.loads(raw)["context"]
-                return self._send(200, core.where_answer(ctx, bins.point_rows(TENANT, ctx)))
+                return self._send(200, core.where_answer(ctx, bins.point_rows(TENANT, ctx), bins.point_names(TENANT, ctx)))
             if not self._admin():
                 return self._send(401, {"error": "admin token required"})
             body = json.loads(raw or b"{}")

@@ -22,7 +22,7 @@ What a partner usually changes:
 
 - a field on a bin or a location (`manifest.json`);
 - what *Where is it?* says (`core.where_answer`);
-- which records the key reads (`service/where.py`, `bin_rows`).
+- which records the key reads (`service/where.py`, `bin_rows`, and `item_names` for the items' names).
 
 The App library's *Bin locations* is this sample. To move a customer's records from it to your version: `tools/deploy/copy_records.py ivendnext_bln <your app>`. A worked example, a *Zone* on each bin: [Make one of our apps your own](../../recipes/make_it_your_own.md).
 
@@ -35,11 +35,15 @@ ivn try
 
 ## Try it at the till
 
-- Put an item on a sale and press the key Where is it? The till names the bin it sits in.
+- Put an item on a sale and press the key Where is it? The till names the bin it sits in, calling each item by the name the sale shows.
 - The key has not yet been pressed on a till by us; the same kind of key has been, for S1 and S6.
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.1.3
+
+- *Where is it?* calls each item by the name the sale shows, beside its bin (*Long-grain white rice: shop floor AU-E1-49 (40)*), where it gave only the item code; an item with no bin is named too. On a long sale the names are cut to fit the till's answer, never the bin. The press carries only codes, so the key reads the items' names, and the app's own role may read items (manifest 0.1.5, `role_rights`). Until a site has updated to it, the key answers with codes as before.
 
 ### 1.1.2
 
