@@ -1,0 +1,17 @@
+{
+ "app": "acme_zqx",
+ "prefix": "ACME ZQX",
+ "mounts": {
+  "rpr": {
+   "sample": "s58_repairs_by_serial",
+   "title": "Repairs by serial number",
+   "handler": null,
+   "prefix": "ACME ZQX",
+   "prefix_setting": "RPR_PREFIX",
+   "aliases": {},
+   "strip": false,
+   "points": {}
+  }
+ },
+ "schedules": {}
+}

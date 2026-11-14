@@ -3,7 +3,7 @@
  "app": "pp_rpr",
  "prefix": "PP RPR",
  "title": "Repairs by serial number",
- "version": "0.1.2",
+ "version": "0.1.3",
  "publisher": "Partner Programme sample",
  "description": "An electronics or phone store's repairs and services, kept in Desk against each unit's serial number. Each PP RPR Repair holds the serial (its item and its warranty date read from the serial, read only), what kind of job it is (Repair, Service, Test only or Recall work), the customer with their phone (the customer's Phone Number, or the Mobile No set in Desk where the till holds none; read only), the store that took the unit in, the day, the date it is promised for, the fault the customer reports and the unit's condition and accessories at intake; then the tests run and their results, the work done, the technician and the parts fitted, each with its own serial where it has one. A workflow moves it Received, In repair, Ready to collect and Collected, or Cancelled; once Collected or Cancelled, a save rule stops its serial, customer, dates, fault, tests, work and parts from changing, so the unit's history holds. The repair slip prints under the retailer's own letter head, with a tag for the unit. Every repair shows under its serial number, its customer and the sale that paid for it; the report Open repairs lists the repairs not yet collected, by the date promised. A field on Stock Entry, Repair, names the repair whose parts a Material Issue takes out of stock. The lock is on from the install. The app moves no money and changes no stock, and calls nothing outside: no service, no outside address.",
  "allowed_urls": [],
@@ -511,6 +511,28 @@
    "property": "default_print_format",
    "property_type": "Data",
    "value": "PP RPR Repair slip"
+  }
+ ],
+ "translations": [
+  {
+   "language": "en",
+   "words": {
+    "PP RPR Test": "Repair test",
+    "PP RPR Part": "Repair part",
+    "PP RPR Repair": "Repair",
+    "PP RPR Received": "Received",
+    "PP RPR In repair": "In repair",
+    "PP RPR Ready to collect": "Ready to collect",
+    "PP RPR Collected": "Collected",
+    "PP RPR Cancelled": "Cancelled",
+    "PP RPR Start work": "Start work",
+    "PP RPR Ready": "Ready",
+    "PP RPR Back to work": "Back to work",
+    "PP RPR Hand over": "Hand over",
+    "PP RPR Cancel": "Cancel",
+    "PP RPR Open repairs": "Open repairs",
+    "PP RPR Repair slip": "Repair slip"
+   }
   }
  ]
 }

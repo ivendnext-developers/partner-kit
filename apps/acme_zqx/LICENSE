@@ -1,0 +1,4 @@
+Replace this file with your app's licence.
+
+You choose your app's licence. The hosting check (tools/deploy_app) and the App library's publishing
+workflow refuse an app whose licence file is empty or still says the line above.
