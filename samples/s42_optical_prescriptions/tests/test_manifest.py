@@ -158,7 +158,7 @@ class ManifestTest(unittest.TestCase):
             for f in ("sph", "cyl", "add"):
                 self.assertIn(f"{{{{ power(doc.{side}_{f}) }}}}", html)
             self.assertIn(f"{{{{ amount(doc.{side}_prism) }}}}", html)
-            self.assertIn(f"{{{{ (doc.{side}_axis or 0)|int }}}}", html)
+            self.assertIn(f'{{{{ (doc.{side}_axis or 0)|int if doc.{side}_cyl else "" }}}}', html)
             for f in ("sph", "cyl", "add", "prism", "bc", "dia", "axis"):
                 self.assertIn(f"{side}_{f}", rx)
                 self.assertNotIn(f"{{{{ doc.{side}_{f} }}}}", html)
@@ -172,7 +172,7 @@ class ManifestTest(unittest.TestCase):
         (block,) = re.findall(r"\{%-? *if (.*?) *-?%\}(.*?)\{%-? *endif *-?%\}", html, re.S)
         self.assertEqual(block[0], 'doc.kind == "Contact lenses"')
         for f in ("r_bc", "r_dia", "l_bc", "l_dia", "cl_lens"):
-            self.assertIn(f"doc.{f}" if f == "cl_lens" else f'get_formatted("{f}")', block[1], f)
+            self.assertIn(f"doc.{f}" if f == "cl_lens" else f"{{{{ one(doc.{f}) }}}}", block[1], f)
             self.assertNotIn(f, html.replace(block[1], ""), f)          # nowhere outside the contact-lens block
         for f in ("examined_by", "registration", "notes"):              # who examined, under which registration
             self.assertIn(f"{{{{ doc.{f} or \"\" }}}}", html.replace(block[1], ""), f)
@@ -199,9 +199,12 @@ class ManifestTest(unittest.TestCase):
         text = sheet(r_sph=1.5, r_add=2.0, l_sph=0.0, l_add=2.25, l_prism=1.0, l_base="In")
         self.assertIn("Right eye +1.50 -0.50 90 +2.00 0.00", text)      # a plus sign on a positive power
         self.assertIn("Left eye 0.00 -0.25 85 +2.25 1.00 In", text)     # a prism is an amount: its direction is Base
-        text = sheet(kind="Contact lenses", r_bc=8.6, l_bc=8.6, r_dia=14.2, l_dia=14.2, cl_lens="Daily toric")
-        self.assertIn("Right eye 8.6 14.2", text)
+        text = sheet(kind="Contact lenses", r_bc=8.6, l_bc=8.6, r_dia=14.0, l_dia=14.2, cl_lens="Daily toric")
+        self.assertIn("Right eye 8.6 14.0", text)                       # one place: 14.0, never 14
+        self.assertIn("Left eye 8.6 14.2", text)
         self.assertIn("Lens brand and type Daily toric", text)
+        text = sheet(r_sph=-1.0, r_cyl=0.0, r_axis=0, l_sph=-1.0, l_cyl=None, l_axis=None)
+        self.assertIn("Right eye -1.00 0.00 0.00 0.00 Left eye -1.00 0.00 0.00 0.00", text)  # a sphere only: no axis
 
     def test_desk_names_the_records_states_and_buttons_in_plain_words(self):
         (tr,) = MANIFEST["translations"]

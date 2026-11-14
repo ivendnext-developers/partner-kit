@@ -31,6 +31,7 @@ jobs:
         env:
           S29_REQUIRE_JINJA: "1"   # S29's template tests fail, not skip, when the engine above is missing
           S4_REQUIRE_JINJA: "1"    # and S4's
+          S42_REQUIRE_JINJA: "1"   # and S42's prescription and job sheets
         run: python3 .github/scripts/run_tests.py
       - name: The issue forms match their Markdown forms
         run: python3 .github/scripts/issue_forms.py --check
