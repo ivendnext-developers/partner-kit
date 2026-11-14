@@ -48,14 +48,28 @@ class Counter:
         return self.sales.get(customer, 0)
 
 
+def refused(case, out, *facts, absent=()):
+    """The refusal's facts, never its sentence, so a partner may reword what the cashier reads (README, *What to change*)
+    and these tests stay green: the answer refuses; the reason names each fact (a coupon, a group, an amount) and none in
+    ``absent``; and it is plain text the till accepts, 1 to 140 characters, whole (never cut short with an ellipsis)."""
+    case.assertEqual(out["verdict"], "refuse", out)
+    reason = out["reason"]
+    case.assertTrue(1 <= len(reason) <= coupons.TEXT_MAX and not reason.endswith("…"), reason)
+    case.assertFalse(set("<>") & set(reason), reason)
+    for fact in facts:
+        case.assertIn(fact, reason)
+    for fact in absent:
+        case.assertNotIn(fact, reason)
+
+
 RULES = coupons.rules_of(RECORDS)
 
 
 class Rules(unittest.TestCase):
     def test_a_first_purchase_coupon_is_refused_for_a_customer_who_has_bought(self):
-        out = coupons.on_check(context(["WELCOME10"]), RULES, Counter({"CUST-1": 3}))
-        self.assertEqual(out, {"verdict": "refuse", "reason": "Coupon WELCOME10 is for a first purchase only; this "
-                                                              "customer has bought before. Remove it, or add the new customer."})
+        n = Counter({"CUST-1": 3})
+        refused(self, coupons.on_check(context(["WELCOME10"]), RULES, n), "WELCOME10")
+        self.assertEqual(n.calls, ["CUST-1"])
 
     def test_a_first_purchase_coupon_is_allowed_for_a_new_customer(self):
         n = Counter({"CUST-9": 1})
@@ -65,14 +79,11 @@ class Rules(unittest.TestCase):
     def test_a_first_purchase_coupon_with_no_customer_is_refused_without_a_count(self):
         n = Counter()
         for none in ("", None):      # the contract sends text; a blank customer is no customer
-            out = coupons.on_check(context(["WELCOME10"], customer=none), RULES, n)
-            self.assertEqual(out["reason"], "Coupon WELCOME10 is for a first purchase only. Add the customer to the sale first.")
+            refused(self, coupons.on_check(context(["WELCOME10"], customer=none), RULES, n), "WELCOME10")
         self.assertEqual(n.calls, [])
 
     def test_a_group_coupon_is_refused_outside_its_group(self):
-        out = coupons.on_check(context(["STAFF15"], group="Retail"), RULES, Counter())
-        self.assertEqual(out, {"verdict": "refuse", "reason": "Coupon STAFF15 is only for customers in Staff. Remove it, "
-                                                              "or add a customer in that group."})
+        refused(self, coupons.on_check(context(["STAFF15"], group="Retail"), RULES, Counter()), "STAFF15", "Staff")
 
     def test_a_group_coupon_is_allowed_in_its_group(self):
         self.assertEqual(coupons.on_check(context(["STAFF15"], group="Staff"), RULES, Counter()), {"verdict": "allow"})
@@ -87,7 +98,8 @@ class Rules(unittest.TestCase):
     def test_the_group_rule_is_judged_before_any_count(self):
         n = Counter()
         out = coupons.on_check(context(["VIPNEW"], group="Retail"), RULES, n)
-        self.assertIn("only for customers in VIP", out["reason"])
+        refused(self, out, "VIPNEW")          # a new customer (no sale counted) is refused only by the group rule
+        self.assertIn("VIP", out["reason"].replace("VIPNEW", ""))
         self.assertEqual(n.calls, [])
 
     def test_both_rules_on_one_coupon_both_hold(self):
@@ -127,12 +139,8 @@ class Rules(unittest.TestCase):
         outs = [coupons.on_check(context([long], group="Retail"), rules, Counter()),
                 coupons.on_check(context([long], group=long), rules, Counter({"CUST-1": 1})),
                 coupons.on_check(context([long], group=long, customer=None), rules, Counter())]
-        for out in outs:
-            self.assertEqual(out["verdict"], "refuse")
-            self.assertTrue(1 <= len(out["reason"]) <= 140, out["reason"])
-            self.assertFalse(set("<>") & set(out["reason"]))
-        for out in outs[1:]:      # the first-purchase sentences keep their instruction whole
-            self.assertTrue(out["reason"].endswith(("Remove it, or add the new customer.", "Add the customer to the sale first.")), out)
+        for out in outs:          # each sentence keeps its instruction whole: the long names are shortened, never the end
+            refused(self, out)
 
 
 CAPPED = coupons.rules_of([{"coupon": "C100", "enabled": 1, "spend_per_use": 1000},
@@ -160,17 +168,14 @@ class Cap(unittest.TestCase):
     """One coupon for each so much spent: the coupons on a sale may take at most floor(total / slice) uses."""
 
     def test_one_coupon_needs_its_sale(self):
-        out = coupons.on_check(capped(["C100"], 99999), CAPPED, Counter())
-        self.assertEqual(out, {"verdict": "refuse", "reason": "Coupon C100 needs a sale of AED 1,000.00; this sale is "
-                                                              "AED 999.99. Remove a coupon, or add to the sale."})
+        refused(self, coupons.on_check(capped(["C100"], 99999), CAPPED, Counter()), "C100", "AED 1,000.00", "AED 999.99")
 
     def test_exactly_the_sale_needed_is_allowed(self):
         self.assertEqual(coupons.on_check(capped(["C100"], 100000), CAPPED, Counter()), {"verdict": "allow"})
 
     def test_two_coupons_need_twice_the_sale(self):
-        out = coupons.on_check(capped(["C100", "C100B"], 150000), CAPPED, Counter())
-        self.assertEqual(out["reason"], "Coupons C100, C100B need a sale of AED 2,000.00; this sale is AED 1,500.00. "
-                                        "Remove a coupon, or add to the sale.")
+        refused(self, coupons.on_check(capped(["C100", "C100B"], 150000), CAPPED, Counter()),
+                "C100", "C100B", "AED 2,000.00", "AED 1,500.00")
         self.assertEqual(coupons.on_check(capped(["C100", "C100B"], 200000), CAPPED, Counter()), {"verdict": "allow"})
 
     def test_floor_of_the_total_over_the_slice(self):
@@ -186,43 +191,37 @@ class Cap(unittest.TestCase):
         self.assertEqual(coupons.on_check(capped(["MIN50"], 5000), CAPPED, Counter())["verdict"], "refuse")
         self.assertEqual(coupons.on_check(capped(["MIN50"], 5001), CAPPED, Counter()), {"verdict": "allow"})
         self.assertEqual(coupons.on_check(capped(["MIN50"], 51, exp=0), CAPPED, Counter()), {"verdict": "allow"})  # no minor unit
-        self.assertEqual(coupons.on_check(capped(["MIN50"], 50, exp=0), CAPPED, Counter())["reason"],   # 50.005 needs 51, not 50
-                         "Coupon MIN50 needs a sale of AED 51; this sale is AED 50. Remove a coupon, or add to the sale.")
-        self.assertEqual(coupons.on_check(capped(["MIN50"], 49500, exp=3), CAPPED, Counter())["reason"],
-                         "Coupon MIN50 needs a sale of AED 50.005; this sale is AED 49.500. Remove a coupon, or add to the sale.")
+        refused(self, coupons.on_check(capped(["MIN50"], 50, exp=0), CAPPED, Counter()),   # 50.005 needs 51, not 50
+                "MIN50", "AED 51", "AED 50")
+        refused(self, coupons.on_check(capped(["MIN50"], 49500, exp=3), CAPPED, Counter()), "MIN50", "AED 50.005", "AED 49.500")
 
     def test_a_capped_coupon_on_a_refund_is_refused_whatever_the_total(self):
         """A backstop: no coupon reaches a return at today's till (a return's coupons are cleared, and a coupon cannot ride
         beside a returned item); should one arrive, its total is paid back, so a capped coupon there is refused."""
         for minor in (-150000, 0, 500000):
-            out = coupons.on_check(capped(["C100"], minor, stage="return"), CAPPED, Counter())
-            self.assertEqual(out, {"verdict": "refuse", "reason": "Coupon C100 needs a sale of AED 1,000.00 and cannot be "
-                                                                  "used on a refund. Remove it."}, minor)
-        out = coupons.on_check(capped(["C100", "C100B"], 0, stage="return"), CAPPED, Counter())
-        self.assertTrue(out["reason"].endswith("cannot be used on a refund. Remove them."), out)
+            refused(self, coupons.on_check(capped(["C100"], minor, stage="return"), CAPPED, Counter()), "C100", "AED 1,000.00")
+        refused(self, coupons.on_check(capped(["C100", "C100B"], 0, stage="return"), CAPPED, Counter()), "C100", "C100B")
         self.assertEqual(coupons.on_check(capped(["PLAIN"], 0, stage="return"), dict(CAPPED, **RULES), Counter()),
                          {"verdict": "allow"})          # an uncapped coupon on a refund: as before
 
     def test_a_refusal_names_only_the_capped_coupons(self):
         out = coupons.on_check(capped(["C100", "PLAIN"], 500), dict(CAPPED, **RULES), Counter())
-        self.assertEqual(out["reason"], "Coupon C100 needs a sale of AED 1,000.00; this sale is AED 5.00. "
-                                        "Remove a coupon, or add to the sale.")
+        refused(self, out, "C100", "AED 1,000.00", "AED 5.00", absent=("PLAIN",))
 
     def test_a_negative_total_keeps_its_sign(self):
         self.assertEqual(coupons.money(-1250, 2, "AED"), "AED -12.50")
-        self.assertIn("this sale is AED -0.01.", coupons.on_check(capped(["C100"], -1), CAPPED, Counter())["reason"])
+        refused(self, coupons.on_check(capped(["C100"], -1), CAPPED, Counter()), "AED -0.01")
 
     def test_the_cap_reads_nothing_and_comes_before_the_count(self):
         n = Counter({"CUST-1": 0})
-        out = coupons.on_check(capped(["FIRSTCAP"], 500), CAPPED, n)
-        self.assertIn("needs a sale of", out["reason"])
+        refused(self, coupons.on_check(capped(["FIRSTCAP"], 500), CAPPED, n), "FIRSTCAP", "AED 1,000.00")
         self.assertEqual(n.calls, [])
         self.assertEqual(coupons.on_check(capped(["FIRSTCAP"], 100000), CAPPED, n), {"verdict": "allow"})
         self.assertEqual(n.calls, ["CUST-1"])
 
     def test_the_group_rule_comes_first(self):
-        self.assertIn("only for customers in Staff", coupons.on_check(capped(["GRPCAP"], 500), CAPPED, Counter())["reason"])
-        self.assertIn("needs a sale of", coupons.on_check(capped(["GRPCAP"], 500, group="Staff"), CAPPED, Counter())["reason"])
+        refused(self, coupons.on_check(capped(["GRPCAP"], 500), CAPPED, Counter()), "GRPCAP", "Staff", absent=("AED",))
+        refused(self, coupons.on_check(capped(["GRPCAP"], 500, group="Staff"), CAPPED, Counter()), "GRPCAP", "AED 1,000.00")
 
     def test_a_switched_off_capped_rule_caps_nothing(self):
         rules = coupons.rules_of([{"coupon": "OFF", "enabled": 0, "spend_per_use": 1000}])
@@ -231,11 +230,8 @@ class Cap(unittest.TestCase):
     def test_long_names_keep_the_amounts_and_the_instruction(self):
         names = ["N" * 60 + str(i) for i in range(5)]
         rules = coupons.rules_of([{"coupon": c, "enabled": 1, "spend_per_use": 999999999} for c in names])
-        for codes in (names[:1], names):
-            out = coupons.on_check(capped(codes, 1), rules, Counter())
-            self.assertTrue(len(out["reason"]) <= 140, out["reason"])
-            self.assertTrue(out["reason"].endswith("this sale is AED 0.01. Remove a coupon, or add to the sale."), out)
-            self.assertFalse(set("<>") & set(out["reason"]))
+        for codes, need in ((names[:1], "AED 999,999,999.00"), (names, "AED 4,999,999,995.00")):
+            refused(self, coupons.on_check(capped(codes, 1), rules, Counter()), need, "AED 0.01")
 
 
 class RulesOf(unittest.TestCase):

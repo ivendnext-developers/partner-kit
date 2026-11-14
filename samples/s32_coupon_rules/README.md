@@ -17,13 +17,15 @@ ivn new acme_coupons --from s32
 What a partner usually changes:
 
 - **The rules:** `on_check` in `coupons.py`, and `rules_of`, which reads the retailer's rule records.
-- **The rule's fields:** the record type `PP CPN Rule` in `manifest.json`, one per coupon, named by it.
-- **The words the cashier reads:** the messages in `coupons.py`.
+- **The rule's fields:** the record type `PP CPN Rule` in `manifest.json`, one per coupon, named by it. Desk shows it as *Coupon rule* through the manifest's `translations` block.
+- **The words the cashier reads:** the messages in `coupons.py`. The tests check each refusal's facts (the coupon, the group, the amounts, and that it fits the till's 140 characters whole), not its sentence, so a new wording keeps them green.
 - **The app's id:** `IVN_LIBRARY_APP` in `app.json`.
 
 More: the [recipe](../../recipes/coupon_rules.md).
 
-**The customer sets:** a *PP CPN Rule* for each coupon to restrict, and the customer group a coupon is for.
+**The customer sets:** a *Coupon rule* (`PP CPN Rule`) for each coupon to restrict, and the customer group a coupon is for.
+
+The app's feed (the Registered Application *PP CPN Rules*, shown as *Coupon rules feed*) is its door to the site: it gives the app its own user and key, and the app reads no events from it yet, so a connection test that shows *Last read: never* is expected.
 
 ## Run it
 
@@ -39,6 +41,12 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.2.2
+
+- Desk shows the rules as *Coupon rule* (and the feed as *Coupon rules feed*) through the manifest's `translations` block. No name changed: installed rules keep theirs.
+- The tests check each refusal's facts, not its sentence: a partner who rewords what the cashier reads keeps them green.
+- The README says the feed reads no events yet, so *Last read: never* on a connection test is expected.
 
 ### 1.2.1
 
