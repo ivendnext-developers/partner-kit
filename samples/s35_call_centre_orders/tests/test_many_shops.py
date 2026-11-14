@@ -89,9 +89,12 @@ class ManyShops(unittest.TestCase):
         self.assertEqual(self.doors, {})
 
     def test_a_shop_that_refuses_the_apps_user_is_told_so_in_words(self):
-        self.refuse = 403
+        self.refuse = 401                       # the key: Connect again sends a new one
         code, out = self.press("route-a", A)
         self.assertEqual((code, out["message"]["body"]), (200, app.REFUSED + app.CONNECT_AGAIN))
+        self.doors, self.refuse = {}, 403       # a right: the app's update brings it, a new key would not
+        code, out = self.press("route-a", A)
+        self.assertEqual((code, out["message"]["body"]), (200, app.NO_RIGHT))
 
     def test_a_shop_that_does_not_answer_is_a_502_so_the_user_checks_the_record(self):
         self.refuse = 500
