@@ -1,0 +1,23 @@
+{
+ "app": "acme_zqx",
+ "prefix": "ACME ZQX",
+ "mounts": {
+  "exr": {
+   "sample": "s62_liquor_excise_returns",
+   "title": "Liquor excise returns",
+   "handler": "exr/service/app.lambda_handler",
+   "prefix": "ACME ZQX",
+   "prefix_setting": "EXR_PREFIX",
+   "aliases": {},
+   "strip": false,
+   "points": {
+    "/exr/work": {
+     "kind": "desk_action",
+     "key": "work",
+     "label": "Liquor excise returns work out"
+    }
+   }
+  }
+ },
+ "schedules": {}
+}
