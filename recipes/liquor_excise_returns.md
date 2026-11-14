@@ -53,6 +53,7 @@ The record type `PP EXR Return`, numbered `format:EXR-R-{#####}`, tracked: `comp
 3. **Add the button** (`desk_actions`, `send_fields` `name`, `conditions` on `workflow_state` your Draft) and its service (`extension_subscriptions`, point `desk_action`). The service reads the return, the duty classes, the items with a class, and the store's ledger with the list API's own sums (`fields` `["item_code","voucher_type","sum(actual_qty) as qty"]` and `group_by`), never a row per sale; then writes the lines, carrying the return's `modified` as read.
 4. **Add the worksheet** (`print_formats`, Jinja, placing the letter head itself, grouping the lines with `groupby("duty_class")`) and a `documentation` property setter per record type.
 5. **Check it before it reaches a retailer:** `python3 tools/check/check.py samples/s62_liquor_excise_returns`.
+6. **Plain names in Desk:** the manifest's `translations` block, language `en`, gives each record type, workflow state and action, and report a plain name (*Excise return*), so Desk never shows the app's code. Your prefix stays the record types' real names.
 
 ## What the retailer does
 

@@ -108,7 +108,8 @@ class ManifestTest(unittest.TestCase):
         (en,) = [t for t in self.m["translations"] if t["language"] == "en"]
         words = en["words"]
         names = {d["name"] for d in self.m["doctypes"]}
-        for key in ("print_formats", "reports", "registered_applications", "sale_attributes"):
+        for key in ("print_formats", "reports", "registered_applications", "sale_attributes", "workspaces",
+                    "number_cards", "notifications"):
             names |= {x["name"] for x in self.m.get(key, [])}
         for wf in self.m.get("workflows", []):
             names |= {s["state"] for s in wf["states"]} | {t["action"] for t in wf["transitions"]}
