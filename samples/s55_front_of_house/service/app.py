@@ -472,7 +472,8 @@ class Service:
         w = door.update(foh.dt("Reservation"), name, {"status": status, "app_note": note[:500]})
         floor = self._floor(door, r.get("store"), row, w)
         return foh.message(APP_NAME, f"{name} is {'a no-show' if status == 'No-show' else 'cancelled'}"
-                           + (f"; its table is free again." if r.get("place") else ".") + (f" {note}" if note else "")
+                           + ("; its table is free again." if r.get("place") and r.get("status") in foh.HOLDING else ".")
+                           + (f" {note}" if note else "")
                            + floor, "warning" if floor else "success")
 
     def change(self, door, name: str) -> dict:
