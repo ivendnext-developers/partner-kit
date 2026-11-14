@@ -22,7 +22,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/price_checker.md).
 
-**The customer sets:** one **PP PRC Kiosk** record per screen, with the store's till profile. On the tablet, open the app's address with `#shop=` and the retailer's site, then `&kiosk=` and the record's name, in full screen. A barcode scanner connected as a keyboard scans into the page. **It reads an item's own barcode:** a pre-packed label that carries the price or the weight (a scale's label for a meat pack) is not decoded, and the kiosk says it could not find the item.
+**The customer sets:** one **PP PRC Kiosk** record per screen, with the store's till profile. On the tablet, open the app's address with `#shop=` and the retailer's site address, the one the site was set up under (copied from the browser with `https://` is fine; a domain of the retailer's own that points at the site is not known to the service), then `&kiosk=` and the record's name, in full screen. A barcode scanner connected as a keyboard scans into the page. **It reads an item's own barcode:** a pre-packed label that carries the price or the weight (a scale's label for a meat pack) is not decoded, and the kiosk says it could not find the item.
 
 ## Run it
 
@@ -32,6 +32,10 @@ ivn try
 ```
 
 ## Versions
+
+### 1.1.2
+
+- The kiosk finds its store when the site's address is copied from the browser, with `https://` and a closing `/`; before, it answered *This kiosk is not set up*. Manifest 0.2.2: the Kiosk record says which address to use: the one the site was set up under, not a domain of the retailer's own.
 
 ### 1.1.1
 

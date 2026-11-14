@@ -60,6 +60,18 @@ STATIC = {"/": ("kiosk.html", "text/html; charset=utf-8"), "/kiosk.js": ("kiosk.
           "/kiosk.css": ("kiosk.css", "text/css; charset=utf-8")}
 
 
+def _bare(named):
+    """The site's name as the kiosk's address gives it, also when copied from a browser (https://…/): the shop is still
+    found by that name only, and called back at the address it connected with."""
+    if not isinstance(named, str):
+        return named
+    s = named.strip()
+    for scheme in ("https://", "http://"):
+        if s.lower().startswith(scheme):
+            s = s[len(scheme):]
+    return s.split("/", 1)[0]
+
+
 class ShopUnreadable(Exception):
     pass
 
@@ -147,7 +159,7 @@ class Service:
         or one that has not handed over its integration user's key yet."""
         if self.one:
             return "-", self.one
-        site = shops.site_of(named)
+        site = shops.site_of(_bare(named))
         record = self.store.get(site) if site else None
         users = sorted(k for k in (record or {}).get("secrets") or {} if k.startswith("user:"))
         return site or "", ({"url": record["url"], "key": record["secrets"][users[0]]} if record and users else None)
