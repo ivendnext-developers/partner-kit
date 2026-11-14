@@ -58,6 +58,8 @@ NOT_SET_UP = (f"{APP_NAME} is not set up yet: no key from this shop has reached 
               "app's user has its key and, if the site could not reach the app, or a key was lost or changed, to press Connect again on the app.")
 REFUSED = f"{APP_NAME} may not read or change this order. Ask your manager to check the app's user, its role and its API key."
 CONNECT_AGAIN = " Then press Connect again on the app."    # many shops: a new key reaches the service only that way
+NO_RIGHT = (f"{APP_NAME} may not read everything this order's save reads: the app's role is missing a read right. Ask "
+            "your manager to update the app (App library, Update), then press Send to store again.")
 NO_TERRITORY = "This order has no territory. Choose the customer's territory on the order, save it, and press Send to store again."
 SUBMITTED = ("This order is already submitted, so it was not changed. To send it to another store, cancel and amend it, "
              "then press Send to store on the draft.")
@@ -233,8 +235,10 @@ class Service:
         try:
             return 200, self.route_order(door, name)
         except TenantError as e:
-            if e.code in (401, 403):    # the shop refused the app's user: say so
+            if e.code == 401:           # the shop did not take the app's key: say so
                 return 200, _warning(REFUSED + (CONNECT_AGAIN if self.app else ""))
+            if e.code == 403:           # the key is good, a right is missing: the app's update brings its rights
+                return 200, _warning(NO_RIGHT)
             if e.code == 404:
                 return 200, _warning(GONE)
             # the shop tells the user "did not answer in time. Check the record before you try again": true, because
