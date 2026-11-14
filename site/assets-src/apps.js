@@ -185,7 +185,7 @@
     changes: "What installing it changes", wording: "Show the exact wording",
     testAgain: "Test again", tryAgain: "Try again", pay: "Pay with your card", plan: "Per month",
     updates: "What the update changes", choosePlan: "Choose a plan first.", noCharge: "Confirm in Stripe: no charge",
-    starting: "Starting on {site}\u2026", wait: "Keep this page open: this takes up to about 4 minutes.",
+    starting: "Starting on {site}\u2026", wait: "Keep this page open: this takes up to about 4 minutes, and a few more the first time an app goes to a site.",   // W227 F-GR-10
     openDesk: "Open Desk", openTill: "Open the till", appAddress: "Your app's address: "
   };
   // the Try button names its site before the press; with none on the list, it opens the list to add one
