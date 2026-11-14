@@ -1,6 +1,6 @@
 # S38 — Expiry markdown (`pp_exm`): mark down stock as its expiry date nears
 
-A grocery, bakery or pharmacy marks down stock whose expiry date is near, so it sells before it is thrown away. The retailer sets its markdown steps once on its item groups: 25% off from 5 days before expiry, 50% off from 2 days, say. Each morning a manager ticks the lots in the Batch list and presses **Mark down**. Every ticked lot inside a step gets its own price on the retailer's selling price list, valid until its expiry date. The till already rings a lot at its own price, so the cashier does nothing new.
+A grocery, bakery or pharmacy marks down stock whose expiry date is near, so it sells before it is thrown away. The retailer sets its markdown steps once on its item groups: 25% off from 5 days before expiry, 50% off from 2 days, say. Each morning a manager ticks the lots in the Batch list and presses **Mark down**. Every ticked lot inside a step gets its own price on the retailer's selling price list, valid until its expiry date, and the same price on any other selling price list (a member list, say) whose own price is higher, so a member never pays more for a marked-down lot than a walk-in. The till already rings a lot at its own price, so the cashier does nothing new.
 
 ![What the install will change, read before you agree](screenshots/01_install.png)
 
@@ -42,6 +42,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.1.2
+
+- A member pays the marked-down price too: the lot's price also goes on each other selling price list in the same currency whose own price for the item is higher, and comes off it with the markdown. A list already priced lower keeps its price. Manifest 0.2.2.
 
 ### 1.1.1
 

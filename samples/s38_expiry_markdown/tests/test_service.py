@@ -78,7 +78,7 @@ class FakeTenant:
     with the shop's ``modified`` check, deleted)."""
 
     def __init__(self, settings=None, refuse=None, edit_before_update=0, duplicate_on_create=0, number_format="#,###.##",
-                 price_list=None, clock=None):
+                 price_list=None, clock=None, lists=None):
         # None: the shop's usual settings; False: no record Default at all
         self.settings = {"price_list": PL, "hours_from_utc": 3} if settings is None else None if settings is False else settings
         self.lots, self.items, self.groups = lots(), copy.deepcopy(ITEMS), groups()
@@ -86,9 +86,10 @@ class FakeTenant:
                                         "supplier": None, "valid_from": None, "valid_upto": None, "note": None,
                                         "packing_unit": 0}, **p) for p in prices()}
         self.price_list = price_list if price_list is not None else {"selling": 1, "enabled": 1, "currency": "AED"}
+        self.lists = lists or {}            # the shop's other price lists: {name: {selling, enabled, currency}}
         self.number_format, self.refuse, self.clock = number_format, refuse, clock
         self.edit_before_update, self.duplicate_on_create = edit_before_update, duplicate_on_create
-        self.writes, self.n = [], 0
+        self.writes, self.n, self.doctypes = [], 0, set()
 
     def _refused(self):
         if self.refuse:
@@ -119,6 +120,11 @@ class FakeTenant:
             return [dict(self.items[n], name=n) for n in filters[0][2] if n in self.items]
         if doctype == "Item Group":
             return copy.deepcopy(self.groups)
+        if doctype == "Price List":
+            out = [dict(v, name=k) for k, v in dict(self.lists, **{PL: self.price_list or {}}).items()]
+            for f, op, v in filters:
+                out = [r for r in out if (r.get(f) == v) == (op == "=")]
+            return out
         if doctype == "Item Price":
             out = list(self.prices.values())
             for f, op, v in filters:
@@ -142,6 +148,7 @@ class FakeTenant:
         name = f"new-{self.n}"
         self.prices[name] = dict(body, name=name, modified=f"2026-10-22 06:00:{self.n:02d}.000001")
         self.writes.append(("create", name, copy.deepcopy(body)))
+        self.doctypes.add(doctype)
         return copy.deepcopy(self.prices[name])
 
     def update(self, doctype, name, body):
@@ -153,6 +160,7 @@ class FakeTenant:
             raise app.TenantError("PUT -> HTTP 417", 417, "TimestampMismatchError")
         self.prices[name].update({k: v for k, v in body.items() if k != "modified"})
         self.writes.append(("update", name, copy.deepcopy(body)))
+        self.doctypes.add(doctype)
         return copy.deepcopy(self.prices[name])
 
     def delete(self, doctype, name):
@@ -161,6 +169,7 @@ class FakeTenant:
             raise app.TenantError("DELETE -> HTTP 404", 404)
         del self.prices[name]
         self.writes.append(("delete", name, None))
+        self.doctypes.add(doctype)
 
     def lot_rows(self, lot):
         return sorted((r for r in self.prices.values() if r.get("batch_no") == lot), key=lambda r: r["uom"])
@@ -388,6 +397,113 @@ class ServiceTest(unittest.TestCase):
     def test_every_answer_fits_the_answers_limit(self):
         long = {k: 10 ** 6 for k, *_ in markdown.WORDS}
         self.assertLessEqual(len(markdown.answer(long, 1, 100, 99)["message"]["body"]), 280)
+
+
+MEMBER, STAFF, CLUB, EURO = "Member Prices", "Staff Prices", "Club Prices", "Euro Prices"
+
+
+def other_lists():
+    """The shop's other price lists: a member list (milk 3.49), a staff list (milk 2.50, already below any markdown), a
+    club list with no milk price, a list in another currency, a buying list and a list switched off."""
+    on = {"selling": 1, "enabled": 1, "currency": "AED"}
+    return {MEMBER: on, STAFF: on, CLUB: on, EURO: dict(on, currency="EUR"),
+            "Buying": dict(on, selling=0), "Old Members": dict(on, enabled=0)}
+
+
+def rings(tenant, price_list, lot, uom="Nos"):
+    """What the till charges for one ``lot`` of MILK to a customer on ``price_list``, read the way the shop reads it
+    (``get_item_price``: the list's rows for the item with no lot or this lot, valid today, for no particular customer,
+    newest ``valid_from`` first and the lot before the lot-less row), and the till's fallback to the store's list when
+    the customer's list has no price (``apply_price_list_fallback``)."""
+    def first(pl):
+        rows = [r for r in tenant.prices.values() if r["item_code"] == "MILK" and r["price_list"] == pl
+                and r.get("uom") == uom and (r.get("batch_no") or "") in ("", lot) and not r.get("customer")
+                and not r.get("supplier") and (r.get("valid_from") or "2000-01-01") <= TODAY.isoformat()
+                <= (r.get("valid_upto") or "2500-12-31")]
+        rows.sort(key=lambda r: (r.get("valid_from") or "", r.get("batch_no") or ""), reverse=True)
+        return rows[0]["price_list_rate"] if rows else 0
+    return first(price_list) or first(PL)
+
+
+class OtherLists(unittest.TestCase):
+    """A member, priced from the member list, paid 3.49 for a lot of milk marked down to 2.99 on the
+    store's list, while a walk-in paid 2.99. The lot's price now goes on every other selling list in the currency whose
+    own price is higher, so no customer pays more for a marked-down lot than the markdown."""
+
+    use, press = ServiceTest.use, ServiceTest.press
+
+    def setUp(self):
+        self.use(FakeTenant(lists=other_lists()))
+        for name, pl, rate in (("ip-milk-member", MEMBER, 3.49), ("ip-milk-staff", STAFF, 2.50),
+                               ("ip-milk-euro", EURO, 4.20), ("ip-milk-buying", "Buying", 1.80),
+                               ("ip-milk-old", "Old Members", 3.29)):
+            self.tenant.prices[name] = dict(self.tenant.prices["ip-milk"], name=name, price_list=pl, price_list_rate=rate)
+
+    def lists_of(self, lot):
+        return {(r["price_list"], r["uom"]): r["price_list_rate"] for r in self.tenant.lot_rows(lot)}
+
+    def test_m1_a_member_pays_the_markdown_not_the_member_price(self):
+        self.assertEqual((rings(self.tenant, PL, "MILK-L1"), rings(self.tenant, MEMBER, "MILK-L1")), (3.99, 3.49))
+        code, out = self.press("MILK-L1")
+        self.assertEqual(out["message"]["body"], "Marked down 1 lot.")
+        self.assertEqual(self.lists_of("MILK-L1"), {(PL, "Nos"): 2.99, (PL, "Crate"): 33.75, (MEMBER, "Nos"): 2.99})
+        self.assertEqual({pl: rings(self.tenant, pl, "MILK-L1") for pl in (PL, MEMBER, STAFF, CLUB)},
+                         {PL: 2.99, MEMBER: 2.99, STAFF: 2.50, CLUB: 2.99})
+        self.assertEqual(rings(self.tenant, MEMBER, "MILK-L3"), 3.49)       # another lot of the same milk: the member price
+        member = self.tenant.lot_rows("MILK-L1")[-1]
+        self.assertEqual((member["batch_no"], member["valid_from"], member["valid_upto"], member["note"]),
+                         ("MILK-L1", TODAY.isoformat(), day(4), "PP EXM: 25% off until it expires"))
+
+    def test_m2_a_list_with_no_price_for_the_item_or_another_currency_buying_or_switched_off_gets_nothing(self):
+        self.press("MILK-L1")
+        written = {r["price_list"] for r in self.tenant.lot_rows("MILK-L1")}
+        self.assertEqual(written, {PL, MEMBER})          # not the club list (no milk price), euro, buying or switched off
+        self.assertEqual(rings(self.tenant, CLUB, "MILK-L1"), 2.99)   # the till takes the store's list, lot and all
+
+    def test_m3_a_list_whose_own_price_is_already_lower_keeps_it(self):
+        self.press("MILK-L1")
+        self.assertNotIn(STAFF, {r["price_list"] for r in self.tenant.lot_rows("MILK-L1")})
+        self.assertEqual(rings(self.tenant, STAFF, "MILK-L1"), 2.50)
+
+    def test_m4_the_last_step_reaches_every_list_it_is_lower_on_and_a_second_press_writes_nothing(self):
+        self.press("MILK-L1")
+        self.tenant.lots["MILK-L1"]["expiry_date"] = day(2)                 # 50%: 3.99 -> 1.99
+        self.press("MILK-L1")
+        self.assertEqual({pl: rings(self.tenant, pl, "MILK-L1") for pl in (PL, MEMBER, STAFF, CLUB)},
+                         {PL: 1.99, MEMBER: 1.99, STAFF: 1.99, CLUB: 1.99})
+        self.tenant.writes.clear()
+        code, out = self.press("MILK-L1")
+        self.assertEqual((self.tenant.writes, out["message"]["body"]), ([], "1 lot already marked down."))
+
+    def test_m5_a_member_price_lowered_below_the_markdown_takes_the_apps_row_off_that_list(self):
+        self.press("MILK-L1")
+        self.tenant.prices["ip-milk-member"]["price_list_rate"] = 2.89
+        self.press("MILK-L1")
+        self.assertNotIn(MEMBER, {r["price_list"] for r in self.tenant.lot_rows("MILK-L1")})
+        self.assertEqual((rings(self.tenant, MEMBER, "MILK-L1"), rings(self.tenant, PL, "MILK-L1")), (2.89, 2.99))
+
+    def test_m6_a_lot_out_of_stock_has_the_markdown_taken_off_every_list(self):
+        self.press("MILK-L1")
+        self.tenant.lots["MILK-L1"]["batch_qty"] = 0
+        code, out = self.press("MILK-L1")
+        self.assertEqual((self.tenant.lot_rows("MILK-L1"), out["message"]["body"]), ([], "Took the markdown off 1 lot."))
+        self.assertEqual(rings(self.tenant, MEMBER, "MILK-L1"), 3.49)
+
+    def test_m7_a_lot_price_the_shop_typed_on_the_member_list_is_left_as_it_is(self):
+        self.tenant.prices["ip-own-member"] = dict(self.tenant.prices["ip-milk-member"], name="ip-own-member",
+                                                   batch_no="MILK-L1", price_list_rate=3.25, note="manager's own")
+        self.press("MILK-L1")
+        self.assertEqual(self.lists_of("MILK-L1"), {(PL, "Nos"): 2.99, (PL, "Crate"): 33.75, (MEMBER, "Nos"): 3.25})
+        self.assertNotIn("ip-own-member", [w[1] for w in self.tenant.writes])
+
+    def test_m8_a_press_writes_lot_prices_only_so_a_sale_and_its_return_are_untouched(self):
+        """A return pays back the price its sale booked (the shop's return copies the sale's own line), so a markdown
+        taken off after the sale changes nothing about it: the press writes Item Price rows of the lot and nothing else."""
+        self.press("MILK-L1")
+        self.tenant.lots["MILK-L1"]["batch_qty"] = 0
+        self.press("MILK-L1")
+        self.assertEqual(self.tenant.doctypes, {"Item Price"})
+        self.assertTrue(all(w[0] == "delete" or w[2].get("batch_no") in (None, "MILK-L1") for w in self.tenant.writes))
 
 
 class OverHttp(unittest.TestCase):
