@@ -29,7 +29,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/expiry_recall.md).
 
-**The customer sets:** the settings record **Default** (the quarantine stores, each ticked *Is Rejected Warehouse* on its Warehouse, the ERP connector's own users, the minimum shelf life and the clocks) and the role *PP RCL Recall Officer* for whoever runs recalls. The customers supplied are health data, so give the role with care.
+**The customer sets:** the settings record **Default** (the quarantine stores, each ticked *Is Rejected Warehouse* on its Warehouse, the ERP connector's own users, the minimum shelf life and the clocks) and the role *PP RCL Recall Officer* for whoever runs recalls: the role shows **Block these batches**, which the site's administrator also sees, so the first recall needs no grant. The customers supplied are health data, so give the role with care.
 
 ## Run it
 
@@ -45,6 +45,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.1.2
+
+- Manifest 0.2.2. A goods receipt with a short-dated lot and no supplier's number shows the shelf-life reason, with the missing number counted after it (*+1 more*), so the check's title and its reason agree. **Block these batches** also shows for the site's administrator, as the role *PP RCL Recall Officer* is empty after the install.
 
 ### 1.1.1
 
