@@ -44,10 +44,11 @@ class ManifestTest(unittest.TestCase):
                           "down_answer" in dis), ("Stock Entry", False, ["pp_rcl_erp_check"], False))
         self.assertNotIn("customer", rec["settings"]["send_fields"] + dis["settings"]["send_fields"])
 
-    def test_the_recall_button_is_the_recall_officers_alone(self):
+    def test_the_recall_button_is_the_recall_officers_and_the_administrators(self):
+        """The install makes the Recall Officer role empty: the administrator sees the button at the first recall too."""
         a = {d["label"]: d for d in self.m["desk_actions"]}
         self.assertEqual((a["Block these batches"]["record_type"], a["Block these batches"]["roles"]),
-                         ("PP RCL Recall Notice", ["PP RCL Recall Officer"]))
+                         ("PP RCL Recall Notice", ["PP RCL Recall Officer", "System Manager"]))
         self.assertLessEqual(len(a["Block these batches"]["confirm_text"]), 140)
 
     def test_customers_supplied_are_read_by_the_recall_officer_and_system_manager_only(self):

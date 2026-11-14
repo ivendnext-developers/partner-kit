@@ -310,7 +310,7 @@ def stock_qty_of(line: dict) -> float:
 
 def judge_receipt(fields: dict, items: dict, batches: dict, bundle_lots: dict, settings: dict,
                   today: datetime.date, erp: bool = False) -> list[str]:
-    """The receipt's problems, in line order, as short sentences (empty: it may submit). ``items``: item → its
+    """The receipt's problems, in line order, the missing supplier's note last, as short sentences (empty: it may submit). ``items``: item → its
     ``has_expiry_date``, ``shelf_life_in_days`` and the app's two Item fields; ``batches``: lot → ``expiry_date``,
     ``manufacturing_date``; ``bundle_lots``: bundle → {its lot: quantity}. Days left are counted from the later of the
     shop's ``today`` and the posting date, so a backdated receipt never lets an expired or short-dated lot in (Good
@@ -318,10 +318,11 @@ def judge_receipt(fields: dict, items: dict, batches: dict, bundle_lots: dict, s
     out = []
     posting = date_of(fields.get("posting_date"))
     since = max(today, posting) if posting else today
+    note = []                                              # last, so the check's title and the reason shown agree
     if settings.get("supplier_note_required") and not str(fields.get("supplier_delivery_note") or "").strip():
-        out.append("Type the supplier's invoice or credit-note number in Supplier Delivery Note.")
+        note.append("Type the supplier's invoice or credit-note number in Supplier Delivery Note.")
     if fields.get("is_return"):
-        return out
+        return note
     floor = whole(settings.get("min_shelf_days")) or 0
     pack_asked = settings.get("pack_expiry_required", 0) not in (0, "0", False)
     later = []
@@ -381,7 +382,7 @@ def judge_receipt(fields: dict, items: dict, batches: dict, bundle_lots: dict, s
                 continue
             out.append(f"Row {i}: lot {lot} has {left} days left, under {least}. Tick Letter of Undertaking with its "
                        f"days, or refuse the goods.")
-    return out + later
+    return out + later + note
 
 
 def is_erp(user, settings: dict) -> bool:

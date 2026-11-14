@@ -139,6 +139,13 @@ class Receipt(unittest.TestCase):
         self.shop.settings["supplier_note_required"] = 0
         self.assertEqual(self.check(receipt([{"batch_no": "PARA-B"}], supplier_delivery_note="")), {"verdict": "allow"})
 
+    def test_c14b_a_short_dated_lot_comes_before_the_missing_suppliers_number(self):
+        """The check's title is *Shelf life at receipt*: the reason shown is the shelf-life one, the note counted after."""
+        out = self.check(receipt([{"batch_no": "PARA-A"}], supplier_delivery_note=""))
+        self.assertTrue(out["reason"].startswith("Row 1: lot PARA-A has 30 days left"), out["reason"])
+        self.assertTrue(out["reason"].endswith("(+1 more)"), out["reason"])
+        self.assertLessEqual(len(out["reason"]), 140)
+
     def test_c15_a_return_is_not_judged_for_shelf_life(self):
         self.assertEqual(self.check(receipt([{"batch_no": "TRAM-X", "item_code": "TRAM"}], is_return=1)),
                          {"verdict": "allow"})

@@ -77,6 +77,8 @@ CANARIES = [
      CK + "Receipt.test_c16_the_erps_own_receipt_is_flagged_never_refused"),
     ("the supplier's number when the settings ask", C, '    if settings.get("supplier_note_required") and not', "    if False and not",
      CK + "Receipt.test_c14_the_suppliers_number_is_required_when_the_settings_say_so"),
+    ("the supplier's number comes after the shelf life", C, "    return out + later + note\n", "    return note + out + later\n",
+     CK + "Receipt.test_c14b_a_short_dated_lot_comes_before_the_missing_suppliers_number"),
     # disposal
     ("a recalled lot moved to a store is left to the till's refusal", C,
      '        if line.get("t_warehouse") and any((batches.get(lot) or {}).get("disabled") for lot in lots):',
