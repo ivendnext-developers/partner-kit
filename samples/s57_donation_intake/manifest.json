@@ -3,7 +3,7 @@
  "app": "pp_don",
  "prefix": "PP DON",
  "title": "Donation intake with a donor receipt",
- "version": "0.1.2",
+ "version": "0.1.3",
  "publisher": "Partner Programme sample",
  "description": "A charity or thrift store's record of donated goods taken in, kept in Desk. Each PP DON Donation holds the donor (one of the retailer's customers, whose name and e-mail it shows, or a donor typed in, or no one named), the donor's address for the receipt, the store that took the goods in and the day, and the goods: each kind, what it is, how many (items, bags or boxes) and its condition. A workflow moves it Received, then Give receipt to Receipt given, or Cancel to Cancelled; once a donation is Receipt given or Cancelled, a save rule stops its donor, store, day and goods from changing. The receipt, the report and the retailer's own e-mail read the donation's step, which Duplicate never copies. It prints as the donor receipt under the retailer's own letter head, which states no value for the goods; Print opens it by default. The report Donations lists every donation not cancelled, newest first. A field on Stock Entry, Donation, names the donation whose goods a Material Receipt takes into stock (the Stock Entry list filters by it); a customer's donations show under the customer. The lock is on from the install. The app moves no money and changes no stock, and calls nothing outside: no service, no outside address.",
  "allowed_urls": [],
@@ -346,6 +346,22 @@
    "property": "default_print_format",
    "property_type": "Data",
    "value": "PP DON Donor receipt"
+  }
+ ],
+ "translations": [
+  {
+   "language": "en",
+   "words": {
+    "PP DON Donation": "Donation intake",
+    "PP DON Goods": "Donated goods",
+    "PP DON Donor receipt": "Donor receipt",
+    "PP DON Donations": "Donation intakes",
+    "PP DON Received": "Received",
+    "PP DON Receipt given": "Receipt given",
+    "PP DON Cancelled": "Cancelled",
+    "PP DON Give receipt": "Give receipt",
+    "PP DON Cancel": "Cancel"
+   }
   }
  ]
 }

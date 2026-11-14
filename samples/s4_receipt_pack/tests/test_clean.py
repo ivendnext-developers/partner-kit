@@ -213,7 +213,7 @@ class Clean(unittest.TestCase):
 
 class Manifest(unittest.TestCase):
     def test_the_package_adds_one_field_that_copies_the_companys_tax_id(self):
-        self.assertEqual(MANIFEST["version"], "0.1.2")
+        self.assertEqual(MANIFEST["version"], "0.1.3")
         (f,) = MANIFEST["custom_fields"]
         self.assertEqual((f["dt"], f["fieldname"], f["fetch_from"]), ("POS Invoice", "pp_rcp_company_tax_id", "company.tax_id"))
         self.assertEqual(validate.validate(MANIFEST), [])

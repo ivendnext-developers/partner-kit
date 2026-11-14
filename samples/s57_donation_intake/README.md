@@ -39,6 +39,10 @@ ivn try
 
 ## Versions
 
+### 0.1.3
+
+- Desk shows plain names (Donation intake, Donated goods, Give receipt, Donor receipt) through the manifest's `translations` block, so a search for *donation* finds the record. The stored names are unchanged: an installed site keeps its records.
+
 ### 0.1.2
 
 - The donor receipt says *Received at* with the store's own name (a read-only *Store name* field), not the warehouse's record name with the company suffix. A receipt saved before the update prints the old name until it is saved again.

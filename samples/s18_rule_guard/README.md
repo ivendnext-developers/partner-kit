@@ -40,6 +40,10 @@ ivn try
 
 ## Versions
 
+### 1.2.1
+
+- Desk shows plain names (Members-only and ID rule) through the manifest's `translations` block, so a search for *members-only* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.3.1.
+
 ### 1.2.0
 
 - The set-up words say the install switches the feed on and gives the role its reads (POS build `2.1.0.691` or later). The app does what it did.

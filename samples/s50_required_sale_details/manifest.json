@@ -3,7 +3,7 @@
  "app": "pp_rsd",
  "prefix": "PP RSD",
  "title": "Required sale details",
- "version": "0.2.0",
+ "version": "0.2.1",
  "publisher": "Partner Programme sample",
  "description": "Sale details a customer group must give before paying: an account customer's purchase order number, an insured patient's policy number. A check before payment: when the cashier presses Pay, the retailer's server sends its priced basket with the customer's group, the till's POS Profile and the sale's details as filled, and the service refuses the sale, in the rule's words, while a detail the group's rule needs is empty; the cashier fills it under the sale's details and presses Pay again. One record of PP RSD Rule per customer group: the sale details needed (a table of Sale Attribute) and the POS Profiles it holds on (none: every till); a group with no rule takes the rule of the nearest group above it, and a group's own rule replaces the rule above it. The store's walk-in customer is in a group too. Refunds are not judged. The service reads the rules and the customer group tree with the app's integration user and writes nothing. The install makes the role PP RSD Integration; the install gives it to the app's own user and, from role_rights, read on Customer Group. The check is on from the install. When the service is down the sale goes on and is flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
@@ -140,5 +140,16 @@
  ],
  "role_rights": [
   {"doctype": "Customer Group", "role": "PP RSD Integration", "rights": ["read"]}
+ ],
+ "translations": [
+  {
+   "language": "en",
+   "words": {
+    "PP RSD Rule": "Required sale details rule",
+    "PP RSD Rule Detail": "Required sale detail",
+    "PP RSD Rule Profile": "Required sale details till",
+    "PP RSD Rules feed": "Required sale details feed"
+   }
+  }
  ]
 }

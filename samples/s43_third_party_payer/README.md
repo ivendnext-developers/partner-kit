@@ -52,6 +52,10 @@ ivn try
 
 ## Versions
 
+### 0.5.2
+
+- Desk shows plain names (Payer, Payer plan, Claim, Claim batch, Remittance) through the manifest's `translations` block, so a search for *claim* finds the record. The stored names are unchanged: an installed site keeps its records.
+
 ### 0.5.1
 
 - **Make the claims file** also attaches the file to its claims batch as a private file named after the batch (`<batch>.csv`), so the claims clerk downloads it from the batch's attachments instead of copying it out of the field. The field keeps the same text. A site whose allowed file types leave out csv still gets the batch, and the press says to copy the file from the field.

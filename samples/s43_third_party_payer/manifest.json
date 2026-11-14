@@ -3,7 +3,7 @@
  "app": "pp_icp",
  "prefix": "PP ICP",
  "title": "Third-party payer",
- "version": "0.5.1",
+ "version": "0.5.2",
  "publisher": "Partner Programme sample",
  "description": "A third party that pays part of a sale: an insurer, a company paying for its staff, an optical plan. Its payers, plans, formularies and members are records; it answers the till's Payer button line by line, makes a claim from each sale booked on a payer, sends claims as a file, follows each to payment, and bills a rejected claim back to the customer. Rebuilt from the co-pay rules of an iVend Retail pharmacy add-on.",
  "allowed_urls": [
@@ -1427,5 +1427,29 @@
   {"doctype": "Item Price", "role": "PP ICP Integration", "rights": ["read"]},
   {"doctype": "Price List", "role": "PP ICP Integration", "rights": ["read"]},
   {"doctype": "Customer", "role": "PP ICP Integration", "rights": ["read"]}
+ ],
+ "translations": [
+  {
+   "language": "en",
+   "words": {
+    "PP ICP Payer": "Payer",
+    "PP ICP Formulary": "Formulary",
+    "PP ICP Formulary Item": "Formulary item",
+    "PP ICP Plan": "Payer plan",
+    "PP ICP Member": "Plan member",
+    "PP ICP Claim": "Claim",
+    "PP ICP Claim Line": "Claim line",
+    "PP ICP Claim Batch": "Claim batch",
+    "PP ICP Remittance": "Remittance",
+    "PP ICP Remittance Line": "Remittance line",
+    "PP ICP Claims": "Claims",
+    "PP ICP Rejected and short-paid claims": "Rejected and short-paid claims",
+    "PP ICP Incomplete claims": "Incomplete claims",
+    "PP ICP Remittances": "Remittances",
+    "PP ICP Payer share by month": "Payer share by month",
+    "PP ICP Claims by status": "Claims by status",
+    "PP ICP Claims Clerk": "Claims clerk"
+   }
+  }
  ]
 }

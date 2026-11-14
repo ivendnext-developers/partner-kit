@@ -3,7 +3,7 @@
  "app": "pp_wrc",
  "prefix": "PP WRC",
  "title": "Warranty terms",
- "version": "0.3.3",
+ "version": "0.3.4",
  "publisher": "Partner Programme sample",
  "description": "The partner's warranty terms, moved inside your store's iVendNext: an item's own term wins over its item group's. The till key 'Warranty' reads them. Every few minutes the app reads the sales booked since its last look and adds one Comment to each sale with a covered item, giving its warranty.",
  "doctypes": [
@@ -149,5 +149,15 @@
   {"doctype": "Serial and Batch Bundle", "role": "PP WRC Integration", "rights": ["read"]},
   {"doctype": "Item", "role": "PP WRC Integration", "rights": ["read"]},
   {"doctype": "Comment", "role": "PP WRC Integration", "rights": ["read", "create"]}
+ ],
+ "translations": [
+  {
+   "language": "en",
+   "words": {
+    "PP WRC Warranty Term": "Warranty term",
+    "PP WRC Warranty": "Warranty terms",
+    "PP WRC Warranty feed": "Warranty feed"
+   }
+  }
  ]
 }

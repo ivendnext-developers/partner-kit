@@ -27,7 +27,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/customer_code_check.md).
 
-**The customer sets:** the retailer's SMS gateway in *SMS Settings*; one **Notification** on *PP CCC Code* (*Send Alert On* New, *Channel* SMS, the receiver the field `mobile`, a message holding `{{ doc.code }}`); one *PP CCC Rule* for each customer group that needs one; and who may change a customer's group and phone number.
+**The customer sets:** the retailer's SMS gateway in *SMS Settings*; one **Notification** on *Customer check code* (`PP CCC Code`) (*Send Alert On* New, *Channel* SMS, the receiver the field `mobile`, a message holding `{{ doc.code }}`); one *Customer code rule* (`PP CCC Rule`) for each customer group that needs one; and who may change a customer's group and phone number.
 
 ## Run it
 
@@ -43,6 +43,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.1.1
+
+- Desk shows plain names (Customer code rule, Customer check code) through the manifest's `translations` block, so a search for *customer code* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.2.1.
 
 ### 1.1.0
 

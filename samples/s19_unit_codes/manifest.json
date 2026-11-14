@@ -3,7 +3,7 @@
  "app": "pp_unc",
  "prefix": "PP UNC",
  "title": "Unit codes at the scan",
- "version": "0.1.2",
+ "version": "0.1.3",
  "publisher": "Partner Programme sample",
  "description": "A chain's own unit codes, read by the till's scan: one record per unit (its unique code, its item, its batch and whether it is still Available or Sold) and a scan source over that table. Scanning a unit's code lands its item with its batch; a Sold unit is refused. Data only: no service, nothing leaves your site. The scan source is on from the install; a chain may set Record the code as to one of its own active line attributes so the code rides the sale's line. The partner's own service writes a unit back to Available after a return and to Sold after a sale (from the event feed). Every right a role has is written out (read, write, create, delete, report, export, share, print, email).",
  "doctypes": [
@@ -31,5 +31,13 @@
  "property_setters": [
   {"doc_type": "PP UNC Unit", "property": "documentation", "property_type": "Data",
    "value": "https://developer.ivendnext.com/samples/s19_unit_codes/index.html"}
+ ],
+ "translations": [
+  {
+   "language": "en",
+   "words": {
+    "PP UNC Unit": "Unit code"
+   }
+  }
  ]
 }

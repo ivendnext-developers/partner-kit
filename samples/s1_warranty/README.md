@@ -45,6 +45,10 @@ ivn try
 
 ## Versions
 
+### 0.3.4
+
+- Desk shows plain names (Warranty term, Warranty terms) through the manifest's `translations` block, so a search for *warranty* finds the record. The stored names are unchanged: an installed site keeps its records.
+
 ### 0.3.3
 
 - The role's rights move into the manifest (`role_rights`): read on Sales Invoice, POS Invoice, Serial and Batch Bundle and Item, and read and create on Comment, so a sale gets its warranty comment right after the install, with nothing for the retailer's administrator to grant. Needs POS build `2.1.0.691` or later; an update adds them from `2.1.0.696`.

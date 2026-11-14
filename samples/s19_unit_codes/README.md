@@ -39,6 +39,10 @@ ivn try
 
 ## Versions
 
+### 0.1.3
+
+- Desk shows plain names (Unit code) through the manifest's `translations` block, so a search for *unit code* finds the record. The stored names are unchanged: an installed site keeps its records.
+
 ### 0.1.2
 
 - The README's first lines say a unit marked *Sold* is refused: nothing marks a unit *Sold* until the retailer's own step or service does. The manifest changes only its version.

@@ -3,7 +3,7 @@
  "app": "pp_gcs",
  "prefix": "PP GCS",
  "title": "Gift card on spend",
- "version": "0.2.1",
+ "version": "0.2.2",
  "publisher": "Partner Programme sample",
  "description": "A sale over the shop's threshold earns the customer the shop's own gift card, spendable after a hold (24 hours by default). The app's service, outside the shop, reads the sales from the event feed, makes the engine's Gift Card from the shop's gift card item at a balance of 0, and raises it to its value with a Gift Card Balance when the hold has passed; a cancelled sale, or a return that takes the spend below what earned a card, voids the cards it no longer earns, unless they have been used. The install makes the role PP GCS Integration and the app's own user that holds it, gives the role read on POS Invoice (the record the feed follows), and, from role_rights, read on Customer and Item, read and create on Gift Card, and read, create and submit on Gift Card Balance. After install: fill in PP GCS Settings, record Default, and tick Enabled. A hosted service is handed the app's user's key by the shop's site itself; for a service you run yourself, press Generate Keys on that user. What leaves the shop: the service reads sales, returns, customers and the gift card item, and writes gift cards and their balances; with these rights its key can set the balance of any gift card in the shop.",
  "allowed_urls": [
@@ -299,5 +299,15 @@
   {"doctype": "Item", "role": "PP GCS Integration", "rights": ["read"]},
   {"doctype": "Gift Card", "role": "PP GCS Integration", "rights": ["read", "create"]},
   {"doctype": "Gift Card Balance", "role": "PP GCS Integration", "rights": ["read", "create", "submit"]}
+ ],
+ "translations": [
+  {
+   "language": "en",
+   "words": {
+    "PP GCS Settings": "Gift card on spend settings",
+    "PP GCS Card": "Earned gift card",
+    "PP GCS Sales": "Gift card on spend feed"
+   }
+  }
  ]
 }

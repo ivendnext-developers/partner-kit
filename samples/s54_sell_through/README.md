@@ -45,6 +45,10 @@ ivn try
 
 ## Versions
 
+### 1.0.4
+
+- Desk shows plain names (Sell-through run, Sell-through by size) through the manifest's `translations` block, so a search for *sell-through* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.1.4.
+
 ### 1.0.3
 
 - The install gives the app's role its two reports and every read and lookup they ask for (`role_rights`, with a `report` entry for each report), so the retailer grants none by hand. A refused report's message no longer asks the retailer to check the rights the setup names. Needs POS build `2.1.0.697`.

@@ -36,6 +36,10 @@ ivn try
 
 ## Versions
 
+### 1.0.3
+
+- Desk shows plain names (Pick task, Pick task line) through the manifest's `translations` block, so a search for *pick task* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.2.3.
+
 ### 1.0.2
 
 - Each line of the pick task shows the item's name and the order line's unit (*2 Case*), as well as the item code; the button sends the service both (`item_name`, `uom` in `send_fields`). The answer no longer names the picker by e-mail: it says how many lines across how many warehouses.

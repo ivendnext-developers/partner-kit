@@ -3,7 +3,7 @@
  "app": "pp_lyl",
  "prefix": "PP LYL",
  "title": "Customer-owned loyalty",
- "version": "0.5.0",
+ "version": "0.5.1",
  "publisher": "Partner Programme sample",
  "description": "A customer's own loyalty programme, run by the partner's service OUTSIDE the shop, with its records kept INSIDE the shop: plans, settings, members and a cash-back ledger whose every row is named by its unique key, so the shop itself refuses a duplicate. Tiers are customer groups, made with their plans and the programme's settings by the install (each tier's promotion is set by configuration). The service reads the event feed with one integration user (role PP LYL Integration, which the install makes), answers the member till key and, once the shop registers it as a remote wallet, lets a member spend the cash back at the till (Member cash). The role's read on what the feed follows is the install's; its write on Customer and its reads of Purchase Order and Supplier are in role_rights. The feed and the till key are on from the install. Every right a role has is written out (read, write, create, delete, report, export, share, print, email). allowed_urls is an example address; a partner writes its own.",
  "allowed_urls": [
@@ -550,5 +550,20 @@
    "value": "https://developer.ivendnext.com/samples/s22_customer_loyalty/index.html"},
   {"doc_type": "PP LYL Balance", "property": "documentation", "property_type": "Data",
    "value": "https://developer.ivendnext.com/samples/s22_customer_loyalty/index.html"}
+ ],
+ "translations": [
+  {
+   "language": "en",
+   "words": {
+    "PP LYL Settings": "Customer loyalty settings",
+    "PP LYL Plan": "Customer loyalty plan",
+    "PP LYL Member": "Customer loyalty member",
+    "PP LYL Ledger": "Customer loyalty ledger",
+    "PP LYL Balance": "Customer loyalty balance",
+    "PP LYL Cash Back": "Cash back",
+    "PP LYL Member cash by day": "Member cash back by day",
+    "PP LYL Loyalty": "Customer loyalty feed"
+   }
+  }
  ]
 }

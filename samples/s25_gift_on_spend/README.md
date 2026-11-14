@@ -34,6 +34,10 @@ ivn try
 
 ## Versions
 
+### 1.2.3
+
+- Desk shows plain names (Gift card on spend settings, Earned gift card) through the manifest's `translations` block, so a search for *gift card* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.2.2.
+
 ### 1.2.2
 
 - Manifest 0.2.1: the *Spendable from* field says *your site's time*, not *the shop's*. Words only.
