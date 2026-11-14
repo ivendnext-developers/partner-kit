@@ -126,6 +126,10 @@ class ManifestTest(unittest.TestCase):
         listed = [f["fieldname"] for f in self.dt[RES]["fields"] if f.get("in_list_view")]
         self.assertEqual(listed[:2], ["booking_date", "booking_time"])
 
+    def test_l2_the_prompts_promise_no_table(self):   # the answer says when a table is freed
+        asks = {a["label"]: a.get("confirm_text") for a in self.m["desk_actions"] if a["record_type"] == RES}
+        self.assertEqual((asks["No-show"], asks["Cancel booking"]), ("Mark this booking a no-show?", "Cancel this booking?"))
+
     def test_w1_desk_shows_the_host_plain_words(self):   # F-HOSP-4
         (en,) = [t["words"] for t in self.m["translations"] if t["language"] == "en"]
         seen = set(self.dt) | {HOST} | {a["name"] for a in self.m["registered_applications"]}
