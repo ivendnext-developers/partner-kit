@@ -321,9 +321,6 @@
   // a try still moving: the page asks again until it is done or stopped
   function tryRunning(s) { return !!(s && s.step && s.step !== "done" && s.step !== "stopped"); }
   // a newer draft than the one tried, a try that stopped, or another site picked: Try installs it again (J4-05 after a fix)
-  // W227 (the walk after phase E): every Try press tries; only a try still running is shown as it stands. A finished
-  // try's "Installed" may be old (the app since uninstalled there): the doors test a site that has the version already
-  function offerAgain(s) { return !tryRunning(s); }
   // J4-01's line with no site, its "Request one" a link to the sandbox page
   function noSandboxParts(words) {
     var i = String(words || "").indexOf(T.request);
@@ -560,7 +557,7 @@
               fromNeeds: fromNeeds, readStart: readStart, barText: barText, appFor: appFor, recordsStart: recordsStart, tickable: tickable,
               making: making, blankCarries: blankCarries, captureGroups: captureGroups, ticksOff: ticksOff, pubLines: pubLines, toThisPage: toThisPage, handOff: handOff, isAddress: isAddress, settingNote: settingNote, versionLine: versionLine, whereWent: whereWent,
               covers: covers, coversText: coversText, ASK_PAGE: ASK_PAGE, CLAIM_FORM: CLAIM_FORM, T: T,
-              SECTIONS: SECTIONS, consentSections: consentSections, tryRunning: tryRunning, offerAgain: offerAgain,
+              SECTIONS: SECTIONS, consentSections: consentSections, tryRunning: tryRunning,
               noSandboxParts: noSandboxParts, U: U, industryWords: industryWords, tryLabel: tryLabel,
               canGoBack: canGoBack, defaultTitle: defaultTitle, versionsShown: versionsShown, logFile: logFile, payWords: payWords, payLabel: payLabel, pubPlan: pubPlan, pubOpensOn: pubOpensOn, pictureType: pictureType, b64: b64, cardBody: cardBody,
               S: S, siteHow: siteHow, trySites: trySites, tickLive: tickLive, instKey: instKey, installState: installState,
@@ -1414,7 +1411,8 @@
     call("POST", "/try/status", { app: app }).then(function (s) {
       if (s.step) data.tryS = s;
       if (tryRunning(s)) { data.trySite = s.site || data.trySite; render(); pollTry(); return; }
-      if (!offerAgain(s)) { render(); return; }
+      // W227: every other press tries again. A finished try's "Installed" may be old (the app since uninstalled there);
+      // the doors test a site that has this version already, so nothing is installed twice
       return startTry(app);
     }).then(null, fail);
   }

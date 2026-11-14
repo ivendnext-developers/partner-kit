@@ -228,8 +228,8 @@ check("J4-02: Try is one press: the install starts with the site's own fingerpri
 check("J4-05: Test again; a try is asked again until done or stopped", T.testAgain === "Test again" &&
   a.tryRunning({ step: "build" }) && !a.tryRunning({ step: "done" }) && !a.tryRunning({ step: "stopped" }) && !a.tryRunning({}));
 check("J4-05, W227: every Try press tries again (a finished try's Installed may be old); a running try is followed, not restarted",
-  a.offerAgain({ step: "done", version: "1.0.1", latest: "1.0.1", site: "a" }) && a.offerAgain({ step: "done", version: "1.0.0", latest: "1.0.1" }) &&
-  a.offerAgain({ step: "stopped" }) && a.offerAgain(null) && !a.offerAgain({ step: "build" }) && !a.offerAgain({ step: "shelf" }));
+  src.includes("if (tryRunning(s)) { data.trySite = s.site || data.trySite; render(); pollTry(); return; }") &&
+  /pollTry\(\); return; \}\n(?:\s*\/\/[^\n]*\n)*\s*return startTry\(app\);/.test(src) && !src.includes("offerAgain"));
 check("J5-15: the plan's lines as the row writes them, nothing added", !src.includes("perMonth") && T.plan === "Per month");
 check("J2-10: the four buttons are on: Try on ⟨site⟩ and Publish open their screens", src.includes("var tryB = button(data.sites ? tryLabel(def) : G.tryIt, function () { if (def) openTry(a.app, def);") &&
   src.includes("tryB.disabled = !data.sites;") &&
