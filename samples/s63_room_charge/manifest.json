@@ -415,7 +415,6 @@
     "message"
    ],
    "order_by": "creation desc",
-   "add_total_row": 1,
    "roles": [
     "PP RMC Auditor",
     "System Manager"
@@ -457,7 +456,7 @@
     {
      "type": "paragraph",
      "data": {
-      "text": "Posted counts everything posted; Waiting and Refused count what is open now. Waiting charges go again every minute. Refused: read the hotel system's words, check the folio, settle it another way, then tick Done on its record with a note. For the day's clearing entry, filter the report by Posted on and Status Posted, and use the total of Clearing.",
+      "text": "Posted counts everything posted; Waiting and Refused count what is open now. Waiting charges go again every minute. Refused: read the hotel system's words, check the folio, settle it another way, then tick Done on its record with a note. For the day's clearing entry, filter the report by Status Posted, then Group By Posted on with Sum of Clearing: the database adds every row.",
       "col": 12
      }
     },
