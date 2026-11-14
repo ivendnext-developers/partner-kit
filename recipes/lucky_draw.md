@@ -57,6 +57,7 @@ A retailer runs a *shop and win* campaign: every so much a customer spends at it
    - answer with a message and `refresh` (the extension point's vocabulary).
 
 5. **Rights.** The manager role needs *Select* on **POS Profile** and **Customer Group** for the campaign form's lookups (the role alone gets no answer), and *Read* on **Company**: the form fills the campaign's currency from the company (`fetch_from`), and a fetch needs read (*"You need Read permission to fetch values from Company"*). The app's user holds the app's integration role alone, with read on **POS Invoice**, **POS Profile** and **Customer Group** (measured on our test bench: iVendNext refused each until it was given; a right of *select* alone answers the names only). The manifest gives the role read and write on the campaign.
+6. **Plain names in Desk:** the manifest's `translations` block, language `en`, gives each record type, workflow state and action, and report a plain name (*Lucky draw campaign*), so Desk never shows the app's code. Your prefix stays the record types' real names.
 
 ## Tell the winners
 
