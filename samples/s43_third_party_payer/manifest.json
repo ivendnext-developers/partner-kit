@@ -665,7 +665,7 @@
      "fieldtype": "Long Text",
      "label": "The file (CSV)",
      "read_only": 1,
-     "description": "The same file is attached to this batch, named after it (.csv): download it from the attachments and send it to the payer."
+     "description": "The file to send to the payer. Download it from this batch's attachments, or copy it from here."
     }
    ],
    "permissions": [
