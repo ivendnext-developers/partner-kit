@@ -46,7 +46,7 @@ ivn try
 
 Manifest 0.3.2.
 
-- *Covers, turns and tips* and *Sales by item* open on yesterday, the day a manager reads in the morning; change the *Date* filter for another day. They no longer show a *Totals* row: it added up only the rows on screen.
+- *Covers, turns and tips* and *Sales by item* open on yesterday, the day a manager reads in the morning; change the *Date* filter for another day. They and *Food cost by ingredient* no longer show a *Totals* row: it added up only the rows on screen. For a day's sums, use the report's *Group By* (Server or Store) with *Sum* of Tip or Covers: the database adds every row.
 - Their columns read *Check* and *Sale line* where they read *Ingredient issue check* and *Ingredient issue sale line*.
 - *The customer sets* names who makes the recipes: the menu's owner, with the role Manufacturing User and the Manufacturing module open.
 

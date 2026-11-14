@@ -88,6 +88,7 @@ class ManifestTest(unittest.TestCase):
         for name in ("PP RBO Sales by item", "PP RBO Covers, turns and tips"):
             self.assertEqual(reps[name]["filters"], [["posting_date", "Timespan", "yesterday"]], name)
             self.assertFalse(reps[name].get("add_total_row"), name)   # a total of the 20 rows loaded read as the day's
+        self.assertFalse(reps["PP RBO Food cost by ingredient"].get("add_total_row"))
         (en,) = [t["words"] for t in self.m["translations"] if t["language"] == "en"]
         self.assertEqual((en["PP RBO Issue Sale"], en["PP RBO Issue Line"]), ("Check", "Sale line"))
 

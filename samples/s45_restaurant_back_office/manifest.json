@@ -1024,7 +1024,6 @@
     "lines.variance_value"
    ],
    "order_by": "to_date desc",
-   "add_total_row": 1,
    "roles": [
     "Stock Manager",
     "Accounts Manager",
