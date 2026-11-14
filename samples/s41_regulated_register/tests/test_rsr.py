@@ -257,7 +257,7 @@ class Manifest(unittest.TestCase):
     def test_the_manifest_is_the_build_of_the_data_sets(self):
         m = json.loads((SAMPLE / "manifest.json").read_text(encoding="utf-8"))
         self.assertEqual(m, build.build_manifest())
-        self.assertEqual(m["version"], "0.2.2")
+        self.assertEqual(m["version"], "0.2.3")
         self.assertFalse((SAMPLE / "door_declaration.json").exists())  # 0.2.0 installs the books: one file
         # the catalogue: every data set's books, switched off (the shop switches its own market's on)
         self.assertEqual({b["data_set"] for b in m["register_books"]}, {ds["id"] for ds in build.datasets()})
@@ -272,7 +272,7 @@ class Manifest(unittest.TestCase):
         m = build.build_manifest()
         self.assertEqual(sorted(k for k in m if isinstance(m[k], list)),
                          ["custom_fields", "dashboard_charts", "dashboards", "notifications", "number_cards",
-                          "print_formats", "register_books", "reports", "sale_attributes", "workspaces"])
+                          "print_formats", "register_books", "reports", "sale_attributes", "translations", "workspaces"])
         self.assertEqual({f["dt"] for f in m["custom_fields"]}, {"Sales Invoice", "Delivery Note"})
         self.assertEqual([r["name"] for r in m["reports"]],
                          ["PP RSR Stock counts to watch", "PP RSR Register entries", "PP RSR Losses and disposals",
@@ -287,7 +287,9 @@ class Manifest(unittest.TestCase):
         text = build.build_manifest()["workspaces"][0]["blocks"][1]["data"]["text"]
         self.assertIn("Each day at close, print the day's pages of each book", text)  # the daily print (no reminder kind)
         self.assertIn("Erase persons' details", text)  # entries due for erasure (a date no filter can carry)
-        self.assertIn("PP RSR Register entries", text)  # the lists, which a workspace cannot link
+        self.assertIn("The saved lists: Register entries, Losses and disposals", text)  # the lists, which a workspace cannot link
+        # by the plain names Desk shows (the manifest's translations), never the prefixed ones
+        self.assertFalse([n for n in build.plain_words() if n in text])
 
     def test_the_approver_role_is_made_by_the_report_and_named_with_the_prefix(self):
         # the shop's install makes an app's own roles from a report's roles, never from a workspace
@@ -440,8 +442,9 @@ class Manifest(unittest.TestCase):
         self.assertEqual(d["columns_from"]["Purchase Receipt"], {"reference_no": "supplier_delivery_note"})  # no bill_no
 
     def test_a_loss_line_prints_its_documents_note_where_a_slot_is_free(self):
-        # PH-K5 (D7): a loss written off by a stock entry prints the entry's Remarks in the plain print's Particulars
-        # (the reason, broken); a till sale has no such field and prints none. Kenya's six slots are taken
+        # a loss written off by a stock entry prints the entry's Remarks in the plain print's Particulars (the reason,
+        # broken). A sale left without a remark, at the till or on the Desk, carries the engine's "No Remarks", and the
+        # plain print shows that too: the register door's print, not this app's layouts. Kenya's six slots are taken
         for ds in ("ng_pharmacy", "gh_pharmacy", "jo_pharmacy", "eg_pharmacy", "mx_pharmacy", "sa_pharmacy",
                    "ae_abu_dhabi_pharmacy"):
             books = [b for b in build.build_manifest()["register_books"] if b["book"].startswith(ds + ".")]
@@ -450,6 +453,16 @@ class Manifest(unittest.TestCase):
                 self.assertTrue([d for d in b["details"].values() if d.get("desk_field") == "remarks"
                                  and d["label"] in ("Note", "Nota", "ملاحظة")], b["book"])
         self.assertNotIn("remarks", json.dumps(declared("ke_pharmacy.poisons_book")["details"]))
+
+    def test_desk_names_the_registers_pages_in_plain_words(self):
+        m = build.build_manifest()
+        (tr,) = m["translations"]
+        self.assertEqual(tr["language"], "en")
+        self.assertEqual(tr["words"]["PP RSR Regulated stock register"], "Regulated stock register")  # the page heading
+        named = ({w["name"] for w in m["workspaces"]} | {r["name"] for r in m["reports"]} | {c["name"] for c in m["number_cards"]}
+                 | {c["name"] for c in m["dashboard_charts"]} | {d["name"] for d in m["dashboards"]})
+        self.assertEqual(set(tr["words"]), named)
+        self.assertFalse([w for w in tr["words"].values() if "PP RSR" in w])
 
     def test_the_declaration_names_every_detail_by_its_slot_and_its_sources(self):
         d = declared("ke_pharmacy.poisons_book")
