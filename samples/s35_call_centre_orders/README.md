@@ -26,7 +26,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/call_centre_orders.md).
 
-**The customer sets:** a **Serving store** (a warehouse of the orders' company, never a group) on each district of its Territory tree; a district left empty takes the store above it.
+**The customer sets:** a **Serving store** (a warehouse of the orders' company, never a group) on each district of its Territory tree; a district left empty takes the store above it. And the serving store's **sales tax on the order**: an order made in iVendNext Desk takes no store's rate by itself (the till takes each store's from its warehouse), so give it the engine's own way: a Tax Rule for each store's area (the order's shipping state, city or ZIP code) naming that area's sales tax; otherwise the total the agent reads to the caller leaves the tax out.
 
 **The app's role needs:** nothing from the retailer's administrator. The install makes the role *PP CCO Integration* and the app's own user, and gives the role **read on Sales Order**, the record type the feed follows. The manifest's `role_rights` give the rest: write on Sales Order, and read on Territory, Customer (a sales order names its customer), Address (the order's save reads its customer's billing and shipping addresses again, so the app's user reads them too) and Warehouse. Give the role to no one else: it reaches every sales order, customer and address (suppliers' and the company's too, as a Sales User reads them). **Needs POS build `2.1.0.691` or later:** on an earlier site the install warns `role_rights` as unknown and skips it, so **Send to store** says the app's role is missing a read right; install the build, then press it again ([What goes where](../../guide/07_manifests.md#what-goes-where)).
 
@@ -38,6 +38,10 @@ ivn try
 ```
 
 ## Versions
+
+### 1.1.2
+
+- *The customer sets* names the sales tax on the order (a Tax Rule for each store's area, by the order's shipping state, city or ZIP code): a phone order made in Desk carried none, so the total read to the caller left the tax out. Words only; the service and the manifest are unchanged.
 
 ### 1.1.1
 
