@@ -139,7 +139,7 @@
   {"doctype": "Customer Group", "role": "PP PMR Integration", "rights": ["read"]}
  ],
  "reports": [
-  {"name": "PP PMR Rules", "ref_doctype": "PP PMR Rule", "report_type": "Report Builder", "columns": ["name", "customer_group", "enabled", "kind", "words"], "order_by": "customer_group asc"}
+  {"name": "PP PMR Rules", "ref_doctype": "PP PMR Rule", "report_type": "Report Builder", "columns": ["customer_group", "enabled", "kind", "words"], "order_by": "customer_group asc"}
  ],
  "translations": [
   {

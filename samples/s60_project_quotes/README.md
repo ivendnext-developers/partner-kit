@@ -18,6 +18,7 @@ ivn new acme_projects --from s60
 
 What a partner usually changes:
 
+- **The report named by the card's title:** `PP PQT Projects` and its word in `translations` (*Project quotes and deliveries by stage*) carry the card's title, so Desk's search finds the app by it; change them together with the title.
 - the project's fields and stages: the `PP PQT Project` record type and its table `PP PQT Stage` in `manifest.json`;
 - the project and stage fields on the documents: `custom_fields` in `manifest.json` (one field name on every document carries the project down Desk's own Create chain; the till's POS Invoice has a field of its own name);
 - the project sheet: the print format *PP PQT Project sheet*, which reads each document type with `ivn_rows`;
