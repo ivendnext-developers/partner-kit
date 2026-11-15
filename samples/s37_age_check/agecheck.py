@@ -190,14 +190,15 @@ def checked_as_read(ctx: dict, prefix: str) -> bool:
 
 def on_scan(ctx: dict, age: int, settings: dict, today: datetime.date, prefix: str) -> dict:
     """A restricted item: the date to compare and the record of the check, on one sheet. An age of 0 (a group the shop
-    named on the service with no age set): allow, nothing shown."""
+    named on the service with no age set): allow, nothing shown. The sentence does not name the item: the scan's context
+    carries only its code, and the till names the item by its name right under the sentence."""
     if not age:
         return {"verdict": "allow"}
-    item, d = plain(ctx["line"]["item_code"], 40), born_by(today, age)
+    d = born_by(today, age)
     look = settings["look_under"]
     ask = f"Ask for ID if they look under {look}." if look > age else "See their ID."
     return {"verdict": "notice",
-            "message": plain(f"{item}: customers {age} or over. Born on or before {d.day} {d:%b %Y}. {ask}"),
+            "message": plain(f"Customers {age} or over. Born on or before {d.day} {d:%b %Y}. {ask}"),
             "sale_attributes": [{"sale_attribute": f"{prefix} {CHECKED}", "attribute_value": checked_value(age)}]}
 
 

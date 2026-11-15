@@ -27,11 +27,11 @@ Alcohol, tobacco, vapes, knives and some medicines may be sold only to customers
 
    ```json
    {"verdict": "notice",
-    "message": "WHISKY-70: customers 18 or over. Born on or before 22 Oct 2008. Ask for ID if they look under 25.",
+    "message": "Customers 18 or over. Born on or before 22 Oct 2008. Ask for ID if they look under 25.",
     "sale_attributes": [{"sale_attribute": "PP AGE ID Checked", "attribute_value": "18 or over"}]}
    ```
 
-   The till opens one sheet: your label, your sentence, *"This will be added to ⟨item⟩:"* and the value. **Add with these details** adds the item and puts the value on the sale; **Don't add it** adds neither. The date is the retailer's today (UTC plus its hours) that many years back. An item with no age: `{"verdict": "allow"}`, nothing shown.
+   The till opens one sheet: your label, your sentence, *"This will be added to ⟨item⟩:"* and the value. The scan sends the item's code, not its name, so the sentence leaves the item to the till's line under it. **Add with these details** adds the item and puts the value on the sale; **Don't add it** adds neither. The date is the retailer's today (UTC plus its hours) that many years back. An item with no age: `{"verdict": "allow"}`, nothing shown.
 
 6. **Ask once a sale.** Remember, per retailer and per the scan's `sale_ref`, the highest age you asked about, and answer `allow` to a later scan of that sale needing that age or less. The till does not tell you what the cashier answered, so a check you remember may have been refused at the sheet: the check at Pay catches that. The reference is empty on a sale's first scan; remember nothing for it.
 
