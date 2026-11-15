@@ -45,6 +45,8 @@ CANARIES = [
     # the double-booking guard
     ("Book reads the other bookings", S, "            clash = self._clash(door, r, row, start, exclude=name)\n            if clash:",
      "            clash = \"\"\n            if clash:", T + "test_b2_an_overlapping_booking_is_refused_and_named"),
+    ("Book refuses another store's table", S, '        return on if on and on != store else ""', '        return ""',
+     T + "test_b10_another_stores_table_is_never_held"),
     ("overlap is strict on both ends", C, "        if s < end and start < e:", "        if s <= end and start <= e:",
      R + "test_r2_overlap_is_strict_and_only_held_bookings_count"),
     ("only held bookings count", C, ' or o.get("status") not in HOLDING:', ":",

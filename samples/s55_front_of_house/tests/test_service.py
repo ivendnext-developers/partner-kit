@@ -211,6 +211,19 @@ class ServiceTest(unittest.TestCase):
         self.press(self.svc(shop), "/press/book", RES, "R1")
         self.assertEqual(shop.res["R1"]["status"], "Booked")                     # never its own clash
 
+    def test_b10_another_stores_table_is_never_held(self):   # F-HOSP-28: stores share table names
+        for first in ("Requested", "Booked"):
+            shop = fs.FakeTenant([fs.booking("R1", "19:00:00", place=fs.OTHER_PLACE, place_label="Table 1", status=first)])
+            out = self.press(self.svc(shop), "/press/book", RES, "R1")
+            self.assertEqual((out[1]["message"]["level"], shop.res["R1"]["status"]), ("warning", "Requested"), first)
+            self.assertIn(f"Table 1 is a table at {fs.OTHER_STORE}, not at {fs.STORE}. Choose a table at {fs.STORE}",
+                          self.said(out))
+            self.assertIn("Not booked", shop.res["R1"]["app_note"])
+            self.assertFalse([c for c in shop.calls if c.startswith("PUT " + app.PLACE)])     # no floor is told
+        shop = fs.FakeTenant([fs.booking("R1", "19:00:00", place=fs.OTHER_PLACE, status="Requested")], place_right=False)
+        self.press(self.svc(shop), "/press/book", RES, "R1")
+        self.assertEqual(shop.res["R1"]["status"], "Booked")      # a site not yet updated books as before
+
     # ── Seat: one check, through the door ──
     def test_s1_seat_opens_the_check_with_the_party_and_nothing_of_the_guest(self):
         shop = fs.FakeTenant([fs.booking("R1", "19:00:00", deposit_sale="ACC-PSINV-0007", deposit_amount=50)])
