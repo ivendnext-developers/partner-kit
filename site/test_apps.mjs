@@ -31,7 +31,7 @@ check("J8-22 (M22)", W.m22 === "GitHub did not sign you in. Try again.");
 check("J2-02: the labels, the hint and the schedule line", W.company === "Your company" && W.companyName === "Company name" &&
   W.firstWord === "Your first word" && a.wordHint("acme") === "Every app you make starts with it: acme_…. It is yours once you press Continue." &&
   a.wordHint("") === "Every app you make starts with it. It is yours once you press Continue." &&
-  a.scheduleLine("3") === "I accept the App Hosting Schedule (version 3)" && W.cont === "Continue");
+  a.scheduleLine("1.1") === "I accept the iVendNext Developer Terms (version 1.1)" && W.cont === "Continue");
 check("J2-03: the button (its words come from the hosting's door, with the person's login)", W.setUp === "Set up my company");
 check("J2-04", W.addPerson === "Add a person" && W.makeOwner === "Make owner" && W.remove === "Remove");
 check("J2-13", W.makeToken === "Make a token for a build server" && W.forWhich === "For which apps" &&
@@ -39,6 +39,9 @@ check("J2-13", W.makeToken === "Make a token for a build server" && W.forWhich =
 check("J5-14", W.handOver === "Hand over this app" && W.toWhich === "Their company's first word. They must have signed in to My apps once." &&
   W.moves === "They accept on their My apps. The app keeps its name; its versions, sites, secrets and hosting move to them, and their card pays from the next month." &&
   W.accept === "Accept" && W.refuse === "Refuse" && a.appTitle("acme_member_till") === "ACME MEMBER TILL");
+
+check("Terms §13: a new version is asked on My apps", W.tickTerms === "Tick the iVendNext Developer Terms first." &&
+  W.termsNew === "The iVendNext Developer Terms have a new version. Accept it to publish a version or order hosting; everything else works as before.");
 
 // 2. the return from GitHub, and a code from the terminal
 const pending = { state: "s".repeat(43), verifier: "v".repeat(64) };
@@ -73,6 +76,10 @@ check("Accept says the app is yours, with its hosting's checkout",
     "ACME MEMBER TILL is yours. Give your card for its hosting from the next month: https://checkout.stripe.com/c/pay/x" &&
   a.acceptedWords("acme_member_till", { hosting: { orders: [] } }) === "ACME MEMBER TILL is yours.");
 const src = readFileSync(path.join(out, "assets/apps.js"), "utf8");
+check("Terms §13: My apps' first screen shows the tick when the company is due, and Accept records it",
+  src.includes("if (who.terms_due) box.appendChild(vTerms());") &&
+  src.includes('call("POST", "/terms", { schedule_version: who.schedule_version })') &&
+  src.includes("if (!tick.checked) { say(WORDS.tickTerms, true); render(); return; }"));
 check("Accept's words are said after going home, which clears the last message",
   /go\("home"\);[^\n]*\n\s*say\(acceptedWords\(o\.app, r\)\);\s*\n\s*render\(\);/.test(src));
 

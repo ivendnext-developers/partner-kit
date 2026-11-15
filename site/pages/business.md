@@ -17,7 +17,7 @@ The next retailer with the same need can buy the same version from you. When it 
 
 ## What stays yours
 
-- **Your code.** In your own repository, private if you like. We never receive it: to deliver your app we take only its manifest and its card, and, if we host it, the package you build.
+- **Your code.** In your own repository, private if you like. We never take your repository: to deliver your app we take only the app folder you upload (`.env` files, `.git` and caches left out) and, if we host it, what we build from it.
 - **Your name.** Your company's own first word (for example `acme`), given once. Every app you name under it is yours, and no one else can take a name under it.
 - **Your customer.** You lead the customer and keep the account.
 - **Your price.** You set it and you invoice it.
@@ -62,7 +62,7 @@ Your customer pays its iVendNext subscription as usual.
 
 ## We keep supporting you
 
-- **The platform is ours to support:** the ways in and their versions, the install, the App library and the hosting. Each version of what your app relies on is served for 12 months after its successor ships, so your customer's upgrades keep your app running ([the changelog](../../CHANGELOG.md)).
+- **The platform is ours to support:** the ways in and their versions, the install, the App library and the hosting. These are versioned contracts: from the general release of 18 October 2026, each version of what your app relies on is served for 12 months after its successor ships ([the changelog](../../CHANGELOG.md)).
 - **Our code comes as is, under its licence,** and we fix its faults in the kit like any other. You support what you deliver to your customer.
 - **Ask when you need something.** A missing door, a gap in a recipe, a sample you need: the [feedback forms](feedback.md) reach the team that builds the kit. Help and your account manager are there for everything else.
 
