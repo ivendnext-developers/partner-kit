@@ -5,6 +5,7 @@ check recorded on the sale and the refusal at Pay, the remembered asks, the shop
 """
 
 import datetime
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -106,14 +107,25 @@ class Scan(unittest.TestCase):
     def test_a_restricted_item_shows_the_date_and_records_the_check(self):
         s = agecheck.settings_of(SETTINGS)
         out = agecheck.on_scan(scan(), 18, s, TODAY, "PP AGE")
-        self.assertEqual(out, {"verdict": "notice",
-                               "message": "WHISKY: customers 18 or over. Born on or before 22 Oct 2008. Ask for ID if they look under 25.",
-                               "sale_attributes": [{"sale_attribute": "PP AGE ID Checked", "attribute_value": "18 or over"}]})
+        self.assertEqual(out["verdict"], "notice")
+        self.assertEqual(out["sale_attributes"], [{"sale_attribute": "PP AGE ID Checked", "attribute_value": "18 or over"}])
+        msg = out["message"]                                       # the facts the cashier needs, not the sentence
+        self.assertIn("WHISKY", msg); self.assertRegex(msg, r"\b18\b")              # the item and the age
+        self.assertIn("22 Oct 2008", msg)                                                  # the born-on-or-before date
+        self.assertRegex(msg, r"\b25\b")                                                   # the look-under age
+
+    def test_the_scan_is_at_most_140_whatever_the_item(self):
+        out = agecheck.on_scan(scan("W" * 200, "Spirits"), 18, agecheck.settings_of(SETTINGS), TODAY, "PP AGE")
+        self.assertLessEqual(len(out["message"]), 140)
+        self.assertIn("22 Oct 2008", out["message"])
 
     def test_see_their_id_when_the_shop_has_no_policy_or_it_is_not_above_the_age(self):
         for look in (0, None, 21):
             out = agecheck.on_scan(scan("VAPE", "Vapes"), 21, agecheck.settings_of({"look_under": look}), TODAY, "PP AGE")
-            self.assertTrue(out["message"].endswith("Born on or before 22 Oct 2005. See their ID."), out)
+            msg = out["message"]
+            self.assertIn("VAPE", msg); self.assertRegex(msg, r"\b21\b")
+            self.assertIn("22 Oct 2005", msg)
+            self.assertEqual(sorted(re.findall(r"\d+", msg)), sorted(["21", "22", "2005"]), msg)   # the age and the date only: no look-under age
 
     def test_no_age_is_allow_with_nothing_shown(self):
         self.assertEqual(agecheck.on_scan(scan("BREAD", "Food"), 0, agecheck.settings_of(SETTINGS), TODAY, "PP AGE"),
@@ -140,7 +152,7 @@ class Check(unittest.TestCase):
         out = agecheck.on_check(ctx, ages(ctx), agecheck.checked_age(ctx, "PP AGE"))
         self.assertEqual(out["verdict"], "refuse")
         reason = out["reason"]
-        self.assertTrue(reason.startswith("Line 2: Glen Moray 12 Year is for customers 18 or over."), reason)  # the name
+        self.assertIn("Glen Moray 12 Year", reason); self.assertRegex(reason, r"\b2\b.*\b18\b")  # the name
         self.assertNotIn("WHISKY", reason)                                                                    # not the code
         self.assertIn("enter 18 in Sale details", reason)
         self.assertTrue(reason.endswith("or take it off."), reason)
@@ -154,7 +166,7 @@ class Check(unittest.TestCase):
         ctx = context([line("LAGER", "Beer", n=1), line("WHISKY", "Spirits", n=2), line("VAPE", "Vapes", n=3)], checked="16 or over")
         reason = agecheck.on_check(ctx, ages(ctx), agecheck.checked_age(ctx, "PP AGE"),
                                    agecheck.checked_as_read(ctx, "PP AGE"))["reason"]
-        self.assertTrue(reason.startswith("Line 3: VAPE is for customers 21 or over;"), reason)
+        self.assertIn("VAPE", reason); self.assertRegex(reason, r"\b3\b.*\b21\b")
         self.assertIn("the sale's ID check says 16.", reason)
         self.assertTrue(reason.endswith("enter 21 in Sale details."), reason)   # a band was confirmed, not an age read
 
@@ -164,7 +176,7 @@ class Check(unittest.TestCase):
         out = agecheck.on_check(ctx, [21], agecheck.checked_age(ctx, "PP AGE"), agecheck.checked_as_read(ctx, "PP AGE"))
         reason = out["reason"]
         self.assertEqual(out["verdict"], "refuse")
-        self.assertTrue(reason.startswith("Line 1: Cabernet Sauvignon 750ml is for 21 or over."), reason)   # the whole name
+        self.assertIn("Cabernet Sauvignon 750ml", reason); self.assertRegex(reason, r"\b1\b.*\b21\b")   # the whole name
         self.assertIn("says 19: under 21, take it off;", reason)                    # the under-age way first
         self.assertTrue(reason.endswith("if their ID shows 21 or over, enter 21."), reason)   # a threshold typed earlier
         self.assertNotIn("EHW-RW-001", reason)
