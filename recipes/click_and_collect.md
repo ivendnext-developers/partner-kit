@@ -15,10 +15,15 @@ A store that sells on the web and lets its customers collect in store needs two 
    ```json
    "custom_fields": [
      {"dt": "Delivery Note", "fieldname": "pp_ccb_handed_over", "fieldtype": "Check", "label": "Handed over",
-      "insert_after": "return_against", "allow_on_submit": 1, "in_list_view": 1, "in_standard_filter": 1},
+      "insert_after": "return_against", "allow_on_submit": 1, "in_list_view": 1, "in_standard_filter": 0},
      {"dt": "Delivery Note", "fieldname": "pp_ccb_collected_by", "fieldtype": "Data", "label": "Collected by",
-      "insert_after": "pp_ccb_handed_over", "allow_on_submit": 1}]
+      "insert_after": "pp_ccb_handed_over", "allow_on_submit": 1}],
+   "property_setters": [
+     {"doc_type": "Delivery Note", "field_name": "custom_mpos_pickup_handed_at", "property": "in_list_view", "value": 1, "property_type": "Check"},
+     {"doc_type": "Delivery Note", "field_name": "per_installed", "property": "in_list_view", "value": 0, "property_type": "Check"}]
    ```
+
+   *Handed over* stays out of the list's filter bar (`in_standard_filter` 0, written so an update clears it): the bar shows a tick box, which cannot hold *No*, so a saved list would lose *Handed over No*. The two property setters show the till's own hand-over time (`custom_mpos_pickup_handed_at`, written by its *Pickup & curbside* board, never *Handed over*) in the list, in the column *% Installed* gives up.
 
 2. **Add the pick list** (Report Builder only: its filters are data). A web order is an order with a customer's order number (`po_no`), which our WooCommerce connector fills with the web order's number:
 
@@ -35,7 +40,7 @@ A store that sells on the web and lets its customers collect in store needs two 
 
    ![The report Web orders to pick on a demo store, one web order to pick](../samples/s33_click_and_collect/screenshots/02_web_orders_to_pick.png)
 
-   ⚠ **Not a report for the waiting list.** A report on Delivery Note filtered on `pp_ccb_handed_over` looks right, but iVendNext refuses it: its install checks a report's columns and filters (and a card's or chart's field) against the record type as it is before the install, so a field the same manifest adds is *not a field* yet. `ivn check` refuses it too (`tools/manifest/site_rules.py`). The waiting list is the Delivery Note list itself, where *Handed over* is a list column and a standard filter (`in_list_view`, `in_standard_filter`).
+   ⚠ **Not a report for the waiting list.** A report on Delivery Note filtered on `pp_ccb_handed_over` looks right, but iVendNext refuses it: its install checks a report's columns and filters (and a card's or chart's field) against the record type as it is before the install, so a field the same manifest adds is *not a field* yet. `ivn check` refuses it too (`tools/manifest/site_rules.py`). The waiting list is the Delivery Note list itself, where *Handed over* is a list column (`in_list_view`) and a condition added under *+ Add a Filter*.
 
 3. **Add the workspace**: a header, a line pointing at the report and naming the waiting list's filter, and shortcuts to the report and to the **Sales Order** and **Delivery Note** lists (iVendNext makes a manifest's workspaces after its reports, so a shortcut may open the app's own report). The workspace opens for the roles the manifest names and the administrator, so the report's `roles` decide who opens it: name every role that works the board. Naming roles replaces the record type's own readers on the report, so keep the sales desk's roles in it.
 

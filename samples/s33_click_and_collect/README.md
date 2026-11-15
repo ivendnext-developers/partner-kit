@@ -1,6 +1,6 @@
 # S33 — Click and collect (`pp_ccb`): a Desk board for web orders
 
-A store's board for the web orders it must pick and hand over, in Desk, with no code of its own. A report lists the web orders still to pick; two fields on the delivery note record the hand-over, and the Delivery Note list filtered on one of them lists the orders waiting for their customer. Nothing leaves the retailer's iVendNext: no service, no outside address.
+A store's board for the web orders it must pick and hand over, in Desk, with no code of its own. A report lists the web orders still to pick; two fields on the delivery note record the hand-over, the Delivery Note list shows the till's own hand-over time beside them, and that list filtered on them lists the orders waiting for their customer. Nothing leaves the retailer's iVendNext: no service, no outside address.
 
 ![The workspace: the line saying where the two lists are, and the two lists](screenshots/01_workspace.png)
 
@@ -19,6 +19,7 @@ ivn new acme_collect --from s33
 What a partner usually changes:
 
 - **The two fields on Delivery Note:** `pp_ccb_handed_over` and `pp_ccb_collected_by` in `custom_fields` in `manifest.json`.
+- **The list's columns:** `property_setters` in `manifest.json` (the till's *POS Pickup Handed At* shown, *% Installed* hidden).
 - **The pick list:** the report's filters, and the roles it and the workspace open for (`roles`), in `reports` in `manifest.json`.
 - **The workspace:** `workspaces` in `manifest.json`, the report, the two lists and the line that names the waiting filter.
 - **The words Desk shows:** `translations` in `manifest.json` (*Click and collect*, *Web orders to pick*).
@@ -35,6 +36,13 @@ ivn try
 ```
 
 ## Versions
+
+### 0.1.3
+
+- The Delivery Note list shows the till's own *POS Pickup Handed At* beside *Handed over* (in place of *% Installed*), so an order handed over at the till's *Pickup & curbside* board reads as handed over in the app's *Delivery notes* list.
+- A saved waiting list keeps *Handed over No* when opened: *Handed over* is no longer in the list's filter bar, whose tick box could not hold *No*.
+- A waiting list saved before 0.1.3 never stored *Handed over No* (the filter bar dropped it when the list was saved): open it, set *Handed over* No again and save it.
+- On a screen 1366 pixels wide or less, Desk's list shows four columns: the till's hand-over time is then on the delivery note's form and in the list's Report view.
 
 ### 0.1.2
 
