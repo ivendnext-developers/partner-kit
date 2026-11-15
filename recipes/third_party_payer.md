@@ -39,7 +39,9 @@ use the till's own *On Account* tender instead: there is nothing to split.
      field:claim_ref`), so a sale is never claimed twice; `<PREFIX> Claim Batch` (the claims file);
      `<PREFIX> Remittance`, entered by the clerk and matched by your service;
    - **permission rows that keep health data off the till:** members and claims are read by your clerk's role and
-     your integration role only;
+     your integration role only; your clerk's role gets *Select* on Customer (`role_rights`), so it can pick the
+     customer when it enrols a member, without opening the customer's record (the list shows each customer's group,
+     territory, mobile number and main address);
    - **a tick on Customer**, *Barred from sales a third party pays*;
    - **Desk buttons** (`desk_actions` with `extension_subscriptions` of point `desk_action`): build claims, make
      the claims file, match a remittance, bill a rejected claim back;
