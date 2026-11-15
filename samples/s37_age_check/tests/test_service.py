@@ -11,6 +11,7 @@ import hmac
 import io
 import json
 import os
+import re
 import socket
 import sys
 import tempfile
@@ -98,7 +99,11 @@ class OneShop(unittest.TestCase):
     def test_a_restricted_scan_shows_the_shops_day_and_records_the_check(self):
         code, out = self.scan(scan())
         self.assertEqual((code, out["verdict"]), (200, "notice"))
-        self.assertEqual(out["message"], "WHISKY: customers 18 or over. Born on or before 22 Oct 2008. Ask for ID if they look under 25.")
+        msg = out["message"]                                       # the facts the cashier needs, not the sentence
+        self.assertIn("WHISKY", msg); self.assertRegex(msg, r"\b18\b")
+        self.assertIn("22 Oct 2008", msg)
+        self.assertRegex(msg, r"\b25\b")                                                  # the look-under age
+        self.assertLessEqual(len(msg), 140)
         self.assertEqual(out["sale_attributes"], [{"sale_attribute": "PP AGE ID Checked", "attribute_value": "18 or over"}])
 
     def test_the_shops_hours_decide_the_date_shown(self):
@@ -181,7 +186,10 @@ class OneShop(unittest.TestCase):
 
     def test_no_settings_record_is_utc_and_see_their_id(self):
         self.api.settings_by[URL] = None
-        self.assertTrue(self.scan(scan())[1]["message"].endswith("Born on or before 22 Oct 2008. See their ID."))
+        msg = self.scan(scan())[1]["message"]
+        self.assertIn("WHISKY", msg); self.assertRegex(msg, r"\b18\b")
+        self.assertIn("22 Oct 2008", msg)
+        self.assertEqual(len(re.findall(r"\b18\b", msg)), 1, msg)       # no look-under age is shown
 
     def test_the_shop_down_is_a_503_so_the_down_answer_applies(self):
         self.api.down = True

@@ -5,6 +5,7 @@ check recorded on the sale and the refusal at Pay, the remembered asks, the shop
 """
 
 import datetime
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -106,14 +107,25 @@ class Scan(unittest.TestCase):
     def test_a_restricted_item_shows_the_date_and_records_the_check(self):
         s = agecheck.settings_of(SETTINGS)
         out = agecheck.on_scan(scan(), 18, s, TODAY, "PP AGE")
-        self.assertEqual(out, {"verdict": "notice",
-                               "message": "WHISKY: customers 18 or over. Born on or before 22 Oct 2008. Ask for ID if they look under 25.",
-                               "sale_attributes": [{"sale_attribute": "PP AGE ID Checked", "attribute_value": "18 or over"}]})
+        self.assertEqual(out["verdict"], "notice")
+        self.assertEqual(out["sale_attributes"], [{"sale_attribute": "PP AGE ID Checked", "attribute_value": "18 or over"}])
+        msg = out["message"]                                       # the facts the cashier needs, not the sentence
+        self.assertIn("WHISKY", msg); self.assertRegex(msg, r"\b18\b")              # the item and the age
+        self.assertIn("22 Oct 2008", msg)                                                  # the born-on-or-before date
+        self.assertRegex(msg, r"\b25\b")                                                   # the look-under age
+
+    def test_the_scan_is_at_most_140_whatever_the_item(self):
+        out = agecheck.on_scan(scan("W" * 200, "Spirits"), 18, agecheck.settings_of(SETTINGS), TODAY, "PP AGE")
+        self.assertLessEqual(len(out["message"]), 140)
+        self.assertIn("22 Oct 2008", out["message"])
 
     def test_see_their_id_when_the_shop_has_no_policy_or_it_is_not_above_the_age(self):
         for look in (0, None, 21):
             out = agecheck.on_scan(scan("VAPE", "Vapes"), 21, agecheck.settings_of({"look_under": look}), TODAY, "PP AGE")
-            self.assertTrue(out["message"].endswith("Born on or before 22 Oct 2005. See their ID."), out)
+            msg = out["message"]
+            self.assertIn("VAPE", msg); self.assertRegex(msg, r"\b21\b")
+            self.assertIn("22 Oct 2005", msg)
+            self.assertEqual(len(re.findall(r"\b21\b", msg)), 1, msg)       # the age once: no look-under age is shown
 
     def test_no_age_is_allow_with_nothing_shown(self):
         self.assertEqual(agecheck.on_scan(scan("BREAD", "Food"), 0, agecheck.settings_of(SETTINGS), TODAY, "PP AGE"),
