@@ -110,7 +110,7 @@ class Scan(unittest.TestCase):
         self.assertEqual(out["verdict"], "notice")
         self.assertEqual(out["sale_attributes"], [{"sale_attribute": "PP AGE ID Checked", "attribute_value": "18 or over"}])
         msg = out["message"]                                       # the facts the cashier needs, not the sentence
-        self.assertIn("WHISKY", msg); self.assertRegex(msg, r"\b18\b")              # the item and the age
+        self.assertNotIn("WHISKY", msg); self.assertRegex(msg, r"\b18\b")           # the age; the till names the item, never its code
         self.assertIn("22 Oct 2008", msg)                                                  # the born-on-or-before date
         self.assertRegex(msg, r"\b25\b")                                                   # the look-under age
 
@@ -123,7 +123,7 @@ class Scan(unittest.TestCase):
         for look in (0, None, 21):
             out = agecheck.on_scan(scan("VAPE", "Vapes"), 21, agecheck.settings_of({"look_under": look}), TODAY, "PP AGE")
             msg = out["message"]
-            self.assertIn("VAPE", msg); self.assertRegex(msg, r"\b21\b")
+            self.assertRegex(msg, r"\b21\b")
             self.assertIn("22 Oct 2005", msg)
             self.assertEqual(sorted(re.findall(r"\d+", msg)), sorted(["21", "22", "2005"]), msg)   # the age and the date only: no look-under age
 
@@ -144,6 +144,9 @@ class Scan(unittest.TestCase):
         out = agecheck.on_scan(scan("W<b>" * 30), 120, agecheck.settings_of({"look_under": 120}), TODAY, "PP AGE")
         self.assertLessEqual(len(out["message"]), 140)
         self.assertNotIn("<", out["message"])
+        reason = agecheck.on_check(context([line("W", "Vapes", name="W<b>" * 30)]), [21], 0)["reason"]   # a name the shop typed
+        self.assertLessEqual(len(reason), 140)
+        self.assertNotIn("<", reason)
 
 
 class Check(unittest.TestCase):

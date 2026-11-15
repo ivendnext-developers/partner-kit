@@ -100,7 +100,7 @@ class OneShop(unittest.TestCase):
         code, out = self.scan(scan())
         self.assertEqual((code, out["verdict"]), (200, "notice"))
         msg = out["message"]                                       # the facts the cashier needs, not the sentence
-        self.assertIn("WHISKY", msg); self.assertRegex(msg, r"\b18\b")
+        self.assertRegex(msg, r"\b18\b")
         self.assertIn("22 Oct 2008", msg)
         self.assertRegex(msg, r"\b25\b")                                                  # the look-under age
         self.assertLessEqual(len(msg), 140)
@@ -187,7 +187,7 @@ class OneShop(unittest.TestCase):
     def test_no_settings_record_is_utc_and_see_their_id(self):
         self.api.settings_by[URL] = None
         msg = self.scan(scan())[1]["message"]
-        self.assertIn("WHISKY", msg); self.assertRegex(msg, r"\b18\b")
+        self.assertRegex(msg, r"\b18\b")
         self.assertIn("22 Oct 2008", msg)
         self.assertEqual(sorted(re.findall(r"\d+", msg)), sorted(["18", "22", "2008"]), msg)   # the age and the date only: no look-under age
 

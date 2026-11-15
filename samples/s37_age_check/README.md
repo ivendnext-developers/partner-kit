@@ -44,6 +44,10 @@ ivn try
 
 ## Versions
 
+### 1.1.6
+
+- The age box at the scan no longer starts with the item's code (*BDR-001-PT: customers 21 or over …*): it reads *Customers 21 or over. Born on or before …*, and the till names the item right under it (*This will be added to House IPA / Pint:*). The service changes; the manifest is unchanged.
+
 ### 1.1.5
 
 - *Try it at the till* starts with the *Age check settings* record `Default` and the store's hours from UTC: without it the till counts the day in UTC, so in an American evening it showed a date of birth one day late. The service and the manifest are unchanged.
