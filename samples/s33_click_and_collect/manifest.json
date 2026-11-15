@@ -53,7 +53,7 @@
    "name": "PP CCB Click and collect",
    "blocks": [
     {"type": "header", "data": {"text": "<span class=\"h4\">Click and collect</span>", "col": 12}},
-    {"type": "paragraph", "data": {"text": "To pick: open Web orders to pick below, then make each order's delivery note. Still to collect: open Delivery notes and filter Status To Bill or Completed, Is Return No, % Returned less than 100, Handed over No, POS Pickup Handed At not set, Customer's Purchase Order No set, your warehouse and Date on or after the install day; save that filter.", "col": 12}},
+    {"type": "paragraph", "data": {"text": "To pick: open Web orders to pick below, then make each order's delivery note. Still to collect: open Delivery notes and filter Status To Bill or Completed, Is Return No, % Returned less than 100, Handed over No, POS Pickup Handed At not set, Customer's Purchase Order No set, your warehouse and Date on or after the install day; save that filter. A filter saved before this update lost Handed over No: set it again and save.", "col": 12}},
     {"type": "shortcut", "data": {"shortcut_name": "Web orders to pick", "col": 4}},
     {"type": "shortcut", "data": {"shortcut_name": "Sales orders", "col": 4}},
     {"type": "shortcut", "data": {"shortcut_name": "Delivery notes", "col": 4}}

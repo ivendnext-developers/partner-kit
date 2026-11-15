@@ -41,6 +41,8 @@ ivn try
 
 - The Delivery Note list shows the till's own *POS Pickup Handed At* beside *Handed over* (in place of *% Installed*), so an order handed over at the till's *Pickup & curbside* board reads as handed over in the app's *Delivery notes* list.
 - A saved waiting list keeps *Handed over No* when opened: *Handed over* is no longer in the list's filter bar, whose tick box could not hold *No*.
+- A waiting list saved before 0.1.3 never stored *Handed over No* (the filter bar dropped it when the list was saved): open it, set *Handed over* No again and save it.
+- On a screen 1366 pixels wide or less, Desk's list shows four columns: the till's hand-over time is then on the delivery note's form and in the list's Report view.
 
 ### 0.1.2
 

@@ -51,8 +51,9 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual((f.get("in_list_view"), f.get("in_standard_filter")), (1, 0))
 
     def test_the_list_shows_the_tills_own_hand_over_time_in_place_of_percent_installed(self):
-        # the till's Pickup & curbside board writes custom_mpos_pickup_handed_at, never Handed over; the list's
-        # columns stop at six on a laptop, so % Installed (the engine's, after Grand Total) makes room for it
+        # the till's Pickup & curbside board writes custom_mpos_pickup_handed_at, never Handed over; Desk's list shows
+        # 6 columns between 1367 and 1919 px wide, so % Installed (the engine's, after Grand Total) makes room for it;
+        # at 1366 px or less it shows 4, and the time is on the form and in Report view (the README says so)
         shown = {(p["doc_type"], p["field_name"], p["property"]): p["value"] for p in MANIFEST["property_setters"]}
         self.assertEqual(shown, {("Delivery Note", "custom_mpos_pickup_handed_at", "in_list_view"): 1,
                                  ("Delivery Note", "per_installed", "in_list_view"): 0})
