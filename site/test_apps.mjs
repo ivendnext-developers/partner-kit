@@ -68,10 +68,23 @@ check("a plain visit is nothing", a.readReturn("", null).kind === "none");
   check("K192: a screen held only in the page (the gallery, Made) comes back to the list, as does an app page with no app",
     ["gallery", "name", "made", "fromsite", "nonsense"].every((s) => a.keptSignIn(keep({ screen: s }), t, "reload").screen === "home") &&
     a.keptSignIn(keep({ appId: null }), t, "reload").screen === "home" && a.keptSignIn(keep({ screen: "people" }), t, "reload").appId === null);
+  // what the page does with this tab's storage, on arrival and as it goes
+  const fake = (init) => { const m = new Map(init ? [[a.KEEP, init]] : []); return { m, getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) }; };
+  let st = fake(keep({}));
+  check("K192: on arrival the kept session is taken out at once, used by a reload", a.takeKept(st, t, "reload").session === "sess" && !st.m.has(a.KEEP));
+  st = fake(keep({}));
+  check("K192: and taken out at once when it may not be used", a.takeKept(st, t, "navigate") === null && !st.m.has(a.KEEP));
+  st = fake();
+  a.keepOnLeave(st, t, { session: "sess", screen: "settings", appId: "acme_kit" });
+  k = a.takeKept(st, t + 1500, "reload");
+  check("K192: what the page keeps as it goes, a reload brings back", k && k.session === "sess" && k.screen === "settings" && k.appId === "acme_kit");
+  st = fake();
+  a.keepOnLeave(st, t, { session: null, screen: "home" });
+  a.keepOnLeave(st, t, { session: "sess", screen: "home", signingOut: true });
+  check("K192: nothing is kept when signed out, or once Sign out is pressed", !st.m.has(a.KEEP));
   const src = readFileSync(path.join(out, "assets/apps.js"), "utf8");
-  check("K192: the session is written to session storage only as the page goes, and taken out as it comes back",
-    (src.match(/setItem\(KEEP,/g) || []).length === 1 && /addEventListener\("pagehide"/.test(src) && /removeItem\(KEEP\)/.test(src) &&
-    !/localStorage/.test(src));
+  check("K192: the page uses these two, and no lasting storage", /var kept = takeKept\(root\.sessionStorage,/.test(src) &&
+    /addEventListener\("pagehide", function \(\) \{\s*keepOnLeave\(/.test(src) && (src.match(/setItem\(KEEP,/g) || []).length === 1 && !/localStorage/.test(src));
 }
 // the checkout opens in its own tab (this tab keeps its sign-in); its tab comes back to a line, never a sign-in alone
 r = a.readReturn("?order=0649c34008d66ea5", null);
