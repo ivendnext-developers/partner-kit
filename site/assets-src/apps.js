@@ -642,6 +642,8 @@
     if (screen === "home") {
       call("GET", "/handovers").then(function (r) { data.handovers = r; render(); }, function () {});
       call("GET", "/apps").then(function (r) { data.apps = r; render(); }, fail);
+      // a new version of the Terms may have come while the page was open: home asks again (Terms §13)
+      call("GET", "/whoami").then(function (w) { if (w.terms_due !== who.terms_due) { who = w; render(); } }, function () {});
     }
     if ((screen === "app" || screen === "settings") && data.appId) openApp(data.appId);
   }

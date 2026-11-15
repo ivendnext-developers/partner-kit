@@ -79,7 +79,8 @@ const src = readFileSync(path.join(out, "assets/apps.js"), "utf8");
 check("Terms §13: My apps' first screen shows the tick when the company is due, and Accept records it",
   src.includes("if (who.terms_due) box.appendChild(vTerms());") &&
   src.includes('call("POST", "/terms", { schedule_version: who.schedule_version })') &&
-  src.includes("if (!tick.checked) { say(WORDS.tickTerms, true); render(); return; }"));
+  src.includes("if (!tick.checked) { say(WORDS.tickTerms, true); render(); return; }") &&
+  src.includes('call("GET", "/whoami").then(function (w) { if (w.terms_due !== who.terms_due) { who = w; render(); } }, function () {});'));
 check("Accept's words are said after going home, which clears the last message",
   /go\("home"\);[^\n]*\n\s*say\(acceptedWords\(o\.app, r\)\);\s*\n\s*render\(\);/.test(src));
 
