@@ -1,6 +1,6 @@
 # S32 — Coupon rules (a check before payment that refuses a coupon the retailer restricted)
 
-Rules a retailer adds to its own coupons, checked when the cashier presses **Pay**. One rule record per coupon, written in Desk, each off until ticked or set: first purchase only, only for customers in one group, and a sale of a set amount needed for each use. The till refuses with *"This sale can't be paid"* and says why; the cashier removes the coupon (or adds the new customer) and presses Pay again. A coupon with no rule is never refused.
+Rules a retailer adds to its own coupons, checked when the cashier presses **Pay**. One rule record per coupon, written in Desk, each off until ticked or set: first purchase only, only for customers in one group, and a sale of a set amount, before its discounts, needed for each use. The till refuses with *"This sale can't be paid"* and says why; the cashier removes the coupon (or adds the new customer) and presses Pay again. A coupon with no rule is never refused.
 
 ![A rule with Sale needed for each use set to 50.00](screenshots/coupon-rules-sale-needed-rule.png)
 
@@ -41,6 +41,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.2.3
+
+- *Sale needed for each use* is judged on the sale before its line discounts, so a coupon no longer counts against its own minimum: a $5.00 coupon that needs $30.00 is taken on a $33.63 basket, where 1.2.2 refused it at *this sale is USD 28.65*. A promotion's free or two-for-one article and a discount on the whole sale still count off, and a cashier's line discount is added back with the coupon's (the check is never sent a coupon's own amount). Tax stays in; the tax a discount took off is not added back. The refusal says *before discounts* and names that figure.
 
 ### 1.2.2
 

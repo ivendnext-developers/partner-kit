@@ -3,9 +3,9 @@
  "app": "pp_cpn",
  "prefix": "PP CPN",
  "title": "Coupon rules",
- "version": "0.3.2",
+ "version": "0.3.3",
  "publisher": "Partner Programme sample",
- "description": "Rules the retailer adds to its own coupons, checked at Pay. A check before payment: when the cashier presses Pay on a sale carrying a coupon the retailer wrote a rule for, iVendNext sends its priced basket and the service refuses the coupon if the rule says only for one customer group and the sale's customer is not in it, or first purchase only and the sale has no customer or the customer already has a submitted sale (counted with iVendNext's own count over POS Invoice and Sales Invoice, never a return), or the coupons on a sale need more of its total than it has (Sale needed for each use). The cashier removes the coupon and presses Pay again. One record of PP CPN Rule per coupon; a coupon with no rule is never refused, and a sale with no coupon is allowed without reading iVendNext. The service reads the rules and the count with the app's integration user and writes nothing. The install makes the role PP CPN Integration; the install gives it to the app's own user and, from role_rights, read on POS Invoice and Sales Invoice. The check is on from the install. When the service is down the sale goes on and is flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
+ "description": "Rules the retailer adds to its own coupons, checked at Pay. A check before payment: when the cashier presses Pay on a sale carrying a coupon the retailer wrote a rule for, iVendNext sends its priced basket and the service refuses the coupon if the rule says only for one customer group and the sale's customer is not in it, or first purchase only and the sale has no customer or the customer already has a submitted sale (counted with iVendNext's own count over POS Invoice and Sales Invoice, never a return), or the coupons on a sale need more than the sale before its discounts (Sale needed for each use). The cashier removes the coupon and presses Pay again. One record of PP CPN Rule per coupon; a coupon with no rule is never refused, and a sale with no coupon is allowed without reading iVendNext. The service reads the rules and the count with the app's integration user and writes nothing. The install makes the role PP CPN Integration; the install gives it to the app's own user and, from role_rights, read on POS Invoice and Sales Invoice. The check is on from the install. When the service is down the sale goes on and is flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": ["https://host.docker.internal:8125/cpn/check"],
  "doctypes": [
   {
@@ -23,7 +23,7 @@
      "in_list_view": 1,
      "description": "Blank: any customer. Exactly this group: a customer in a group under it is refused."},
     {"fieldname": "spend_per_use", "fieldtype": "Currency", "label": "Sale needed for each use", "in_list_view": 1,
-     "description": "Blank or 0: no cap. Each coupon on a sale with an amount here takes that much of the sale's total (in the sale's own currency, as rounded for payment, after its discounts, tax included); more than the total is refused at Pay. Two coupons with 1,000 here need a sale of 2,000."}
+     "description": "Blank or 0: no cap. Each coupon on a sale with an amount here takes that much of the sale before its line discounts (in the sale's own currency: the total to pay, tax included, with its lines' discounts added back, so a coupon never counts against itself; a promotion's free or two-for-one article and a discount on the whole sale still count off); more than that is refused at Pay. Two coupons with 1,000 here need a sale of 2,000."}
    ],
    "permissions": [
     {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1, "share": 0, "print": 1, "email": 0},
