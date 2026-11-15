@@ -24,6 +24,7 @@ class ContractTest(unittest.TestCase):
                  "sent, total moved": route.sent(order(), long, long, {"grand_total": 10 ** 9, "rounded_total": 10 ** 9}),
                  "already": route.already("Maadi Store - S", "Maadi"), "not saved": app._warning(app.NOT_SAVED), "already, long": route.already(long, long),
                  "not set up": app._warning(app.NOT_SET_UP), "refused": app._warning(app.REFUSED + app.CONNECT_AGAIN),
+                 "no right": app._warning(app.NO_RIGHT),
                  "no territory": app._warning(app.NO_TERRITORY), "submitted": app._warning(app.SUBMITTED),
                  "gone": app._warning(app.GONE), "changed": app._warning(app.CHANGED),
                  "no store": app._warning(app.no_store(long)), "not taken": app._warning(app.not_taken(long))}
