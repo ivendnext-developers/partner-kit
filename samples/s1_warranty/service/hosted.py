@@ -10,7 +10,8 @@ It runs as a FUNCTION (app.json "runs": "function", "schedule"; ``lambda_handler
 (``PP WRC Warranty Term``). A pass does what ``app.py`` does on your own server from a webhook (``register.py``): one warranty
 per covered serial number and one Comment on the sale. The Comment is the record: the shops store (the table on hosting) keeps
 only each site's place, one row per record type, because every pass reads that table's list of sites. A site's first pass
-marks the site's own newest sale: older sales are left alone, also when one is saved again later.
+starts at the install, on the site's own clock (its newest sale less the time since the site connected), so a sale rung
+before that pass still gets its warranty; older sales are left alone, also when one is saved again later.
 
 When the app has no user's key yet, the shop refuses that key, or the shop cannot be read in time, the cashier is told so
 in words (200, a warning message), never a guess. A pass that cannot read a site says so in the log and tries again next time.
@@ -31,7 +32,7 @@ import os
 import sys
 import threading
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SAMPLE = os.path.dirname(HERE)
@@ -104,9 +105,12 @@ class SiteStore:
     def mark(self, doctype: str) -> dict | None:
         return self.store.get(self._name("mark", doctype))
 
-    def start(self, doctype: str, newest: str) -> None:
-        """The first pass: this site's place starts just after its own newest sale, on its own clock."""
-        at = (datetime.fromisoformat(newest[:19]) + timedelta(seconds=1)).strftime("%Y-%m-%d %H:%M:%S")
+    def start(self, doctype: str, newest: str, since_s: float = 0) -> None:
+        """The first pass: this site's place starts at the install, on the site's own clock: its newest sale less the time
+        since the site connected, so the sales rung between the install and this pass are read. Without that time, just
+        after its newest sale."""
+        step = timedelta(seconds=-since_s) if since_s > 0 else timedelta(seconds=1)
+        at = (datetime.fromisoformat(newest[:19]) + step).strftime("%Y-%m-%d %H:%M:%S")
         self.store.put(self._name("mark", doctype), {"at": at, "first": at, "from": at[:10]})
 
     def floor(self, doctype: str) -> tuple:
@@ -121,6 +125,15 @@ class SiteStore:
 
     def event(self, kind: str, what: str) -> None:
         print(json.dumps({"site": self.site, "event": kind, "what": what[:300]}), flush=True)
+
+
+def since_connected(record: dict) -> float:
+    """Seconds since the site connected (its install, or its last Connect again); 0 when the record holds no such time."""
+    try:
+        at = datetime.strptime(record.get("connected") or "", "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return 0
+    return max(0.0, (datetime.now(timezone.utc) - at).total_seconds())
 
 
 def _warning(body: str) -> dict:
@@ -153,7 +166,7 @@ class Service:
             for dt in register.DOCTYPES:
                 if not kept.mark(dt):
                     newest = door.list(dt, ["modified"], [["docstatus", "=", 1]], "modified desc", 1)
-                    kept.start(dt, newest[0]["modified"] if newest else EARLIEST)
+                    kept.start(dt, newest[0]["modified"] if newest else EARLIEST, since_connected(record))
             return register.reconcile(kept, door, EARLIEST, time_left, OVERLAP_S, kept.floor)
         except TenantError as e:
             print(json.dumps({"site": site, "pass": "could not read", "why": str(e)[:200]}), flush=True)
