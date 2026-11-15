@@ -50,7 +50,7 @@ On [My apps](https://developer.ivendnext.com/apps), press **Sign in with GitHub*
 ivn login
 ```
 
-It opens your browser. The first time only, set up your company: press **Set up my company**, give its name as retailers will see it, take the first word we suggest for your apps (for example `acme`), tick the Hosting Schedule and press **Continue**. Then press **Sign the command in**.
+It opens your browser. The first time only, set up your company: press **Set up my company**, give its name as retailers will see it, take the first word we suggest for your apps (for example `acme`), tick the iVendNext Developer Terms and press **Continue**. Then press **Sign the command in**.
 
 ### 2. Make the app: blank, or from a sample
 

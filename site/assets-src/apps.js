@@ -61,6 +61,9 @@
     deviceWarn: "Enter a code only from a command you ran yourself, just now: it signs that command in as you, for your company.",
     accept: "Accept",
     refuse: "Refuse",
+    // Terms §13: the iVendNext Developer Terms are accepted here, and again for a new version
+    tickTerms: "Tick the iVendNext Developer Terms first.",
+    termsNew: "The iVendNext Developer Terms have a new version. Accept it to publish a version or order hosting; everything else works as before.",
     // the purpose lines and small answers a review asked for
     peopleWhy: "Everyone here can make, try and publish your company's apps. An owner adds and removes people.",
     tokensWhy: "A token lets a build server publish your company's apps without a person signing in.",
@@ -115,7 +118,7 @@
     return "Every app you make starts with it" + (word ? ": " + word + "_…" : "") + ". It is yours once you press Continue.";
   }
 
-  function scheduleLine(version) { return "I accept the App Hosting Schedule (version " + version + ")"; }
+  function scheduleLine(version) { return "I accept the iVendNext Developer Terms (version " + version + ")"; }
 
   function allApps(name) { return "All of " + name + "'s apps"; }
 
@@ -705,9 +708,9 @@
     sched.checked = !!data.coTick;   // a refusal keeps the tick, the name and the word
     sched.addEventListener("change", function () { data.coTick = sched.checked; });
     box.appendChild(el("p", {}, sched, " ", el("label", { "for": "a-sched" },
-      el("a", { href: who.schedule_url || "#", target: "_blank", rel: "noopener", text: scheduleLine(who.schedule_version) }))));
+      el("a", { href: who.schedule_url || "#", target: "_blank", rel: "noopener", text: scheduleLine(who.terms_version || who.schedule_version) }))));
     box.appendChild(button(WORDS.cont, function (ev) {
-      if (!sched.checked) { say("Tick the App Hosting Schedule first.", true); render(); return; }
+      if (!sched.checked) { say(WORDS.tickTerms, true); render(); return; }
       ev.target.disabled = true;
       call("POST", "/company", { name: name.value.trim(), word: word.value.trim().toLowerCase(), schedule_version: who.schedule_version })
         .then(function () { return call("GET", "/whoami"); })
@@ -718,10 +721,29 @@
     return box;
   }
 
+  // Terms §13: a new version, asked of anyone in the company until one person accepts it for the company; until then
+  // the hosting refuses a publish and an order, and nothing else
+  function vTerms() {
+    var box = card(null);
+    box.appendChild(p(WORDS.termsNew));
+    var tick = el("input", { type: "checkbox", id: "a-terms" });
+    box.appendChild(el("p", {}, tick, " ", el("label", { "for": "a-terms" },
+      el("a", { href: who.schedule_url || "#", target: "_blank", rel: "noopener", text: scheduleLine(who.terms_version || who.schedule_version) }))));
+    box.appendChild(button(WORDS.accept, function (ev) {
+      if (!tick.checked) { say(WORDS.tickTerms, true); render(); return; }
+      ev.target.disabled = true;
+      call("POST", "/terms", { schedule_version: who.schedule_version })
+        .then(function () { return call("GET", "/whoami"); })
+        .then(function (r) { who = r; say(""); render(); }, function (e) { ev.target.disabled = false; fail(e); });
+    }));
+    return box;
+  }
+
   // J2-05, J6-01: My apps
   function vHome() {
     var box = card(who.name || who.company);
     box.appendChild(p("Signed in as " + who.login + (who.role === "owner" ? ", an owner." : ".")));
+    if (who.terms_due) box.appendChild(vTerms());
     box.appendChild(el("p", {}, button(S.open, function () { go("sites"); }, true), " ",
       button(WORDS.people, function () { go("people"); }, true), " ",
       button(WORDS.tokens, function () { go("tokens"); }, true), " ", button("Sign out", signOut, true)));

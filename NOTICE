@@ -22,8 +22,8 @@ repository the file is under the Apache License, Version 2.0.
 
 Not under the Apache licence:
 - The iVendNext name and logo (site/assets-src/logo*.svg) are trademarks of CitiXsys and are not
-  licensed for reuse. The partner terms (at https://legal.ivend.com, once published) say how partners may refer to
-  iVendNext.
+  licensed for reuse. The iVendNext Developer Terms
+  (https://legal.ivend.com/ivendnext-developer-terms/) say how partners may refer to iVendNext.
 - The fonts in site/assets-src/fonts/ are under the SIL Open Font License 1.1
   (site/assets-src/fonts/OFL.txt).
 
