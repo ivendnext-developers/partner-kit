@@ -11,7 +11,9 @@
 //
 // It talks to the hosting's web door only (https://hosting.ivendnext.app/v1/web/), as the hosting page does: the same
 // GitHub sign-in (PKCE; the code is exchanged on the server, the GitHub token never reaches this page), the session kept
-// in this script's memory only (a reload signs out). A token made on Tokens is shown once and kept nowhere.
+// in this script's memory. A reload keeps it (K192): as the page goes, the session and the screen are put in this tab's
+// session storage, and as it comes back they are taken out at once and used only by a reload within a minute; a closed
+// tab, a new tab or a duplicated one is signed out. A token made on Tokens is shown once and kept nowhere.
 //
 // The pure parts are exported for site/test_apps.mjs; the page itself is checked in a browser.
 (function (root) {
@@ -20,6 +22,7 @@
   var API = "https://hosting.ivendnext.app/v1/web";
   var PAGE = "https://developer.ivendnext.com/apps";   // a callback address of the GitHub App
   var PENDING = "ivn-apps-signin";                      // the state and verifier of a sign-in on its way, used once
+  var KEEP = "ivn-apps-keep";                            // the session and screen across a reload, taken out at once (K192)
   var CODE = "ivn-apps-code";                            // a code from the command's login, kept across the sign-in
   var START = "ivn-apps-start";                          // the ticks a shortlist or a sample's page brought, kept across it
   // Ask for it opens the public *Tell us what is missing* page, never the members-only form (a 404 to anyone not
@@ -89,6 +92,35 @@
     return "https://github.com/login/oauth/authorize?" + new URLSearchParams({
       client_id: clientId, redirect_uri: PAGE, state: state, code_challenge: challenge, code_challenge_method: "S256"
     }).toString();
+  }
+
+  // K192: what a reload brings back. `raw` is what the page put in this tab's session storage as it went, `nav` how this
+  // load came (the browser's navigation type). Only a reload within a minute signs back in: a tab reopened after it was
+  // closed, a duplicated tab, a link or the Back button come as other types and start signed out, as before. The screen
+  // comes back where it can be read afresh; a try, a publish or the logs come back to their app's page.
+  var KEEP_MS = 60000;
+  var KEEP_SCREENS = { home: "home", people: "people", tokens: "tokens", sites: "sites", app: "app", settings: "settings",
+                       "try": "app", publish: "app", logs: "app" };
+  function keptSignIn(raw, now, nav) {
+    var k = null;
+    try { k = JSON.parse(raw || "null"); } catch (e) { return null; }
+    if (nav !== "reload" || !k || typeof k.session !== "string" || !k.session || typeof k.at !== "number" ||
+        !(now - k.at >= 0 && now - k.at <= KEEP_MS)) return null;
+    var screen = KEEP_SCREENS[k.screen] || "home", appId = typeof k.appId === "string" && k.appId ? k.appId : null;
+    if ((screen === "app" || screen === "settings") && !appId) screen = "home";
+    return { session: k.session, screen: screen, appId: screen === "app" || screen === "settings" ? appId : null };
+  }
+  // On arrival: what this tab kept, taken out at once whatever it holds, and what a reload may use of it
+  function takeKept(st, now, nav) {
+    var kept = keptSignIn(st.getItem(KEEP), now, nav);
+    st.removeItem(KEEP);
+    return kept;
+  }
+  // As the page goes: the session and the screen, kept only while signed in (or still coming back from a reload) and
+  // never once Sign out is pressed
+  function keepOnLeave(st, now, s) {
+    if (!s.session || s.signingOut) return;
+    st.setItem(KEEP, JSON.stringify({ session: s.session, at: now, screen: s.screen, appId: s.appId || null }));
   }
 
   // What the address says on arrival: GitHub's return (taken only with this tab's state, once), or a code the command
@@ -552,7 +584,7 @@
     return lines.join("\n") + "\n";
   }
 
-  var api = { WORDS: WORDS, PAGE: PAGE, readReturn: readReturn, authorizeUrl: authorizeUrl, challengeOf: challengeOf,
+  var api = { WORDS: WORDS, PAGE: PAGE, readReturn: readReturn, keptSignIn: keptSignIn, takeKept: takeKept, keepOnLeave: keepOnLeave, KEEP: KEEP, KEEP_MS: KEEP_MS, authorizeUrl: authorizeUrl, challengeOf: challengeOf,
               suggestWord: suggestWord, wordHint: wordHint, scheduleLine: scheduleLine, allApps: allApps, appTitle: appTitle,
               acceptedWords: acceptedWords, G: G, INDUSTRIES: INDUSTRIES, DOOR_WORDS: DOOR_WORDS, doorWords: doorWords,
               needKind: needKind, KIND_WORDS: KIND_WORDS, instead: instead, askUrl: askUrl, sampleNumber: sampleNumber,
@@ -2170,7 +2202,8 @@
   }
 
   function signOut() {
-    call("POST", "/signout").then(function () {}, function () {}).then(function () { session = null; who = null; data = {}; go("home"); });
+    signingOut = true;   // K192: a reload from here on is signed out, even before the hosting answers
+    call("POST", "/signout").then(function () {}, function () {}).then(function () { session = null; who = null; data = {}; signingOut = false; go("home"); });
   }
 
   var shown = null;
@@ -2216,6 +2249,15 @@
     ev.preventDefault(); data.made = null; data.pick = null; go("home");   // J6f F5: My apps, still signed in
   });
 
+  // K192: the session goes into this tab's session storage only as the page goes, and is taken out as it comes back.
+  // While a reload is still coming back (`kept`, until the hosting answers), a second reload keeps what the first brought.
+  var nav = root.performance && root.performance.getEntriesByType ? (root.performance.getEntriesByType("navigation")[0] || {}).type : "";
+  var kept = takeKept(root.sessionStorage, Date.now(), nav), signingOut = false;
+  root.addEventListener("pagehide", function () {
+    keepOnLeave(root.sessionStorage, Date.now(), kept || { session: session, screen: screen, appId: data.appId, signingOut: signingOut });
+  });
+  root.addEventListener("pageshow", function (ev) { if (ev.persisted) root.sessionStorage.removeItem(KEEP); });   // back from the browser's page cache: it never left
+
   var brought = readStart(root.location.search);
   if (brought) root.sessionStorage.setItem(START, JSON.stringify(brought));   // kept through the sign-in (J1-02, J1-14)
   var arrival = readReturn(root.location.search, JSON.parse(root.sessionStorage.getItem(PENDING) || "null"));
@@ -2227,6 +2269,13 @@
     cfg = c;
     if (arrival.kind === "refused") say(arrival.why, true);
     if (arrival.kind === "checkout") say(WORDS.backFromCheckout[arrival.left ? 1 : 0], arrival.left);
+    if (arrival.kind === "none" && kept) {   // K192: a reload, still signed in, on the same screen
+      session = kept.session;
+      return call("GET", "/whoami").then(function (w) {
+        who = w; screen = kept.screen; data.appId = kept.appId || undefined; kept = null;
+        if (!arrive()) { render(); load(); }
+      }, function () { session = null; who = null; kept = null; render(); });   // the session ended meanwhile: the sign-in, as before
+    }
     if (arrival.kind !== "signin") { render(); return; }
     return call("POST", "/signin", { code: arrival.code, verifier: arrival.verifier, redirect_uri: PAGE }).then(function (r) {
       session = r.session; who = r; delete who.session;
