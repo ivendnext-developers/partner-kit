@@ -10,10 +10,10 @@ record per coupon (``<prefix> Rule``, named by the coupon). ``on_check`` refuses
   submitted sales in the shop), or when the sale names no customer. The till always names one (its walk-in customer
   when the cashier has added none, who has usually bought before), so the refusal says to add the new customer;
 - **a sale needed for each use** (1.1.0): on a sale (``stage`` ``sale``), every coupon whose rule names an amount
-  takes that much of the sale's total (``totals.grand_minor``: as rounded for payment, after its discounts, the
-  coupons' own included, tax included; an exchange's replacement is its own sale, judged at its own total); when their
-  sum is more than the total, the coupons are refused. The amount is read in the sale's own currency, rounded up to
-  its minor unit. The check sees each coupon once (``coupon_codes`` is a set of names) and never a coupon's own
+  takes that much of the sale before its discounts (``before_discounts``, 1.2.3: the total as rounded for payment, tax
+  included, with every discount the check is sent added back, so a coupon never counts against its own minimum; an
+  exchange's replacement is its own sale, judged at its own total); when their sum is more than that, the coupons are
+  refused. The amount is read in the sale's own currency, rounded up to its minor unit. The check sees each coupon once (``coupon_codes`` is a set of names) and never a coupon's own
   amount, so the cap is per coupon: a coupon of 100 for each 1,000 spent is a rule of 1,000 on each such coupon, and
   two of them need a sale of 2,000.
 
@@ -81,6 +81,10 @@ def check_context(body: dict) -> dict:
     exp, totals = ctx.get("currency_exponent"), ctx.get("totals")
     if not _whole(exp) or not 0 <= exp <= 4 or not isinstance(totals, dict) or not _whole(totals.get("grand_minor")):
         raise ValueError("currency_exponent and totals.grand_minor are whole numbers")
+    lines = ctx.get("lines")
+    if (not _whole(totals.get("discount_minor")) or not isinstance(lines, list)
+            or not all(isinstance(ln, dict) and _whole(ln.get("discount_minor")) for ln in lines)):
+        raise ValueError("totals.discount_minor and each line's discount_minor are whole numbers")
     return ctx
 
 
@@ -130,8 +134,18 @@ def money(minor: int, exponent: int, currency: str = "") -> str:
     return f"{plain(currency, 3)} {text}".strip()
 
 
+def before_discounts(ctx: dict) -> int:
+    """The sale before its discounts, in minor units: ``totals.grand_minor`` with each line's ``discount_minor`` and the
+    sale's own ``totals.discount_minor`` added back, the till's *Grand Total* plus its *Discount*. A coupon books into its
+    lines' discount beside the promotions' and the cashier's, and the check is never sent a coupon's own amount, so all
+    are added back: a coupon never counts against its own minimum. Tax stays in, as it is on the total. A line priced
+    above its list (a negative discount) adds nothing, as on the till's *Discount*."""
+    cut = sum(max(0, ln["discount_minor"]) for ln in ctx["lines"]) + max(0, ctx["totals"]["discount_minor"])
+    return ctx["totals"]["grand_minor"] + cut
+
+
 def over_cap(ctx: dict, rules: dict, mine: list) -> dict | None:
-    """The refusal when the sale's capped coupons need more of its total than it has, else ``None``. On the ``return``
+    """The refusal when the sale's capped coupons need more than the sale before its discounts, else ``None``. On the ``return``
     stage a capped coupon is always refused, a backstop: no coupon reaches a return at today's till, and there the total
     is what the customer is paid back, never a sale."""
     capped = [c for c in mine if rules[c].get("spend")]
@@ -139,7 +153,7 @@ def over_cap(ctx: dict, rules: dict, mine: list) -> dict | None:
         return None
     exp = ctx["currency_exponent"]
     need = sum(int((rules[c]["spend"] * 10 ** exp).to_integral_value(ROUND_CEILING)) for c in capped)   # a minimum: up
-    total = ctx["totals"]["grand_minor"]
+    total = before_discounts(ctx)
     refund = ctx["stage"] != "sale"
     if not refund and need <= total:
         return None
@@ -148,7 +162,7 @@ def over_cap(ctx: dict, rules: dict, mine: list) -> dict | None:
     if refund:
         tail = f" a sale of {money(need, exp, cur)} and {ON_REFUND if one else ON_REFUND_MANY}"
     else:
-        tail = f" a sale of {money(need, exp, cur)}; this sale is {money(total, exp, cur)}. {ADD_TO_SALE}"
+        tail = f" a sale of {money(need, exp, cur)} before discounts; this sale is {money(total, exp, cur)}. {ADD_TO_SALE}"
     names = ", ".join(plain(c, 20) for c in capped)
     lead = f"Coupon {names} needs" if one else f"Coupons {names} need"
     if len(lead + tail) > TEXT_MAX:     # long names: the amounts and the instruction stay whole
