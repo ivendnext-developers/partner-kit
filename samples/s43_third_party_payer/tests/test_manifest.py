@@ -40,7 +40,7 @@ class ManifestTest(unittest.TestCase):
         for s in subs.values():
             self.assertEqual(app.ROUTES[s["endpoint_url"].split("8142", 1)[1]][0], s["key"])
             self.assertIn(s["endpoint_url"], MANIFEST["allowed_urls"])
-        self.assertEqual(MANIFEST["version"], "0.5.2")
+        self.assertEqual(MANIFEST["version"], "0.5.3")
 
     def test_the_payer_service_carries_only_settings_the_door_takes_and_never_a_clearing_mode(self):
         payer = next(s for s in MANIFEST["extension_subscriptions"] if s["point"] == "payer")
@@ -55,6 +55,18 @@ class ManifestTest(unittest.TestCase):
     def test_members_and_claims_are_never_a_till_roles(self):
         for dt in (f"{P} Member", f"{P} Claim", f"{P} Claim Batch", f"{P} Remittance"):
             self.assertEqual(roles(dt), {"System Manager", f"{P} Claims Clerk", f"{P} Integration"}, dt)
+
+    def test_the_role_rights_are_the_services_reads_and_the_clerks_customer_list(self):
+        """The service's reads beyond the feed's, and the claims clerk's Select on Customer: a new plan member's (and
+        payer's) Customer box searches and checks the customer with Select alone, so the clerk enrols members and never
+        opens a customer's record."""
+        rights = {(r["doctype"], r["role"]): r["rights"] for r in MANIFEST["role_rights"]}
+        self.assertEqual(rights, {**{(dt, f"{P} Integration"): ["read"] for dt in
+                                     ("Retail Payer Record", "Item", "Item Price", "Price List", "Customer")},
+                                  ("Customer", f"{P} Claims Clerk"): ["select"]})
+        for dt in (f"{P} Member", f"{P} Payer"):
+            self.assertIn("Customer", {f.get("options") for f in DT[dt]["fields"] if f["fieldtype"] == "Link"}, dt)
+            self.assertTrue(next(p for p in DT[dt]["permissions"] if p["role"] == f"{P} Claims Clerk")["create"], dt)
 
     def test_only_the_clerk_and_the_service_write_claims_and_no_one_deletes_one(self):
         for p in DT[f"{P} Claim"]["permissions"]:
