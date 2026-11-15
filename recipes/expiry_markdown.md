@@ -13,7 +13,7 @@ A grocery, bakery or pharmacy marks down stock whose expiry date is near, so it 
 1. The manager filters the **Batch** list on *Expiry Date* (this week), ticks the lots and presses **Mark down**, then confirms: *"Mark down these lots by your item groups' steps? Each lot's own price changes until its expiry date."*
 
    ![Three lots ticked in the Batch list on a demo site, and Mark down in the Actions menu](../samples/s38_expiry_markdown/screenshots/05_batch_list_mark_down.png)
-2. *Mark down — Marked down 2 lots. 2 lots not yet due.* The list reloads. Each marked lot now has its own price on the retailer's selling price list: the item's price less the step's percent, rounded down to the currency's smallest unit, valid from today until the lot's expiry date, noted *PP EXM: 25% off until it expires* (the library's copy writes *IVENDNEXT EXM: …*).
+2. *Mark down — Marked down 2 lots. 2 lots not yet due.* The list reloads. Each marked lot now has its own price on the retailer's selling price list: the item's price less the step's percent, rounded down to the currency's smallest unit, valid from today until the lot's expiry date, noted *PP EXM: 25% off until it expires* (the library's copy writes *IVENDNEXT EXM: …*). Every other selling price list in that currency that prices the item (a member, regional, trade or payer list) gets the lot's own price too, the same step's percent off that list's own price: the till prices a customer's sale from the customer's own list only, so without it a member would pay their full member price for a marked-down lot.
 
    ![The answer on a demo site: Marked down 2 lots. 1 lot not yet due.](../samples/s38_expiry_markdown/screenshots/07_marked_down.png)
 
@@ -53,11 +53,11 @@ Pressed again, the button writes nothing: *2 lots already marked down.* Pressed 
 
 5. **Write the service** (`samples/s38_expiry_markdown/markdown.py` and `service/app.py`, standard library). For each press:
    - check the signature (the subscription's secret);
-   - read, with the app's user: the settings record *Default*; its price list (a selling list that is switched on) and the list's currency (its smallest unit); the ticked lots (`item`, `expiry_date`, `batch_qty`, `disabled`); their items' groups; the item group tree with the steps (`lft`, `rgt`); and those items' prices on the list — one list read each (`GET /api/resource/<type>?fields=…&filters=…&limit_page_length=0`);
+   - read, with the app's user: the settings record *Default*; its price list (a selling list that is switched on) and the list's currency (its smallest unit); the ticked lots (`item`, `expiry_date`, `batch_qty`, `disabled`); their items' groups; the item group tree with the steps (`lft`, `rgt`); the other selling price lists that are switched on in the same currency; and those items' prices on all of them — one list read each (`GET /api/resource/<type>?fields=…&filters=…&limit_page_length=0`);
    - for each lot: the days left (the retailer's day); the steps of its group or the nearest group above with any; the step reached (the one with the fewest days the lot has reached); the item's own price valid today for any customer, per unit;
    - a lot with a price the retailer typed (no note of yours): leave it and say so;
    - a lot past its date, with no stock, outside every step, or whose item has no price: delete your own row for it, if any;
-   - otherwise write the lot's own row (`POST /api/resource/Item Price` with `batch_no`, `price_list_rate`, `valid_from` today, `valid_upto` the expiry date and your `note`), or change your row when the step moved (`PUT` with the row's `modified` as read); write nothing when it is already right;
+   - otherwise write the lot's own row (`POST /api/resource/Item Price` with `batch_no`, `price_list_rate`, `valid_from` today, `valid_upto` the expiry date and your `note`), or change your row when the step moved (`PUT` with the row's `modified` as read); write nothing when it is already right; do the same on each other selling list in that currency that prices the item, from that list's own price, and take your row off a list that no longer prices it;
    - stop starting new lots after 6 seconds (iVendNext waits 10), then delete up to 20 of your rows whose date has passed, anywhere, and answer `{"refresh": true, "message": …}` with a count per outcome.
 
 6. **Check it before it reaches a retailer:** `python3 tools/check/check.py samples/s38_expiry_markdown` (iVendNext's checker and its install's two extra refusals).
@@ -72,7 +72,7 @@ Pressed again, the button writes nothing: *2 lots already marked down.* Pressed 
    | Batch | Read | the ticked lots |
    | Item | Read | each lot's item group (with *select* alone iVendNext answers only the fields it lists for search, which a retailer may change) |
    | Item Group | Read | the steps, and the tree they are read up (with *select* alone iVendNext lists the names only, and every lot reads as having no steps) |
-   | Price List | Read | the settings' list and its currency |
+   | Price List | Read | the settings' list, its currency and the other selling lists in it |
    | Currency | Read | the currency's smallest unit |
    | Item Price | Read, Write, Create, Delete | the item's price, and each lot's own price |
 
@@ -94,9 +94,10 @@ Pressed again, the button writes nothing: *2 lots already marked down.* Pressed 
 - **A price you edit on the app's row** (its note starts with the app's prefix) is the app's again at the next press: write your own note to keep it.
 - **Which lot rings.** A scanned lot label names its lot. An item's own barcode lets iVendNext pick the lot (Stock Settings *Pick Serial / Batch Based On*): with *Expiry*, the lot nearest its date sells first.
 - **Regulated prices.** Put steps only on item groups whose every item may be sold below its price: a group below takes its parent's steps, and a step of 0 is no step, so a group of price-regulated medicines must not sit under one with steps.
-- **The first press.** After the first press, restart the tills (or sign them in again) before they go offline: a till started before any lot had its own price keeps selling lots offline at the item's own price, above the markdown on the label.
+- **The first press.** After the first press, restart the tills (or sign them in again) before they go offline: a till started before any lot had its own price keeps selling lots offline at the item's own price, above the markdown on the label. After the first press on version 1.1.2 of the sample (which marks down the other selling lists too), restart each store's tills again, so their offline price check knows the new lot prices.
 - **No answer in time.** If the service does not answer in time, some lots may already be marked down: press again, and a repeat writes nothing.
-- **One set of steps per item group,** one price list per site; up to 100 lots a press.
+- **One set of steps per item group,** one price list per site in the settings; every other selling list in its currency that prices the item is marked down from its own price; up to 100 lots a press.
+- **A list's price changed.** A lot already marked down keeps the price made from the list's old price until the next press: after you change a list's price, press Mark down again on lots already marked down.
 - **Removing the app leaves the lots' prices it wrote:** delete them first (Item Price filtered on *Note*); nothing removes them after, and while they exist the tills do not sell lot-tracked items offline.
 
 ## Technical notes
@@ -104,7 +105,7 @@ Pressed again, the button writes nothing: *2 lots already marked down.* Pressed 
 ### What the service sends and writes
 
 - **Each press sends** the ticked lots' names, items and expiry dates, the pressing user (an e-mail address) and the language. The consent the System Manager reads lists exactly these.
-- **The service reads** the settings, the price list and its currency, the lots, their items' groups, the item group tree and those items' prices on the list, **and writes** each lot's own Item Price. It keeps nothing of a press; a hosted copy holds each retailer's press secret and its user's API key, handed over by the retailer's site, until the retailer removes the app.
+- **The service reads** the settings, the price list and its currency, the other selling lists in that currency, the lots, their items' groups, the item group tree and those items' prices on those lists, **and writes** each lot's own Item Price. It keeps nothing of a press; a hosted copy holds each retailer's press secret and its user's API key, handed over by the retailer's site, until the retailer removes the app.
 - **The rounding** is down, to the currency's own digits from its number format (`#,###.##` → 2, `#,###.###` → 3, `#,###` → 0; the yen counts 100 sen and shows none), so the customer never pays more than the step promises at that grain. The rounding is to the currency's own digits (its number format); a site whose currency precision is set to fewer digits rounds the line again, which can add up to half of its smallest unit.
 - **An edit saved meanwhile is never overwritten:** an update carries the row's `modified` as read, and iVendNext refuses a stale one (`TimestampMismatchError`); the answer asks for another press. Two presses that create the same lot's row at once: iVendNext refuses the second as a duplicate, and its answer asks for another press, which finds the row right.
 - **iVendNext's own words never reach the user.** The service branches on the error's type (`exc_type`), never shows its message.

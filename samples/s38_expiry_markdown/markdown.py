@@ -185,17 +185,27 @@ def base_rows(rows: list[dict], item: str, today: datetime.date) -> dict:
 
 
 def plan(lot: dict, item: dict | None, rows: list[dict], groups: dict, today: datetime.date, price_list: str,
-         exponent: int) -> tuple[str, list]:
+         exponent: int, others: tuple = ()) -> tuple[str, list]:
     """(the lot's outcome, the writes): ``("create", body)``, ``("update", row, body)`` or ``("delete", row)``.
 
     Outcomes: ``marked`` (written) · ``already`` (at its step) · ``removed`` (the app's price taken off: past its date,
     no stock, or no longer in a step) · ``not_due`` · ``own_price`` (a price the shop typed: left as it is) · ``no_price``
-    (the item has no price on the list) · ``not_tracked`` (gone, or its item is not one the shop prices by lot)."""
+    (the item has no price on the list) · ``not_tracked`` (gone, or its item is not one the shop prices by lot).
+
+    ``rows`` holds the item's prices on ``price_list`` and on ``others``, the shop's other selling lists in its currency (a
+    member, regional, trade or payer list). The shop prices a sale from the customer's own list only, so the lot gets its
+    own price on each of them too: the same step's percent off that list's own price for the item. A list with no price
+    for the item gets nothing; a lot price the shop typed on one of them leaves that list as it is."""
     name = lot.get("name")
-    lot_rows = [r for r in rows if r.get("batch_no") == name]
+
+    def on(pl):
+        return [r for r in rows if (r.get("price_list") or price_list) == pl]
+
+    main = on(price_list)
+    lot_rows = [r for r in main if r.get("batch_no") == name]
     if any(not own(r) for r in lot_rows):
         return "own_price", []
-    mine = [r for r in lot_rows if own(r)]
+    mine = [r for r in rows if r.get("batch_no") == name and own(r)]      # every list's: taken off together
     expiry = date_of(lot.get("expiry_date"))
     if not item or not expiry or item.get("name") != lot.get("item"):
         return ("removed" if mine else "not_tracked"), [("delete", r) for r in mine]
@@ -203,30 +213,46 @@ def plan(lot: dict, item: dict | None, rows: list[dict], groups: dict, today: da
     pct = pct_for(steps_for(item.get("item_group") or "", groups), (expiry - today).days)
     if pct is None or lot.get("disabled") or (isinstance(qty, (int, float)) and qty <= 0):
         return ("removed" if mine else "not_due"), [("delete", r) for r in mine]
-    base = base_rows(rows, lot["item"], today)
+    base = base_rows(main, lot["item"], today)
     if not base:
         return ("removed" if mine else "no_price"), [("delete", r) for r in mine]
+    upto, note = expiry.isoformat(), note_for(pct)
+    prices = {k: marked(b["price_list_rate"], pct, exponent) for k, b in base.items()}
+    writes = _sync(lot, [r for r in lot_rows if own(r)], base, prices, upto, note, today, price_list)
+    for pl in others:
+        theirs = on(pl)
+        lot_pl = [r for r in theirs if r.get("batch_no") == name]
+        if pl == price_list or any(not own(r) for r in lot_pl):
+            continue
+        base_pl = base_rows(theirs, lot["item"], today)
+        want = {k: marked(b["price_list_rate"], pct, exponent) for k, b in base_pl.items()}
+        writes += _sync(lot, lot_pl, base_pl, want, upto, note, today, pl)
+    marked_now = any(w[0] in ("create", "update") for w in writes)
+    return ("marked" if marked_now else "already"), writes
+
+
+def _sync(lot: dict, mine: list[dict], base: dict, prices: dict, upto: str, note: str, today: datetime.date,
+          price_list: str) -> list:
+    """The writes that leave the app's rows for ``lot`` on one list at ``prices``: ``{(uom, packing unit): price}``."""
     writes, by_key = [], {}
     for r in mine:
-        if _key(r) in by_key or _key(r) not in base:     # a second row for one unit, or a unit no longer priced: off
+        if _key(r) in by_key or _key(r) not in prices:     # a second row for one unit, or a unit no longer priced: off
             writes.append(("delete", r))
         else:
             by_key[_key(r)] = r
-    upto, note = expiry.isoformat(), note_for(pct)
-    for k, b in sorted(base.items()):
-        want = {"price_list_rate": marked(b["price_list_rate"], pct, exponent), "valid_upto": upto, "note": note}
+    for k, price in sorted(prices.items()):
+        want = {"price_list_rate": price, "valid_upto": upto, "note": note}
         r = by_key.get(k)
         if r is None:
             writes.append(("create", dict(want, item_code=lot["item"], price_list=price_list, uom=k[0],
-                                          packing_unit=k[1], batch_no=name, valid_from=today.isoformat())))
+                                          packing_unit=k[1], batch_no=lot["name"], valid_from=today.isoformat())))
             continue
         # the shop's price lookup takes the newest valid_from first and the lot only after it (``get_item_price``), so a
         # lot's row older than the item's own row is never read: move it to today with the new price
-        older = (date_of(r.get("valid_from")) or datetime.date.min) < (date_of(b.get("valid_from")) or datetime.date.min)
+        older = (date_of(r.get("valid_from")) or datetime.date.min) < (date_of(base[k].get("valid_from")) or datetime.date.min)
         if older or any(r.get(f) != v for f, v in want.items()):
             writes.append(("update", r, dict(want, valid_from=today.isoformat(), modified=r.get("modified"))))
-    marked_now = any(w[0] in ("create", "update") for w in writes)
-    return ("marked" if marked_now else "already"), writes
+    return writes
 
 
 def _fit(text: str, most: int = 280) -> str:
