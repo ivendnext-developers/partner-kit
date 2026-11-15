@@ -45,6 +45,10 @@ ivn try
 
 ## Versions
 
+### 0.3.5
+
+- The hosted service's first pass on a site starts at the install, so a sale rung in the minutes between the install and that pass gets its warranty too (it was left without one). The manifest is unchanged.
+
 ### 0.3.4
 
 - Desk shows plain names (Warranty term, Warranty terms) through the manifest's `translations` block, so a search for *warranty* finds the record. The stored names are unchanged: an installed site keeps its records.

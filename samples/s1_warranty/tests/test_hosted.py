@@ -252,6 +252,18 @@ class RegisteringPass(Base):
         app.scheduled(svc, "pass", 900)
         self.assertEqual([c[1] for c in t.comments], ["NEW"])
 
+    def test_the_sales_rung_between_the_install_and_the_first_pass_get_their_warranties(self):  # a sale rung at once
+        from datetime import datetime, timedelta, timezone
+        utc = datetime.now(timezone.utc).replace(tzinfo=None)
+        site = lambda ago: (utc - timedelta(hours=6, seconds=ago)).strftime("%Y-%m-%d %H:%M:%S")   # a store six hours behind
+        sold = lambda ago: self.sale(modified=site(ago), posting_date=site(ago)[:10])
+        t = SaleTenant(self.TERM, {"POS Invoice": {"OLD": sold(3 * 86400), "BEFORE": sold(840),     # the install: 240 s ago
+                                                   "RUNG-1": sold(100), "RUNG-2": sold(5)}, "Sales Invoice": {}})
+        svc = self.service(t)
+        self.store.put(SITE, {**self.store.get(SITE), "connected": (utc - timedelta(seconds=240)).strftime("%Y-%m-%dT%H:%M:%SZ")})
+        app.scheduled(svc, "pass", 900)
+        self.assertEqual(sorted(c[1] for c in t.comments), ["RUNG-1", "RUNG-2"])
+
     def test_a_sale_that_cannot_be_read_keeps_the_place_for_the_next_pass(self):
         t = SaleTenant(self.TERM, {"POS Invoice": {"S-1": self.sale()}, "Sales Invoice": {}}, why_get="HTTP 403")
         svc = self.started(self.service(t))
