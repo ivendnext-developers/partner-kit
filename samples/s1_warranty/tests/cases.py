@@ -14,8 +14,9 @@ import pathlib
 HERE = pathlib.Path(__file__).resolve().parent
 
 def says_months(body: str, item: str, months: int) -> bool:
-    """True when the body names ``item`` and its ``months`` in one part: the facts, not the sentence."""
-    return any(item in part and re.search(rf"\b{months}\b", part.split(item, 1)[1]) for part in body.split("; "))
+    """True when the body names ``item`` and its ``months`` in one part, in either order: the facts, not the sentence."""
+    return any(item in part and re.search(rf"\b{months}\b", part.replace(item, " "))
+               for part in re.split(r"; |\n", body))           # the item's own part, its months before or after it
 
 
 # name -> (level, phrases that must appear in the body; an (item, months) pair is checked by its facts)
