@@ -42,6 +42,14 @@ ivn try
 
 ## Versions
 
+### 1.2.3
+
+Manifest 0.3.3.
+
+- *Covers, turns and tips* shows one row per issue (a store's day, or the part of it a later press took up): its sales, covers, table turns, tips and sales net of tax, with a *Totals* row. Desk adds up only the rows it has loaded (20 at first), and a row per check made a day of 62 covers read 21; with a row per issue the totals are the day's. Each check's table, server, covers and tip stay on its issue, under *Checks, covers and tips*. When the foot of the report reads *20 of* more, pick 100 or 500 there first.
+- The day's sales by store are on *Covers, turns and tips*; *Sales by item* lists each line sold.
+- An issue written before 1.2.3 shows 0 covers, turns and tips; its checks keep their figures.
+
 ### 1.2.2
 
 Manifest 0.3.2.

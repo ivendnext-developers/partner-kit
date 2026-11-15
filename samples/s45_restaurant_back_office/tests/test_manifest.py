@@ -87,8 +87,16 @@ class ManifestTest(unittest.TestCase):
         reps = {r["name"]: r for r in self.m["reports"]}
         for name in ("PP RBO Sales by item", "PP RBO Covers, turns and tips"):
             self.assertEqual(reps[name]["filters"], [["posting_date", "Timespan", "yesterday"]], name)
-            self.assertFalse(reps[name].get("add_total_row"), name)   # a total of the 20 rows loaded read as the day's
+        self.assertFalse(reps["PP RBO Sales by item"].get("add_total_row"))   # a total of the 20 lines loaded read as the day's
         self.assertFalse(reps["PP RBO Food cost by ingredient"].get("add_total_row"))
+        # Desk adds up only the rows it has loaded (20): a row per check made a day of 62 covers read 21. A row per
+        # store and day, its sums worked out by the service, makes the totals the day's
+        cov = reps["PP RBO Covers, turns and tips"]
+        self.assertFalse([c for c in cov["columns"] if "." in c])
+        self.assertEqual(cov["columns"], ["posting_date", "store", "sale_count", "covers", "turns", "tips", "food_sales"])
+        self.assertEqual(cov.get("add_total_row"), 1)
+        own = {f["fieldname"]: f for f in self.dt["PP RBO Issue"]["fields"]}
+        self.assertTrue(all(own[c]["read_only"] for c in ("covers", "turns", "tips")))
         (en,) = [t["words"] for t in self.m["translations"] if t["language"] == "en"]
         self.assertEqual((en["PP RBO Issue Sale"], en["PP RBO Issue Line"]), ("Check", "Sale line"))
 

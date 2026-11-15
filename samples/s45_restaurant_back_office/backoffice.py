@@ -357,6 +357,9 @@ def issue_doc(company: str, group: dict, need: dict, items: dict, notes: list) -
             "posting_date": group["posting_date"], "posting_time": group["posting_time"],
             "status": "Pending" if need else "Nothing to issue", "sales": "\n".join(group["sales"]),
             "sale_count": len(group["sales"]), "food_sales": round(sum(ln["amount"] for ln in group["lines"]), 2),
+            "covers": sum(c["covers"] for c in group.get("checks") or []),
+            "turns": sum(c["turn"] for c in group.get("checks") or []),
+            "tips": round(sum(c["tip"] for c in group.get("checks") or []), 2),
             "note": "; ".join(notes)[:500],
             "lines": group["lines"], "checks": group.get("checks") or [],
             "parts": [{"item_code": k, "qty": v, "uom": (items.get(k) or {}).get("stock_uom")} for k, v in need.items()]}
