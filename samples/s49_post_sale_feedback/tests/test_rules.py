@@ -66,7 +66,16 @@ class Choose(unittest.TestCase):
         sales = [sale("S1", "C1"), sale("S2", "C2"), sale("S3", "C3", contact_mobile=""), sale("S4", "C4")]
         chosen, counts = fb.choose(sales, rule(), set(), {"S1", "C4"}, {"C2"}, {}, set(), TODAY)
         self.assertEqual(chosen, [])
-        self.assertEqual(counts, {"no_contact": 1, "stopped": 1, "asked": 2})
+        self.assertEqual(counts, {"no_contact": 1, "stopped": 1, "asked": 1})     # S1 was asked: read, not counted
+
+    def test_a_sale_read_at_the_last_press_is_not_counted_again_and_one_not_made_is_asked(self):
+        at = "2026-10-24 10:00:00"
+        sales = [sale("S1", "C1"), sale("S2", "C2", contact_mobile=""), sale("S3", "C3", creation="2026-10-24 10:00:01")]
+        chosen, counts = fb.choose(sales, rule(asked_up_to=at), set(), {"C1"}, set(), {}, set(), TODAY)
+        self.assertEqual([c[0]["name"] for c in chosen], ["S3"])
+        self.assertEqual(counts, {"no_contact": 0, "stopped": 0, "asked": 0})   # S1 and S2 were said at the last press
+        chosen, _ = fb.choose([sale("S1", "C9")], rule(asked_up_to=at), set(), set(), set(), {}, set(), TODAY)
+        self.assertEqual([c[0]["name"] for c in chosen], ["S1"])     # at the place, not made last time: asked now
 
     def test_the_customers_own_contact_when_the_sale_has_none(self):
         s = sale("S1", "C1", contact_mobile="", contact_email="")

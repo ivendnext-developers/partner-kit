@@ -221,14 +221,15 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(self.shop.requests, before)
         self.assertIn(["creation", ">=", "2026-10-24 10:00:59.000000"],
                       json.loads([c for c in self.shop.calls if c[1] == "POS Invoice"][-1][2]))
-        self.assertEqual("No new feedback requests. Not asked: 1 whose customer was already asked in the rule's days "
-                         "back.", out["message"]["body"])       # the last sale read is read again, its customer asked
+        self.assertEqual("No new feedback requests: no new customer sale to ask about.",
+                         out["message"]["body"])        # the last sale read is read again and not counted again
 
     def test_s4_a_sale_already_asked_is_counted_never_asked_again(self):
         self.shop.requests["S10"] = {"name": "S10", "sale": "S10", "customer": "C1", "sale_date": "2026-10-24"}
         code, out = self.press()
         self.assertNotIn("S1", self.shop.requests)        # C1's earlier sale is not asked instead
-        self.assertIn("2 whose customer was already asked", out["message"]["body"])   # both of C1's sales
+        self.assertIn("Not asked: 1 whose customer was already asked", out["message"]["body"])   # C1's earlier sale;
+        # S10 itself was asked when it was read, so it is not counted again
 
     def test_s32_a_member_asked_yesterday_who_buys_today_is_said_and_a_press_with_nothing_new_says_so(self):
         # the walk's day: a member asked about yesterday's sale buys again today, and a walk-in's sale comes last
