@@ -46,15 +46,16 @@ ivn try
 
 Manifest 0.3.3.
 
-- *Covers, turns and tips* shows one row per issue (a store's day, or the part of it a later press took up): its sales, covers, table turns, tips and sales net of tax, with a *Totals* row. Desk adds up only the rows it has loaded (20 at first), and a row per check made a day of 62 covers read 21; with a row per issue the totals are the day's. Each check's table, server, covers and tip stay on its issue, under *Checks, covers and tips*. When the foot of the report reads *20 of* more, pick 100 or 500 there first.
-- The day's sales by store are on *Covers, turns and tips*; *Sales by item* lists each line sold.
+- *Covers, turns and tips* shows one row per issue (a store's day, or the part of it a later press took up): its number of sales, covers, table turns, tips and sales net of tax, with a *Totals* row. Desk adds up only the rows it has loaded (20 at first), and a row per check made a day of 62 covers read 21; with a row per issue the totals are the day's. A chain with more than 20 stores picks 100 or 500 at the foot of the report first. Each check's table, server, covers and tip (the tips by server) stay on its issue, under *Checks, covers and tips*.
+- The day's sales by store are on *Covers, turns and tips*; *Sales by item* lists each line sold and has no *Totals* row.
+- The issue's count of sales reads *Number of sales*, where it read *Sales* beside *Sales (net of tax)*.
 - An issue written before 1.2.3 shows 0 covers, turns and tips; its checks keep their figures.
 
 ### 1.2.2
 
 Manifest 0.3.2.
 
-- *Covers, turns and tips* and *Sales by item* open on yesterday, the day a manager reads in the morning; change the *Date* filter for another day. They and *Food cost by ingredient* no longer show a *Totals* row: it added up only the rows on screen. For a day's sums, use the report's *Group By* (Server or Store) with *Sum* of Tip or Covers: the database adds every row.
+- *Covers, turns and tips* and *Sales by item* open on yesterday, the day a manager reads in the morning; change the *Date* filter for another day. They and *Food cost by ingredient* no longer showed a *Totals* row: it added up only the rows on screen. 1.2.3 gives *Covers, turns and tips* its *Totals* row back, over one row per store's day.
 - Their columns read *Check* and *Sale line* where they read *Ingredient issue check* and *Ingredient issue sale line*.
 - *The customer sets* names who makes the recipes: the menu's owner, with the role Manufacturing User and the Manufacturing module open.
 

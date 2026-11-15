@@ -97,6 +97,9 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(cov.get("add_total_row"), 1)
         own = {f["fieldname"]: f for f in self.dt["PP RBO Issue"]["fields"]}
         self.assertTrue(all(own[c]["read_only"] for c in ("covers", "turns", "tips")))
+        # a count beside the money: "Sales" next to "Sales (net of tax)" read as an amount. A count of sales, not of
+        # checks: a split check is several sales, a counter sale has no check, and a return is a sale too
+        self.assertEqual((own["sale_count"]["label"], own["food_sales"]["label"]), ("Number of sales", "Sales (net of tax)"))
         (en,) = [t["words"] for t in self.m["translations"] if t["language"] == "en"]
         self.assertEqual((en["PP RBO Issue Sale"], en["PP RBO Issue Line"]), ("Check", "Sale line"))
 
