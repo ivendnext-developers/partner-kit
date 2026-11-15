@@ -160,7 +160,11 @@ def choose(sales: list, rule: Rule, walk_ins: set, asked: set, stopped: set, cus
     ``stopped`` holds the customers who asked to stop, and the mobile numbers and e-mails (lower case) they asked from.
     ``sales`` come oldest first by when the retailer's iVendNext received them (``creation``). ``asked`` holds the
     sales and the customers already asked in the press's days: a customer is asked once in a rule's days, and once a
-    press (``taken`` is shared by every rule of the press); the latest sale of theirs in the list wins."""
+    press (``taken`` is shared by every rule of the press); the latest sale of theirs in the list wins.
+
+    A sale read at the last press is read again (the place is kept with ``>=``) and is not counted again: a sale
+    already asked, and a sale at the kept place that is not asked now. A sale at the kept place that was not made
+    (out of time, no answer) is still asked."""
     first = since(rule, today)
     counts = {"no_contact": 0, "stopped": 0, "asked": 0}
     latest = {}
@@ -170,20 +174,21 @@ def choose(sales: list, rule: Rule, walk_ins: set, asked: set, stopped: set, cus
         day, customer = date_of(s.get("posting_date")), s.get("customer")
         if s.get("docstatus") != 1 or s.get("is_return") or not day or day < first \
                 or (rule.profiles and s.get("pos_profile") not in rule.profiles) or not customer \
-                or customer in walk_ins:
+                or customer in walk_ins or s["name"] in asked:
             continue
+        seen = 0 if rule.asked_up_to and s.get("creation") == rule.asked_up_to else 1   # 0: counted at the last press
         if customer in stopped:
-            counts["stopped"] += 1
-        elif s["name"] in asked or customer in asked:
-            counts["asked"] += 1
+            counts["stopped"] += seen
+        elif customer in asked:
+            counts["asked"] += seen
         else:
             c = customers.get(customer) or {}
             mobile = phone_of(s.get("contact_mobile")) or c.get("mobile", "")
             email = email_of(s.get("contact_email")) or c.get("email", "")
             if (mobile and mobile in stopped) or (email and email.lower() in stopped):
-                counts["stopped"] += 1           # the same number or e-mail on another customer record
+                counts["stopped"] += seen        # the same number or e-mail on another customer record
             elif not (mobile or email):
-                counts["no_contact"] += 1
+                counts["no_contact"] += seen
             else:
                 latest[customer] = (s, mobile, email)
     chosen = [v for k, v in latest.items() if k not in taken]
@@ -253,8 +258,11 @@ def message(body: str, level: str = "success", title: str = "Feedback requests")
 
 def press_answer(made: int, counts: dict, failed: int, left: bool, problems: list[str]) -> dict:
     parts = [f"Made {made} feedback request{'' if made == 1 else 's'}." if made else "No new feedback requests."]
-    why = [f"{counts[k]} {w}" for k, w in (("asked", "already asked"), ("stopped", "asked us to stop"),
+    why = [f"{counts[k]} {w}" for k, w in (("asked", "whose customer was already asked in the rule's days back"),
+                                          ("stopped", "asked us to stop"),
                                           ("no_contact", "with no mobile number or e-mail")) if counts.get(k)]
+    if not (made or why or failed or left):      # every sale read since the last press was a walk-in's, or none came
+        parts = ["No new feedback requests: no new customer sale to ask about."]
     if why:
         parts.append("Not asked: " + ", ".join(why) + ".")
     if failed:
