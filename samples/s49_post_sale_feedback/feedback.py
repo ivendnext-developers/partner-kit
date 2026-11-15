@@ -253,8 +253,11 @@ def message(body: str, level: str = "success", title: str = "Feedback requests")
 
 def press_answer(made: int, counts: dict, failed: int, left: bool, problems: list[str]) -> dict:
     parts = [f"Made {made} feedback request{'' if made == 1 else 's'}." if made else "No new feedback requests."]
-    why = [f"{counts[k]} {w}" for k, w in (("asked", "already asked"), ("stopped", "asked us to stop"),
+    why = [f"{counts[k]} {w}" for k, w in (("asked", "whose customer was already asked in the rule's days back"),
+                                          ("stopped", "asked us to stop"),
                                           ("no_contact", "with no mobile number or e-mail")) if counts.get(k)]
+    if not (made or why or failed or left):      # every sale read since the last press was a walk-in's, or none came
+        parts = ["No new feedback requests: no new customer sale to ask about."]
     if why:
         parts.append("Not asked: " + ", ".join(why) + ".")
     if failed:

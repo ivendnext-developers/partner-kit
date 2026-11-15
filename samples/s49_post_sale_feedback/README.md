@@ -1,6 +1,6 @@
 # S49 — Post-sale feedback (`pp_psf`): ask each customer how their visit was
 
-After a till sale, the retailer's own message asks the customer how the visit was, with a link to a one-page answer: three answers in the retailer's words, an optional comment, and *Stop these messages*. A manager presses *Send feedback requests* on a rule and one request is made per customer to ask. Each answer lands once on the retailer's own record of that request, and a report lists the answers by store. A walk-in customer, a return or a sale with no customer is never asked.
+After a till sale, the retailer's own message asks the customer how the visit was, with a link to a one-page answer: three answers in the retailer's words, an optional comment, and *Stop these messages*. A manager presses *Send feedback requests* on a rule and one request is made per customer to ask. A customer already asked is not asked again within the rule's *Days back a press reaches*; the press's answer counts those sales. Each answer lands once on the retailer's own record of that request, and a report lists the answers by store. A walk-in customer, a return or a sale with no customer is never asked.
 
 ![What the install will change, read before you consent](screenshots/post-sale-feedback-install.png)
 
@@ -43,6 +43,12 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.1.4
+
+Manifest 0.2.2 (unchanged: the words are the hosted service's).
+
+- The press's answer says why a member's new sale was not asked: *Not asked: 2 whose customer was already asked in the rule's days back.* A press with nothing new since the last one says *No new feedback requests: no new customer sale to ask about.*
 
 ### 1.1.3
 

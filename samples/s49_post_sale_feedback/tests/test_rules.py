@@ -149,11 +149,16 @@ class Answers(unittest.TestCase):
     def test_every_press_answer_fits_and_says_why(self):
         a = fb.press_answer(1, {"asked": 2, "stopped": 0, "no_contact": 3}, 0, False, [])
         self.assertEqual(a["message"]["body"],
-                         "Made 1 feedback request. Not asked: 2 already asked, 3 with no mobile number or e-mail.")
+                         "Made 1 feedback request. Not asked: 2 whose customer was already asked in the rule's days "
+                         "back, 3 with no mobile number or e-mail.")
         self.assertEqual(a["message"]["level"], "success")
         a = fb.press_answer(0, {}, 2, True, ["X was not found."] * 40)
         self.assertLessEqual(len(a["message"]["body"]), 280)
         self.assertEqual(a["message"]["level"], "warning")
+
+    def test_a_press_with_nothing_to_ask_says_no_new_sale(self):
+        a = fb.press_answer(0, {"asked": 0, "stopped": 0, "no_contact": 0}, 0, False, [])
+        self.assertEqual(a["message"]["body"], "No new feedback requests: no new customer sale to ask about.")
 
 
 if __name__ == "__main__":
