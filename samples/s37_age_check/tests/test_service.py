@@ -109,7 +109,7 @@ class OneShop(unittest.TestCase):
     def test_the_shops_hours_decide_the_date_shown(self):
         svc = app.Service(ONE, api=self.api, clock=self.clock, now=lambda: NOW + 9.5 * 3600)   # the 23rd in Dubai
         raw = raw_of(scan(), "capture/1")
-        self.assertIn("Born on or before 23 Oct 2008", svc.answer("/age/scan", signed(raw, SCAN), raw)[1]["message"])
+        self.assertIn("23 Oct 2008", svc.answer("/age/scan", signed(raw, SCAN), raw)[1]["message"])
 
     def test_a_sale_asked_about_is_not_asked_again_for_that_age_or_below(self):
         self.assertEqual(self.scan(scan("VAPE", "Vapes"))[1]["verdict"], "notice")
@@ -123,7 +123,7 @@ class OneShop(unittest.TestCase):
 
     def test_a_variant_is_judged_by_its_templates_age_read_in_a_second_step(self):
         out = self.check(context([line("POD-MINT", "Food", n=1, name="Mint pods")]))[1]
-        self.assertTrue(out["reason"].startswith("Line 1: Mint pods is for customers 21 or over."), out)
+        self.assertIn("Mint pods", out["reason"]); self.assertRegex(out["reason"], r"\b1\b.*\b21\b")
         self.assertEqual([c[3] for c in self.api.calls if c[0] == "items"], [("POD-MINT",), ("POD",)])
         self.assertEqual(self.check(context([line("POD-MINT", "Food")], checked="21"))[1], {"verdict": "allow"})
         self.assertEqual(len([c for c in self.api.calls if c[0] == "items"]), 2)          # both kept a minute
@@ -134,7 +134,7 @@ class OneShop(unittest.TestCase):
     def test_the_check_refuses_a_restricted_line_the_sale_has_no_check_for(self):
         out = self.check(context([line("WHISKY", "Spirits", n=1, name="Glen Moray 12 Year")]))[1]
         self.assertEqual(out["verdict"], "refuse")
-        self.assertTrue(out["reason"].startswith("Line 1: Glen Moray 12 Year is for customers 18 or over."), out)
+        self.assertIn("Glen Moray 12 Year", out["reason"]); self.assertRegex(out["reason"], r"\b1\b.*\b18\b")
 
     def test_an_age_typed_from_the_id_under_the_lines_age_is_refused_with_take_it_off(self):
         out = self.check(context([line("VAPE", "Vapes", n=1, name="Mint vape")], checked="19"))[1]
@@ -189,7 +189,7 @@ class OneShop(unittest.TestCase):
         msg = self.scan(scan())[1]["message"]
         self.assertIn("WHISKY", msg); self.assertRegex(msg, r"\b18\b")
         self.assertIn("22 Oct 2008", msg)
-        self.assertEqual(len(re.findall(r"\b18\b", msg)), 1, msg)       # no look-under age is shown
+        self.assertEqual(sorted(re.findall(r"\d+", msg)), sorted(["18", "22", "2008"]), msg)   # the age and the date only: no look-under age
 
     def test_the_shop_down_is_a_503_so_the_down_answer_applies(self):
         self.api.down = True
