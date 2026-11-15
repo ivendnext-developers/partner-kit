@@ -36,6 +36,10 @@ ivn try
 
 ## Versions
 
+### 0.1.3
+
+- A search in Desk for the card's title, *Project quotes and deliveries by stage* or any start of it, now finds the projects: the manifest adds a Report Builder report, *PP PQT Projects*, worded with the title in `translations`. It lists every project; who sees a project is still the record's own read.
+
 ### 0.1.2
 
 - *Print* on a project opens the project sheet: the manifest makes *PP PQT Project sheet* the record's default print format (a `default_print_format` property setter), so the sheet prints without picking it from the list.

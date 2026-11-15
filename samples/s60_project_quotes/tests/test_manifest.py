@@ -53,7 +53,7 @@ class ManifestTest(unittest.TestCase):
         self.assertFalse([k for k in OUTSIDE if MANIFEST.get(k)])          # no service, feed, key or Desk action
         money = [(d, f["fieldname"]) for d in DT for f in DT[d]["fields"] if f["fieldtype"] in ("Currency", "Percent")]
         self.assertEqual(money, [])                                        # the till and the ERP keep the money
-        self.assertFalse(MANIFEST.get("workflows") or MANIFEST.get("save_rules") or MANIFEST.get("reports"))
+        self.assertFalse(MANIFEST.get("workflows") or MANIFEST.get("save_rules"))
 
     def test_the_project_field_is_one_optional_link_on_the_five_documents_carried_by_create(self):
         got = [c for c in MANIFEST["custom_fields"] if c["fieldtype"] == "Link"]
@@ -140,9 +140,15 @@ class ManifestTest(unittest.TestCase):
 
     def test_the_english_words_cover_every_name_the_store_sees(self):   # Desk shows people's words, never the code
         (en,) = [t["words"] for t in MANIFEST["translations"] if t["language"] == "en"]
-        names = set(DT) | {PF["name"]}
+        names = set(DT) | {PF["name"]} | {r["name"] for r in MANIFEST["reports"]}
         self.assertEqual(sorted(names - set(en)), [])
         self.assertTrue(all(w and not w.startswith(P) for w in en.values()))
+
+    def test_desks_search_finds_the_cards_title(self):   # the search bar matches a report by its word
+        (en,) = [t["words"] for t in MANIFEST["translations"] if t["language"] == "en"]
+        (rep,) = MANIFEST["reports"]
+        self.assertEqual((rep["ref_doctype"], en[rep["name"]]), (PROJECT, MANIFEST["title"]))
+        self.assertFalse(rep.get("filters") or rep.get("roles"))   # every project; the record's own read decides
 
 
 if __name__ == "__main__":

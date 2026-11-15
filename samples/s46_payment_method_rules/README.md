@@ -42,6 +42,10 @@ ivn try
 
 ## Versions
 
+### 1.2.2
+
+- A search in Desk for the card's title, *Payment method rules*, now finds the rules: the manifest adds a Report Builder report, *PP PMR Rules*, worded with the title in `translations`. Who sees a rule is still the record's own read. Manifest 0.3.2.
+
 ### 1.2.1
 
 - Desk shows plain names (Payment method rule) through the manifest's `translations` block, so a search for *payment method rule* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.3.1.
