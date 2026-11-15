@@ -23,7 +23,7 @@
      "in_list_view": 1,
      "description": "Blank: any customer. Exactly this group: a customer in a group under it is refused."},
     {"fieldname": "spend_per_use", "fieldtype": "Currency", "label": "Sale needed for each use", "in_list_view": 1,
-     "description": "Blank or 0: no cap. Each coupon on a sale with an amount here takes that much of the sale before its discounts (in the sale's own currency: the total to pay, tax included, with its discounts added back, so a coupon never counts against itself); more than that is refused at Pay. Two coupons with 1,000 here need a sale of 2,000."}
+     "description": "Blank or 0: no cap. Each coupon on a sale with an amount here takes that much of the sale before its line discounts (in the sale's own currency: the total to pay, tax included, with its lines' discounts added back, so a coupon never counts against itself; a promotion's free or two-for-one article and a discount on the whole sale still count off); more than that is refused at Pay. Two coupons with 1,000 here need a sale of 2,000."}
    ],
    "permissions": [
     {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1, "share": 0, "print": 1, "email": 0},

@@ -281,11 +281,22 @@ class BeforeDiscounts(unittest.TestCase):
         refused(self, coupons.on_check(walked([(2499, 500)]), SAVE5, Counter()), coupons.ADD_TO_SALE,
                 amounts=("USD 30.00", "USD 29.99"))
 
-    def test_the_sales_own_discount_is_added_back(self):
-        self.assertEqual(coupons.on_check(walked([(3000, 0)], sale_discount=500), SAVE5, Counter()), {"verdict": "allow"})
+    def test_the_sales_own_discount_still_counts_off(self):
+        """A discount on the whole sale (a cashier's 20% off, say) is never a coupon's: 30.00 less 5.00 is 25.00."""
+        refused(self, coupons.on_check(walked([(3000, 0)], sale_discount=500), SAVE5, Counter()), coupons.ADD_TO_SALE,
+                amounts=("USD 30.00", "USD 25.00"))
 
-    def test_every_lines_discount_is_added_back(self):
-        """A promotion's cut on another line counts too: the check cannot tell it from a coupon's."""
+    def test_a_promotions_line_still_counts_off(self):
+        """A free article (or a two-for-one's half) a promotion marked as its own is never a coupon's cut: 20.00 plus
+        the coupon's 5.00 is 25.00, the free 20.00 article stays off."""
+        ctx = walked([(2000, 500), (0, 2000)])
+        ctx["lines"][1]["promo_qty_milli"] = 1000
+        refused(self, coupons.on_check(ctx, SAVE5, Counter()), coupons.ADD_TO_SALE, amounts=("USD 30.00", "USD 25.00"))
+        ctx["lines"][1].update(promo_qty_milli=0, is_free_item=1)
+        self.assertEqual(coupons.before_discounts(ctx), 2500)
+
+    def test_every_other_lines_discount_is_added_back(self):
+        """A cut on a line no promotion marked counts back: the check cannot tell it from a coupon's."""
         self.assertEqual(coupons.on_check(walked([(2000, 500), (0, 500)]), SAVE5, Counter()), {"verdict": "allow"})
 
     def test_a_line_priced_above_its_list_takes_nothing_off(self):

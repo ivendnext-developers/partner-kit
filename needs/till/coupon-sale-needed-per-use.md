@@ -18,7 +18,7 @@ Your service answers the check before payment. iVendNext keeps one rule per coup
 
 ## Limits
 - Answered when the cashier presses Pay, not when the coupon is entered.
-- The sale is judged before its discounts (the coupons', the promotions' and the cashier's), tax included: the till's *Grand Total* plus its *Discount*, so a coupon never counts against its own minimum. An exchange's replacement is its own sale, judged at its own total.
+- The sale is judged before its line discounts (the coupons' and a cashier's line discount), tax included, so a coupon never counts against its own minimum; a promotion's free or two-for-one article and a discount on the whole sale still count off. An exchange's replacement is its own sale, judged at its own total.
 - One amount per coupon, read in each sale's own currency.
 - It counts each coupon as one use, never what the coupon takes off: a 10% coupon with 1,000 here takes 100 of a 1,000 sale, a 50% coupon 500. It is a minimum sale per coupon, not a cap on the discount.
 - Several coupons of one kind on one sale count as one. For one coupon for each so much spent, give each coupon its own record and rule (coupons issued as serial numbers of one coupon cannot be used twice on a sale unless its hidden Can Repeat In Transaction is ticked, and then count once).

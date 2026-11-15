@@ -135,12 +135,14 @@ def money(minor: int, exponent: int, currency: str = "") -> str:
 
 
 def before_discounts(ctx: dict) -> int:
-    """The sale before its discounts, in minor units: ``totals.grand_minor`` with each line's ``discount_minor`` and the
-    sale's own ``totals.discount_minor`` added back, the till's *Grand Total* plus its *Discount*. A coupon books into its
-    lines' discount beside the promotions' and the cashier's, and the check is never sent a coupon's own amount, so all
-    are added back: a coupon never counts against its own minimum. Tax stays in, as it is on the total. A line priced
-    above its list (a negative discount) adds nothing, as on the till's *Discount*."""
-    cut = sum(max(0, ln["discount_minor"]) for ln in ctx["lines"]) + max(0, ctx["totals"]["discount_minor"])
+    """The sale before its line discounts, in minor units: ``totals.grand_minor`` with each line's ``discount_minor``
+    added back. A coupon books its cut into its lines' discount and the check is never sent a coupon's own amount, so the
+    line discounts are added back and a coupon never counts against its own minimum. Still counted off: a line a promotion
+    marked as its own (``is_free_item`` 1, or ``promo_qty_milli`` above 0: a free article, a two-for-one) and the sale's
+    own discount (``totals.discount_minor``), which a coupon never writes. Tax stays in, as it is on the total; the tax a
+    line discount took off is not added back. A line priced above its list (a negative discount) adds nothing."""
+    cut = sum(max(0, ln["discount_minor"]) for ln in ctx["lines"]
+              if not ln.get("is_free_item") and not ln.get("promo_qty_milli"))
     return ctx["totals"]["grand_minor"] + cut
 
 

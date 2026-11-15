@@ -44,7 +44,7 @@ ivn try
 
 ### 1.2.3
 
-- *Sale needed for each use* is judged on the sale before its discounts, so a coupon no longer counts against its own minimum: a $5.00 coupon that needs $30.00 is taken on a $33.63 basket, where 1.2.2 refused it at *this sale is USD 28.65*. The refusal says *before discounts* and names that figure: the till's *Grand Total* plus its *Discount*. Tax stays in, as before.
+- *Sale needed for each use* is judged on the sale before its line discounts, so a coupon no longer counts against its own minimum: a $5.00 coupon that needs $30.00 is taken on a $33.63 basket, where 1.2.2 refused it at *this sale is USD 28.65*. A promotion's free or two-for-one article and a discount on the whole sale still count off, and a cashier's line discount is added back with the coupon's (the check is never sent a coupon's own amount). Tax stays in; the tax a discount took off is not added back. The refusal says *before discounts* and names that figure.
 
 ### 1.2.2
 
