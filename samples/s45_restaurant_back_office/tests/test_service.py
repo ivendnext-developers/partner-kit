@@ -128,6 +128,7 @@ class ServiceTest(unittest.TestCase):
         (iss,) = shop.issues.values()
         self.assertEqual([(r["sale"], r["place"], r["server"], r["covers"], r["turn"], r["tip"]) for r in iss["checks"]],
                          [("S1", "Table 3", "sam@x", 4, 1, 12.5), ("S2", "", "ben@x", 0, 0, 1.0)])
+        self.assertEqual((iss["covers"], iss["turns"], iss["tips"]), (4, 1, 13.5))    # the day's figures the report reads
         self.assertEqual({ln["sale"]: ln["server"] for ln in iss["lines"]}, {"S1": "sam@x", "S2": "ben@x"})
 
     def test_i20b_a_site_that_has_not_given_the_check_reads_still_books_its_issue(self):
