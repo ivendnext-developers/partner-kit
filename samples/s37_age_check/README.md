@@ -36,12 +36,17 @@ ivn try
 
 ## Try it at the till
 
-- First, in iVendNext Desk, set *Customers must be at least this old* on the wine's item group (21, say), and add that group to the scan service's settings (`item_groups`), as *The customer sets* says.
+- First, in iVendNext Desk, make the *Age check settings* record `Default` with *Hours from UTC at your store* (-5 for New York), so the till counts the store's day, not UTC's.
+- Then set *Customers must be at least this old* on the wine's item group (21, say), and add that group to the scan service's settings (`item_groups`), as *The customer sets* says.
 - Scan a bottle of wine; the till shows the date of birth to check. Press Add with these details.
 - Pick a restricted item from the list instead of scanning it; the till stops it at Pay.
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.1.5
+
+- *Try it at the till* starts with the *Age check settings* record `Default` and the store's hours from UTC: without it the till counts the day in UTC, so in an American evening it showed a date of birth one day late. The service and the manifest are unchanged.
 
 ### 1.1.4
 
