@@ -291,7 +291,21 @@ def app_view(part: Part) -> dict:
         m["allowed_urls"] = [mount_url(u, part.tag) if isinstance(u, str) and any(
             u == y.get(address_field(k)) for k in KEYED for y in part.manifest.get(k) or []) else u
             for u in m.get("allowed_urls") or []]
+    telling(m, part.prefix[:-len(part.tag) - 1] if part.tagged else part.prefix)
     return m
+
+
+def telling(m: dict, prefix: str) -> None:
+    """The words of what Desk's search lists (a record type, a report, a workspace, a dashboard) end in the app's own name,
+    ``Repair (acme hk)``: a site that also runs the library's copy of the sample lists ``Repair`` there, and the two
+    would read the same. The developer may drop it in ``translations`` once no site of theirs runs both."""
+    listed = {x.get("name") for k in ("reports", "workspaces", "dashboards") for x in m.get(k) or [] if isinstance(x, dict)}
+    listed |= {x.get("name") for x in m.get("doctypes") or [] if isinstance(x, dict) and not x.get("istable")}
+    for t in m.get("translations") or []:
+        words = t.get("words") if isinstance(t, dict) else None
+        for source, text in (words or {}).items() if isinstance(words, dict) else ():
+            if source in listed and isinstance(text, str) and text:
+                words[source] = f"{text} ({prefix.lower()})"
 
 
 def limits(parts: list[Part]) -> None:
@@ -822,6 +836,12 @@ def readme(parts: list[Part], app: str, prefix: str, manifest: dict, app_json: d
     else:
         server = "For one that runs only when called: `ivn package` writes `package.zip` for your own function host."
     names = ", ".join(p.label for p in parts)
+    tail = f" ({prefix.lower()})"
+    shown = next((w for t in manifest.get("translations") or [] if isinstance(t, dict)
+                  for w in (t.get("words") or {}).values() if isinstance(w, str) and w.endswith(tail)), None)
+    own_name = (f" The lists' words end in your app's own name (`{shown}`), so a site that also runs the App library's copy "
+                "of a sample tells the two apart in Desk's search; take it out of `translations` if no site of yours runs "
+                "both.") if shown else ""
     return f"""# {prefix}
 
 {manifest.get('title')}: one app made by New app from {len(parts)} sample{'s' if len(parts) != 1 else ''} of the iVendNext partner kit ({names}). Its names start with `{prefix}` and `{app}`.
@@ -840,7 +860,7 @@ def readme(parts: list[Part], app: str, prefix: str, manifest: dict, app_json: d
 
 ## What you can change safely
 
-Your own code in `service/`, the titles and words in `manifest.json`, the card.
+Your own code in `service/`, the titles and words in `manifest.json`, the card.{own_name}
 
 ## What to leave alone
 

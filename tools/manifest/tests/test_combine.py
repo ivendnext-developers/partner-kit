@@ -273,6 +273,27 @@ class Combine(Base):
                 self.assertEqual(mis[0], 401, path)
 
 
+class NotTheLibrarysWords(Base):
+    """F-EP-13: a made app's lists never read word for word like the App library's copy of the same sample, which every
+    demo box runs; Desk's search opens the first of two alike *New* lines."""
+
+    def test_what_the_search_lists_ends_in_the_apps_own_name_and_differs_from_the_librarys(self):
+        for samples, prefix in ((["s58_repairs_by_serial", "s1_warranty"], "ACME HK2"), (["s58_repairs_by_serial"], "ACME RP")):
+            with self.subTest(samples=samples):
+                folder, _ = self.make(samples, prefix)
+                app = {w for t in self.manifest(folder)["translations"] for w in t["words"].values()}
+                for s in samples:
+                    own = combine.sample_info.manifest(KIT / "samples" / s)
+                    lib, _ = rename.rename(own, "IVENDNEXT " + own["prefix"].split()[1])       # as the library holds it
+                    listed = {d["name"] for d in lib["doctypes"] if not d.get("istable")} | {r["name"] for r in lib.get("reports") or []}
+                    words = {k: v for t in lib["translations"] for k, v in t["words"].items()}
+                    for name in listed & set(words):
+                        self.assertNotIn(words[name], app)
+                        self.assertIn(f"{words[name]} ({prefix.lower()})", app)
+                self.assertIn("Received", app)                  # a state reads inside the form only: its plain word stays
+                self.assertIn(f"`Repair ({prefix.lower()})`", (folder / "README.md").read_text(encoding="utf-8"))
+
+
 class DeskButtons(Base):
     """A Desk button names its subscription by key (its `service`): combined or added, it names the tagged key, so the
     kit's check passes (found by EASY3a's walk, 2026-11-01: S23 with S49 was refused by the check)."""
