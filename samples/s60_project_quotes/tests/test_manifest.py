@@ -105,15 +105,15 @@ class ManifestTest(unittest.TestCase):
     def test_the_sheet_reads_each_document_with_the_viewers_rights_filtered_on_the_project(self):
         html = PF["html"]
         self.assertEqual((PF["doc_type"], PF["print_format_type"]), (PROJECT, "Jinja"))
-        reads = dict(re.findall(r'ivn_rows\("([^"]+)", filters=\{"([a-z_]+)": doc\.name\}', html))
+        reads = dict(re.findall(r'ivn_rows\("([^"]+)", filters=\{"([a-z0-9_]+)": doc\.name\}', html))
         self.assertEqual(set(reads), HEADERS)
         field = {c["dt"]: c["fieldname"] for c in MANIFEST["custom_fields"] if c["dt"] in HEADERS}
         self.assertEqual(reads, field)                                      # each read filters on that type's own field
         self.assertNotRegex(html, r"\b(get_all|get_list|get_doc|get_value|db\.)")   # never the framework's own readers
         self.assertIn("{{ letter_head }}", html)                            # a Jinja print places it itself (run 22)
         own = set(fields(PROJECT)) | {"name", "status"}
-        self.assertFalse({m for m in re.findall(r"doc\.([a-z_]+)", html)} - own - {"get_formatted"})
-        self.assertFalse({m for m in re.findall(r"\bs\.([a-z_]+)", html)} - set(fields(STAGE)) - {"get_formatted"})
+        self.assertFalse({m for m in re.findall(r"doc\.([a-z0-9_]+)", html)} - own - {"get_formatted"})
+        self.assertFalse({m for m in re.findall(r"\bs\.([a-z0-9_]+)", html)} - set(fields(STAGE)) - {"get_formatted"})
         self.assertEqual(len(re.findall(r"None yet\.", html)), len(HEADERS))   # an empty section still reads well
 
     def test_the_builder_lists_its_projects(self):
