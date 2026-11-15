@@ -126,6 +126,11 @@ class ManifestTest(unittest.TestCase):
         listed = [f["fieldname"] for f in self.dt[RES]["fields"] if f.get("in_list_view")]
         self.assertEqual(listed[:2], ["booking_date", "booking_time"])
 
+    def test_m11_the_table_list_shows_the_chosen_stores_tables(self):   # F-HOSP-28
+        for dt in (RES, WAIT):
+            place = {x["fieldname"]: x for x in self.dt[dt]["fields"]}["place"]
+            self.assertEqual(json.loads(place["link_filters"]), [["Retail Floor Place", "store", "=", "eval:doc.store"]], dt)
+
     def test_l2_the_prompts_promise_no_table(self):   # the answer says when a table is freed
         asks = {a["label"]: a.get("confirm_text") for a in self.m["desk_actions"] if a["record_type"] == RES}
         self.assertEqual((asks["No-show"], asks["Cancel booking"]), ("Mark this booking a no-show?", "Cancel this booking?"))

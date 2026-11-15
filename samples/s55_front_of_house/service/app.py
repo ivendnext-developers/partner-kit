@@ -294,6 +294,18 @@ class Service:
         found = foh.clashes(foh.span(start, foh.minutes_of(r, row)), others, {r["store"]: row}, exclude=exclude)
         return foh.clash_words(found[0], r.get("place_label") or r["place"]) if found else ""
 
+    @staticmethod
+    def _place_store(door, place: str, store: str) -> str:
+        """The store the table is on when it is not the booking's, else ``""``. A site that does not let the app read
+        the tables (the app not updated there yet) books as before."""
+        try:
+            on = door.doc(PLACE, place).get("store") or ""
+        except TenantError as e:
+            if not e.refused:
+                raise
+            return ""
+        return on if on and on != store else ""
+
     def _clock(self, door, store: str, site_now: datetime.datetime) -> foh.Clock:
         """The store's wall clock against the site's: the store's zone from its Warehouse, the site's offset from its own
         clock (``site_now``, a write's ``modified``) against ours. A site that does not let the app read the store (the
@@ -345,6 +357,12 @@ class Service:
             door.update(foh.dt("Reservation"), name, {"status": "Booked", "app_note": ""})
             return foh.message(APP_NAME, f"{name} is booked for {foh.num(r['party'])} at {start:%H:%M} on "
                                f"{start:%d %b}, with no table held yet. Choose a table and press Book again to hold one.")
+        elsewhere = self._place_store(door, r["place"], r["store"])
+        if elsewhere:                   # stores share table names: another store's Table 6 holds nothing here
+            words = (f"Not booked: {r.get('place_label') or r['place']} is a table at {elsewhere}, not at {r['store']}. "
+                     f"Choose a table at {r['store']}, save, then press Book again.")
+            door.update(foh.dt("Reservation"), name, {"status": "Requested", "app_note": words[:500]})
+            return _warning(words, refresh=True)
         mine, _ = self._lock(door, row["name"])
         try:
             clash = self._clash(door, r, row, start, exclude=name)

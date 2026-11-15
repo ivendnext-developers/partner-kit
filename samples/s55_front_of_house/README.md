@@ -44,6 +44,12 @@ ivn try
 
 ## Versions
 
+### 1.3.2
+
+Manifest 0.4.2.
+
+- The *Table* list on a reservation and on a waiting party shows only the chosen store's tables, so a New York host never picks Portland's *Table 6* from a chain's three. **Book** refuses a table of another store (a store changed after the table was chosen, or a booking written by a platform): *"Not booked: Table 6 is a table at Portland, not at New York. Choose a table at New York, save, then press Book again."*; the reservation goes back to *Requested*. **Seat** was already refused at the till.
+
 ### 1.3.1
 
 Manifest 0.4.1.
