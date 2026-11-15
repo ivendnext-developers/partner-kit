@@ -91,5 +91,12 @@ class ManifestTest(unittest.TestCase):
         self.assertTrue(all(w and not w.startswith(m["prefix"]) for w in en.values()))
 
 
+    def test_desks_search_finds_the_cards_title(self):   # the search bar matches a report by its word
+        (en,) = [t["words"] for t in MANIFEST["translations"] if t["language"] == "en"]
+        (rep,) = MANIFEST["reports"]
+        self.assertEqual((rep["ref_doctype"], en[rep["name"]]), (MANIFEST["prefix"] + " Rule", MANIFEST["title"]))
+        self.assertFalse(rep.get("filters") or rep.get("roles"))   # every rule; the record's own read decides
+
+
 if __name__ == "__main__":
     unittest.main()

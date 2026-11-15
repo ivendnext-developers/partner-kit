@@ -18,6 +18,7 @@ ivn new acme_paymethods --from s46
 
 What a partner usually changes:
 
+- **The report named by the card's title:** `PP PMR Rules` and its word in `translations` (*Payment method rules*) carry the card's title, so Desk's search finds the app by it; change them together with the title.
 - the rule's reach: a rule per POS Profile or per terminal (the check sends `pos_profile` and `pos_terminal`), or per customer, from a field you add to Customer, in `payrules.py`;
 - amounts: a method from an amount is a method row's *From a sale of* already; cash up to a limit, or on account up to the customer's credit left, are yours to add;
 - refunds: a refund only to the methods that paid the sale (the check sends `return_of.paid_by` on a return); keep store credit open, or every exchange is refused;
@@ -41,6 +42,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.2.2
+
+- A search in Desk for the card's title, *Payment method rules*, now finds the rules: the manifest adds a Report Builder report, *PP PMR Rules*, worded with the title in `translations`. Who sees a rule is still the record's own read. Manifest 0.3.2.
 
 ### 1.2.1
 
