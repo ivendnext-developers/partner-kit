@@ -14,6 +14,8 @@ from unittest import mock
 
 SAMPLE = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SAMPLE))
+sys.path.insert(0, str(SAMPLE / "tests"))
+import cases  # noqa: E402
 for up in (SAMPLE.parents[1] / "tools" / "app_template" / "service", SAMPLE.parents[1] / "service" / "_kit"):
     sys.path.append(str(up))
 spec = importlib.util.spec_from_file_location("s1_hosted", SAMPLE / "service" / "hosted.py")
@@ -71,7 +73,7 @@ class WarrantyKey(Base):
         self.assertEqual(code, 200)
         self.assertIn("PHONE", out["message"]["body"])
         self.assertIn("24", out["message"]["body"])
-        self.assertIn("CABLE: 3 months", out["message"]["body"])
+        self.assertTrue(cases.says_months(out["message"]["body"], "CABLE", 3), out)
 
     def test_every_term_is_read_however_many_a_chain_keeps(self):
         rows = [{"applies_to": "Item", "item": f"OTHER-{i}", "months": 1} for i in range(1001)]
@@ -84,7 +86,7 @@ class WarrantyKey(Base):
             def item_groups(self, codes):
                 raise app.TenantError("GET Item -> HTTP 403")
         code, out = self.press(self.service(NoItems([{"applies_to": "Item", "item": "PHONE", "months": 24}])))
-        self.assertIn("PHONE: 24 months", out["message"]["body"])
+        self.assertTrue(cases.says_months(out["message"]["body"], "PHONE", 24), out)
 
     def test_a_call_not_signed_by_the_site_is_refused(self):
         svc = self.service(FakeTenant())

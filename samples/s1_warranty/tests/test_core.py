@@ -11,6 +11,7 @@ from datetime import date
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
+import cases  # noqa: E402
 import core  # noqa: E402
 
 TERMS = {   # the service's terms.json, plus the item groups the bench reported for these codes (the setup record)
@@ -39,7 +40,8 @@ class WarrantyAnswer(unittest.TestCase):
     def test_covered(self):
         m = valid_for_till(core.warranty_answer(ctx("covered"), TERMS))
         self.assertEqual(m["level"], "success")
-        self.assertIn("months", m["body"])
+        self.assertTrue(cases.says_months(m["body"], "PP-WRC-PHONE", 24), m["body"])   # the item and its months,
+        self.assertTrue(cases.says_months(m["body"], "AIRPODS-3", 12), m["body"])      # not the sentence
 
     def test_not_covered(self):
         m = valid_for_till(core.warranty_answer(ctx("not_covered"), TERMS))

@@ -8,18 +8,25 @@ built from them."""
 
 import copy
 import json
+import re
 import pathlib
 
 HERE = pathlib.Path(__file__).resolve().parent
 
-# name -> (level, phrases that must appear in the body)
+def says_months(body: str, item: str, months: int) -> bool:
+    """True when the body names ``item`` and its ``months`` in one part, in either order: the facts, not the sentence."""
+    return any(item in part and re.search(rf"\b{months}\b", part.replace(item, " "))
+               for part in re.split(r"; |\n", body))           # the item's own part, its months before or after it
+
+
+# name -> (level, phrases that must appear in the body; an (item, months) pair is checked by its facts)
 EXPECT = {
-    "covered": ("success", ["PP-WRC-PHONE: 24 months", "AIRPODS-3: 12 months"]),   # own term 24 beats group 12
+    "covered": ("success", [("PP-WRC-PHONE", 24), ("AIRPODS-3", 12)]),   # own term 24 beats group 12
     "not_covered": ("info", ["CABLE-USBC-1M: not covered", "CASE-LEATHER: not covered"]),
     "unknown": ("warning", ["PP-NO-SUCH-ITEM: unknown item"]),
     "empty": ("info", ["There are no items on this sale yet."]),
     "sixty": ("warning", ["more"]),
-    "duplicates": ("success", ["PP-WRC-PHONE: 24 months"]),
+    "duplicates": ("success", [("PP-WRC-PHONE", 24)]),
 }
 
 
@@ -45,7 +52,8 @@ def failures(name: str, message: dict) -> list[str]:
         return [f"not a message: {message!r}"[:200]]
     if message["level"] != level:
         bad.append(f"level {message['level']!r}, want {level!r}")
-    bad += [f"body lacks {p!r}" for p in phrases if p not in message["body"]]
+    bad += [f"body lacks {p!r}" for p in phrases
+            if not (says_months(message["body"], *p) if isinstance(p, tuple) else p in message["body"])]
     if name == "duplicates" and message["body"].count("PP-WRC-PHONE") != 1:
         bad.append("a duplicated item is named more than once")
     if len(message["body"]) > 280 or len(message["title"]) > 60:
