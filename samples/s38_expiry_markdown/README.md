@@ -37,7 +37,7 @@ ivn try
 
 ## Try it at the till
 
-- First set the price list (*Price list to mark down*) and *Hours from UTC at your store* (-5 for New York) in Expiry markdown settings, and the steps on your item group (in Desk, on Item Group: *First markdown: days before expiry* 5 and *First markdown (% off)* 25, say).
+- First set the price list (*Price list to mark down*) and *Hours from UTC at your store* (-5 for New York) in the *Expiry markdown settings* record `Default`, and the steps on your item group (in Desk, on Item Group: *First markdown: days before expiry* 5 and *First markdown (% off)* 25, say).
 - In Desk, tick a lot close to its expiry date on the Batch list and press Mark down.
 - Scan that lot at the till; it rings at its marked-down price.
 - Close the till day when you are done.

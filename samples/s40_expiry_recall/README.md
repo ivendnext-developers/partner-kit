@@ -40,11 +40,16 @@ ivn try
 
 ## Try it at the till
 
-- In Desk, enter a recall notice for one lot and press Block these batches.
+- First, in iVendNext Desk, make the *Expiry and recall settings* record `Default` with *Hours from UTC at your store* (-5 for New York), so the notice's *Blocked on* and *Traced on* read the store's time, not UTC's.
+- Then, in Desk, enter a recall notice for one lot and press Block these batches.
 - Sell that item at the till; the blocked lot is no longer offered.
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.1.4
+
+- *Try it at the till* starts with the *Expiry and recall settings* record `Default` and the store's hours from UTC: without it the notice's *Blocked on* and *Traced on* read UTC's time, a day late in an American evening. The service and the manifest are unchanged.
 
 ### 1.1.3
 

@@ -35,7 +35,7 @@ ivn try
 
 ## Try it at the till
 
-- First, in iVendNext Desk, make the *Duty-free allowance settings* record `Default` with the airport's *Hours from UTC at the airport* (-5 for New York), so today's flights are the airport's today, not UTC's.
+- First, in iVendNext Desk, make the *Duty-free allowance settings* record `Default` with *Hours from UTC at the airport* (-5 for New York), so today's flights are the airport's today, not UTC's.
 - Sell a bottle of spirits with no boarding pass; the till stops it at Pay.
 - Scan the boarding pass into Sale details and try again.
 - Close the till day when you are done.
