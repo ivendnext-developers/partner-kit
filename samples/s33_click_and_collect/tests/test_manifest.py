@@ -1,5 +1,5 @@
 """S33's laptop tests: the manifest passes the kit's checker, its two fields can be set after a delivery note is submitted
-and *Handed over* is a list column and filter (the Delivery Note list filtered on it is the waiting list), its report lists
+and *Handed over* is a list column beside the till's own hand-over time, kept out of the filter bar so a saved waiting list keeps *Handed over No*, its report lists
 exactly the web orders to pick and opens for the store manager and the stock clerk, its workspace opens the report, the sales orders and the delivery notes, and nothing leaves the shop. The
 shop's install refuses a report that names a field the same manifest adds, and so does the kit (site_rules.py). Data only: no service.
 
@@ -43,9 +43,19 @@ class ManifestTest(unittest.TestCase):
         # the Details tab's first section, where the counter sees them; never the folded More Info (after po_no)
         self.assertEqual(fields["pp_ccb_handed_over"]["insert_after"], "return_against")
 
-    def test_handed_over_is_a_list_column_and_a_list_filter_so_the_list_is_the_waiting_list(self):
+    def test_handed_over_is_a_list_column_kept_out_of_the_filter_bar_so_a_saved_list_keeps_handed_over_no(self):
+        # the list's filter bar shows a Check as a tick box: a saved "= 0" lands there, reads as unticked (any) and is
+        # dropped, so the waiting list opened with orders already handed over. Off the bar, it stays in the filter list.
+        # 0, not left out: an update writes only the keys it names, so an installed field would keep the bar's 1
         f = next(f for f in MANIFEST["custom_fields"] if f["fieldname"] == "pp_ccb_handed_over")
-        self.assertEqual((f.get("in_list_view"), f.get("in_standard_filter")), (1, 1))
+        self.assertEqual((f.get("in_list_view"), f.get("in_standard_filter")), (1, 0))
+
+    def test_the_list_shows_the_tills_own_hand_over_time_in_place_of_percent_installed(self):
+        # the till's Pickup & curbside board writes custom_mpos_pickup_handed_at, never Handed over; the list's
+        # columns stop at six on a laptop, so % Installed (the engine's, after Grand Total) makes room for it
+        shown = {(p["doc_type"], p["field_name"], p["property"]): p["value"] for p in MANIFEST["property_setters"]}
+        self.assertEqual(shown, {("Delivery Note", "custom_mpos_pickup_handed_at", "in_list_view"): 1,
+                                 ("Delivery Note", "per_installed", "in_list_view"): 0})
 
     def test_the_waiting_list_leaves_out_an_order_the_till_handed_over(self):
         ws = json.dumps(MANIFEST["workspaces"]) + MANIFEST["description"]
