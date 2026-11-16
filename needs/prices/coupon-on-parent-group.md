@@ -5,7 +5,7 @@ area: prices
 topic: promotions
 asks: A coupon for Supplements should cover every supplement, Protein and Vitamins included
 status: ready-with-limits
-door: event-feed
+door: outside-app
 blocked-by: -
 recipe: recipes/parent_groups.md
 sample: samples/s31_parent_groups

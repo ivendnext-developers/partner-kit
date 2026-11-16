@@ -39,10 +39,14 @@ ivn try
 ## Try it at the till
 
 - Choose a customer in a group that needs a code; the till asks for the code texted to their mobile.
-- Type the code the customer reads out, then sell as usual.
+- Type the code the customer reads out, then sell as usual. On a site with no text gateway (a demo or sandbox site), read the code in Desk instead: *Customer check code*, the newest row.
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.1.2
+
+- *Try it at the till* says where to read the code on a site with no text gateway: *Customer check code* in Desk, the newest row. Words only; no service or manifest changes.
 
 ### 1.1.1
 

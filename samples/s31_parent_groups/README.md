@@ -32,7 +32,16 @@ ivn try
 
 Then run it from your own computer or scheduler (Try does not run it), from `service/pgx/` in the app you made, with the key of a user of your own that holds *PP PGX Integration* (*Generate Keys* on that user): `PGX_KEY=… PGX_SECRET=… python3 expander.py run --base https://shop.example --state state/pgx.sqlite --watch 15`. Once, for what exists: `PGX_KEY=… PGX_SECRET=… python3 expander.py reconcile --base https://shop.example --state state/pgx.sqlite`.
 
+## Try it at the till
+
+- Try installs the app but does not run its service. On the tried site, make a user of your own, give it the role *PP PGX Integration* and press *Generate Keys* on it. Then run it from `service/pgx/` in the app you made: `PGX_KEY=… PGX_SECRET=… python3 expander.py run --base https://<the tried site> --state state/pgx.sqlite --watch 15`.
+- In Desk, save a coupon or a promotion on a parent item group: within seconds it carries a row for each of the group's children.
+
 ## Versions
+
+### 0.2.2
+
+- *Try it at the till* says Try does not run this service, gives the one command that runs it against the tried site, and what you then see; its card on *New app* says it is your own service outside iVendNext, as S26's and S27's do, not settings in Desk (its needs card's door is *Outside app*, and the configuration card *Prices, promotions and coupons* no longer names S31 as its sample). Words only.
 
 ### 0.2.1
 

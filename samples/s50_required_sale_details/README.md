@@ -37,11 +37,16 @@ ivn try
 
 ## Try it at the till
 
-- Choose a customer in a group that needs a detail and press Pay; the till stops it.
-- Fill the detail in Sale details and press Pay again.
+- First, in Desk: if the site has no *Sale Attribute* for the detail, make one (switched on, *Required* off, no default). Then make a *Required sale details rule*: *Customer group*, the detail under *Sale details needed*, your till under *Only at these POS Profiles*, and *Words the cashier reads*. The app installs no rule, so until then every sale goes through.
+- Choose a customer in that group and press Checkout; the till stops it with your words.
+- Fill the detail in Sale details and press Checkout again.
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.1.2
+
+- *Try it at the till* starts with what to set in Desk first (the *Sale Attribute*, and a *Required sale details rule* for the customer's group): the app installs no rule, so a first sale went straight through. Words only; no service or manifest changes.
 
 ### 1.1.1
 

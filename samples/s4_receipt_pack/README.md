@@ -18,14 +18,14 @@ ivn new acme_receipt --from s4
 
 What a partner usually changes:
 
-- **The layout and wording:** `receipt.html`.
-- **The logo:** replace `logo.png`, then rebuild the manifest with `python3 samples/s4_receipt_pack/build.py`.
+- **The layout and wording:** `receipt.html`, then run `python3 build.py` in the same folder (in an app you made, `service/rcp/`): it writes the layout into the app's `manifest.json`, the one the site installs, and nothing else changes.
+- **The logo:** replace `logo.png`, then run `build.py` the same way.
 - **The labels:** the English and Arabic pairs in `receipt.html`; change the pair for your market.
 - **The tax rows:** the VAT rate and taxable-value rows in `receipt.html`. For a real market, start from a copy of the seeded `mPOS Receipt` rather than this simple layout.
 
 More: the [recipe](../../recipes/receipt_format.md).
 
-**The customer sets:** the company's **Tax ID** on the Company, an **Address** linked to the Company, the **Company Address** on the till's **POS Profile**, and the pack's format in the **Print Format** field of the POS Profile. The pack cannot set the profile for the retailer. A sale saved before the install prints *—* for the tax number.
+**The customer sets:** the company's **Tax ID** on the Company, an **Address** linked to the Company, the **Company Address** on the till's **POS Profile**, and the pack's format in the **Print Format** field of the POS Profile. The pack cannot set the profile for the retailer. A sale saved before the install prints *—* for the tax number. **Before removing the app** (*Export and uninstall*), set the POS Profile's *Print Format* back to the store's own receipt: otherwise the profile still names the pack's format, which is gone, and the till prints the sale's plain form.
 
 ## Run it
 
@@ -35,6 +35,11 @@ ivn try
 ```
 
 ## Versions
+
+### 0.1.4
+
+- `build.py` writes the layout into the manifest's receipt and changes nothing else; in an app made from S4 it writes the app's own `manifest.json` (and the copy its tests read), so *edit `receipt.html`, then run `build.py`* reaches the site. Before, it wrote a `manifest.json` beside itself that the app never read.
+- *The customer sets* says to set the POS Profile's *Print Format* back to the store's own before removing the app.
 
 ### 0.1.3
 

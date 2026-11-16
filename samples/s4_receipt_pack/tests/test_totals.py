@@ -47,6 +47,26 @@ class TotalsTest(unittest.TestCase):
         self.assertEqual(validate.validate(MANIFEST), [])
 
 
+class BuildTest(unittest.TestCase):
+    """``build.py``: edit receipt.html, run it, and the manifest's receipt carries the change; nothing else changes."""
+
+    def test_a_changed_receipt_reaches_the_manifest_and_nothing_else_moves(self):
+        import shutil
+        import subprocess
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            for name in ("build.py", "receipt.html", "logo.png", "manifest.json"):
+                shutil.copy(SAMPLE / name, Path(tmp) / name)
+            (Path(tmp) / "receipt.html").write_text(HTML.replace("Total", "Grand total", 1), encoding="utf-8")
+            r = subprocess.run([sys.executable, "build.py"], cwd=tmp, capture_output=True, text=True, timeout=60)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            built = json.loads((Path(tmp) / "manifest.json").read_text(encoding="utf-8"))
+        self.assertIn("Grand total", built["print_formats"][0]["html"])
+        self.assertNotIn("@@LOGO@@", built["print_formats"][0]["html"])
+        built["print_formats"][0]["html"] = MANIFEST["print_formats"][0]["html"]
+        self.assertEqual(built, MANIFEST)                     # its version, words and translations are kept
+
+
 class PlainWordsTest(unittest.TestCase):
     def test_the_english_words_cover_every_name_the_store_sees(self):   # Desk shows people's words, never the code
         with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "manifest.json"), encoding="utf-8") as f:

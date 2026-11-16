@@ -475,6 +475,26 @@ class Refusals(Base):
                 self.assertEqual(combine.does(part), words)
         self.assertEqual(combine.make_part("s3_price_audit", "ACME ONE", "acme_one", False, KIT / "samples").title, "Price-deviation audit")
 
+    def test_s4s_build_writes_the_apps_own_receipt(self):  # F-HOSP-42: edit receipt.html, run build.py, and it is in the app
+        for samples in (["s4_receipt_pack"], ["s4_receipt_pack", "s59_kitchen_screen"]):
+            with self.subTest(samples), tempfile.TemporaryDirectory() as tmp:
+                folder = combine.combine(samples, "ACME ONE", pathlib.Path(tmp))
+                part = folder / "service" / "rcp"
+                html = (part / "receipt.html").read_text(encoding="utf-8")
+                (part / "receipt.html").write_text(html.replace("Total", "Grand total", 1), encoding="utf-8")
+                r = subprocess.run([sys.executable, "build.py"], cwd=part, capture_output=True, text=True, timeout=60)
+                self.assertEqual(r.returncode, 0, r.stderr)
+                self.assertFalse((part / "manifest.json").exists())                   # no stray copy nothing reads
+                for m in (self.manifest(folder), json.loads((folder / "tests" / "rcp" / "_manifest.json").read_text("utf-8"))):
+                    receipt = next(p for p in m["print_formats"] if p["name"].endswith("UAE Tax Invoice"))
+                    self.assertIn("Grand total", receipt["html"])
+                self.check(folder)
+                r = subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests"], cwd=folder,
+                                   capture_output=True, text=True, timeout=600)
+                self.assertEqual(r.returncode, 0, r.stderr[-2000:])                     # the app's tests read the change
+                self.assertIn("After a change in `service/rcp/` (S4's `receipt.html`), run `python3 build.py` there",
+                              (folder / "README.md").read_text(encoding="utf-8"))
+
     def test_s2_brings_its_feed_so_the_install_makes_the_user_its_key_needs(self):  # F-GR-27: alone, or with S27
         for samples in (["s2_bins"], ["s2_bins", "s27_stock_alerts"]):
             with self.subTest(samples), tempfile.TemporaryDirectory() as tmp:

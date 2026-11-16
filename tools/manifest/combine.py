@@ -844,6 +844,13 @@ def where(part: Part) -> str:
     return f"service/{part.tag}/" if has_code else f"tests/{part.tag}/"
 
 
+BUILDS = "in an app made from this sample"      # a sample's build.py that writes the app's own manifest.json (S4's)
+
+
+def _text(p: pathlib.Path) -> str:
+    return p.read_text(encoding="utf-8", errors="ignore") if p.is_file() else ""
+
+
 def readme(parts: list[Part], app: str, prefix: str, manifest: dict, app_json: dict) -> str:
     rows = "\n".join(f"| `{where(p)}` | {in_folder(p)} |" for p in parts)
     settings = list(app_json.get("env") or [])
@@ -857,6 +864,8 @@ def readme(parts: list[Part], app: str, prefix: str, manifest: dict, app_json: d
     else:
         server = "For one that runs only when called: `ivn package` writes `package.zip` for your own function host."
     names = ", ".join(p.label for p in parts)
+    built = "".join(f" After a change in `service/{p.tag}/` (S4's `receipt.html`), run `python3 build.py` there: it writes "
+                    "that part into `manifest.json`." for p in parts if BUILDS in _text(p.folder / "build.py"))
     return f"""# {prefix}
 
 {manifest.get('title')}: one app made by New app from {len(parts)} sample{'s' if len(parts) != 1 else ''} of the iVendNext partner kit ({names}). Its names start with `{prefix}` and `{app}`.
@@ -875,7 +884,7 @@ def readme(parts: list[Part], app: str, prefix: str, manifest: dict, app_json: d
 
 ## What you can change safely
 
-Your own code in `service/`, the titles and words in `manifest.json`, the card.
+Your own code in `service/`, the titles and words in `manifest.json`, the card.{built}
 
 ## What to leave alone
 
