@@ -36,8 +36,8 @@ Then, from `service/stk/` in the app you made, with the key of a user that holds
 
 ## Try it at the till
 
-- Try installs the lists but does not run the alerts. In Desk, fill your app's settings record `Default` (in the list whose name starts with your prefix and ends in *Settings*: the source warehouse, the days before expiry), tick *Enabled*, and give an item a reorder row of type *Transfer* for a store whose stock is below its level.
-- On the tried site, make a user of your own, give it your app's role ending *Integration* (your prefix, then Integration) and press *Generate Keys* on it. Then run it once, as [Run it](#run-it) says, with `--base https://<the tried site>`. Your app's alert list (your prefix, ending in *Alert*) shows the low stock, and a draft transfer request titled with your prefix, the store and the day waits in Desk for a person to submit.
+- Try installs the lists but does not run the alerts. In Desk, fill your app's settings record `Default` (in the list that starts with your prefix and ends in *Settings*; press *New*, its name fills itself as `Default`): the source warehouse, the days before expiry; tick *Enabled*, and give an item a reorder row of type *Transfer* for a store whose stock is below its level.
+- On the tried site, make a user of your own, give it your app's role ending *Integration* (your prefix, then Integration) and press *Generate Keys* on it. Then run it once, as [Run it](#run-it) says, with `--base https://<the tried site>`. Your app's alert list (your prefix, ending in *Alert*) shows the low stock, and a draft transfer request titled with your prefix, its words joined by hyphens, then the store and the day waits in Desk for a person to submit.
 
 ## Versions
 
