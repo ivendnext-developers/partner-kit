@@ -11,9 +11,11 @@
 //
 // It talks to the hosting's web door only (https://hosting.ivendnext.app/v1/web/), as the hosting page does: the same
 // GitHub sign-in (PKCE; the code is exchanged on the server, the GitHub token never reaches this page), the session kept
-// in this script's memory. A reload keeps it (K192): as the page goes, the session and the screen are put in this tab's
-// session storage, and as it comes back they are taken out at once and used only by a reload within a minute; a closed
-// tab, a new tab or a duplicated one is signed out. A token made on Tokens is shown once and kept nowhere.
+// in this script's memory and, for its own lifetime (the hosting's three hours), in this browser's storage, so a new
+// visit (the header's My apps, a link, a bookmark, a new tab) is still signed in (W227 F-LW-22); Sign out takes it out at
+// once. A reload also comes back to its screen (K192): as the page goes, the screen is put in this tab's session storage,
+// and as it comes back it is taken out at once and used only by a reload within a minute. A token made on Tokens is
+// shown once and kept nowhere.
 //
 // The pure parts are exported for site/test_apps.mjs; the page itself is checked in a browser.
 (function (root) {
@@ -23,6 +25,7 @@
   var PAGE = "https://developer.ivendnext.com/apps";   // a callback address of the GitHub App
   var PENDING = "ivn-apps-signin";                      // the state and verifier of a sign-in on its way, used once
   var KEEP = "ivn-apps-keep";                            // the session and screen across a reload, taken out at once (K192)
+  var LAST = "ivn-apps-session";                         // the session for its lifetime, across visits (F-LW-22)
   var CODE = "ivn-apps-code";                            // a code from the command's login, kept across the sign-in
   var START = "ivn-apps-start";                          // the ticks a shortlist or a sample's page brought, kept across it
   // Ask for it opens the public *Tell us what is missing* page, never the members-only form (a 404 to anyone not
@@ -38,8 +41,8 @@
     noGitHub: ["No GitHub account? ", "Make a free one", " in two minutes with any e-mail, then come back."],
     m22: "GitHub did not sign you in. Try again.",
     // the checkout opens in its own tab, so this tab keeps its sign-in; the checkout's tab comes back here
-    backFromCheckout: ["Back from the checkout: paid. If My apps is open in another tab, carry on there; otherwise sign in here.",
-                       "The checkout was closed without paying. If My apps is open in another tab, it still offers it; otherwise sign in here."],
+    backFromCheckout: ["Back from the checkout: paid. If My apps is open in another tab, carry on there.",
+                       "The checkout was closed without paying. If My apps is open in another tab, it still offers it."],
     company: "Your company",
     companyName: "Company name",
     firstWord: "Your first word",
@@ -95,8 +98,9 @@
   }
 
   // K192: what a reload brings back. `raw` is what the page put in this tab's session storage as it went, `nav` how this
-  // load came (the browser's navigation type). Only a reload within a minute signs back in: a tab reopened after it was
-  // closed, a duplicated tab, a link or the Back button come as other types and start signed out, as before. The screen
+  // load came (the browser's navigation type). Only a reload within a minute comes back to its screen: a tab reopened
+  // after it was closed, a duplicated tab, a link or the Back button come as other types and open on the list, signed
+  // in by the stored session while it lasts (F-LW-22). The screen
   // comes back where it can be read afresh; a try, a publish or the logs come back to their app's page.
   var KEEP_MS = 60000;
   var KEEP_SCREENS = { home: "home", people: "people", tokens: "tokens", sites: "sites", app: "app", settings: "settings",
@@ -121,6 +125,21 @@
   function keepOnLeave(st, now, s) {
     if (!s.session || s.signingOut) return;
     st.setItem(KEEP, JSON.stringify({ session: s.session, at: now, screen: s.screen, appId: s.appId || null }));
+  }
+
+  // W227 F-LW-22: the session a new visit signs in with: what the sign-in stored, until the hosting's own expiry
+  function storedSignIn(raw, now) {
+    var k = null;
+    try { k = JSON.parse(raw || "null"); } catch (e) { return null; }
+    return k && typeof k.session === "string" && k.session && typeof k.expires === "number" && now < k.expires * 1000
+      ? k.session : null;
+  }
+  // stored at the sign-in with the hosting's expiry; no session (Sign out, or one the hosting ended) takes it out
+  function storeSignIn(st, session, expires) {
+    try {
+      if (session && typeof expires === "number") st.setItem(LAST, JSON.stringify({ session: session, expires: expires }));
+      else st.removeItem(LAST);
+    } catch (e) { /* storage blocked (a private window): signed in for this visit only */ }
   }
 
   // What the address says on arrival: GitHub's return (taken only with this tab's state, once), or a code the command
@@ -292,6 +311,7 @@
   function pointClass(l) { return /\): Passed\b/.test(l) ? "hosting-ok" : /\): Inconclusive\b/.test(l) ? "" : "hosting-bad"; }
   function installState(inst, installed) {
     if (installed || (inst && inst.done)) return "done";
+    if (inst && inst.refused) return "again";   // W227 F-OP-22: a refused read waits for a press, never read again by itself
     if (!inst || (!inst.sha && !inst.step && !inst.reading)) return "read";
     if (inst.step === "installing" || inst.reading) return "wait";
     return "ask";
@@ -596,6 +616,7 @@
               noSandboxParts: noSandboxParts, U: U, industryWords: industryWords, tryLabel: tryLabel,
               canGoBack: canGoBack, defaultTitle: defaultTitle, versionsShown: versionsShown, logFile: logFile, payWords: payWords, payLabel: payLabel, pubPlan: pubPlan, pubOpensOn: pubOpensOn, pictureType: pictureType, b64: b64, cardBody: cardBody,
               S: S, siteHow: siteHow, trySites: trySites, tickLive: tickLive, instKey: instKey, installState: installState,
+              storedSignIn: storedSignIn, storeSignIn: storeSignIn, LAST: LAST,
               removedWords: removedWords, pointClass: pointClass, triedOn: triedOn };
   if (typeof module === "object" && module.exports) {
     module.exports = api;
@@ -649,7 +670,7 @@
                                     credentials: "omit", cache: "no-store" })
       .then(function (r) {
         return r.json().catch(function () { return {}; }).then(function (j) {
-          if (!r.ok) throw new Error(j.words || "The hosting answered " + r.status + ".");
+          if (!r.ok) { var e = new Error(j.words || "The hosting answered " + r.status + "."); e.status = r.status; throw e; }
           return j;
         });
       });
@@ -1659,7 +1680,10 @@
       return call("POST", "/publish/install", Object.assign({ app: data.appId, site: x.site }, body)).then(function (r) {
         data.inst[k] = r; render();
         if (r.step === "installing") root.setTimeout(function () { ask({ sha: inst.sha || r.sha }); }, 3000);
-      }, function (e) { delete data.inst[k]; fail(e); });   // refused: the button comes back with the site's words
+      }, function (e) {   // refused: the button comes back with the site's words
+        if (body.sha) delete data.inst[k]; else data.inst[k] = { refused: true };   // a refused read is asked again only by a press
+        fail(e);
+      });
     };
     if (state === "done") { box.appendChild(el("p", { "class": "hosting-ok", text: inst.words || "Installed." })); return box; }
     if (inst.words) box.appendChild(p(inst.words));
@@ -1667,6 +1691,8 @@
       data.inst[k] = { reading: true };
       ask({});
       box.appendChild(p("Reading what installing it changes on " + x.site + "\u2026"));
+    } else if (state === "again") {
+      box.appendChild(button(S.installNow, function () { delete data.inst[k]; render(); }));   // reads the words afresh
     } else if (state === "ask") {
       consentSections(inst).forEach(function (sec) {
         box.appendChild(el("p", {}, el("strong", { text: sec.title })));
@@ -2203,6 +2229,7 @@
 
   function signOut() {
     signingOut = true;   // K192: a reload from here on is signed out, even before the hosting answers
+    storeSignIn(lasting, null);   // F-LW-22: and a new visit too
     call("POST", "/signout").then(function () {}, function () {}).then(function () { session = null; who = null; data = {}; signingOut = false; go("home"); });
   }
 
@@ -2253,10 +2280,19 @@
   // While a reload is still coming back (`kept`, until the hosting answers), a second reload keeps what the first brought.
   var nav = root.performance && root.performance.getEntriesByType ? (root.performance.getEntriesByType("navigation")[0] || {}).type : "";
   var kept = takeKept(root.sessionStorage, Date.now(), nav), signingOut = false;
+  var lasting = null;   // F-LW-22: this browser's storage (none where it is blocked: then each visit signs in)
+  try { lasting = root.localStorage; } catch (e) { lasting = null; }
+  var stored = null;
+  try { stored = lasting ? storedSignIn(lasting.getItem(LAST), Date.now()) : null; } catch (e) { stored = null; }
+  if (!stored && lasting) storeSignIn(lasting, null);   // an ended one goes
   root.addEventListener("pagehide", function () {
     keepOnLeave(root.sessionStorage, Date.now(), kept || { session: session, screen: screen, appId: data.appId, signingOut: signingOut });
   });
-  root.addEventListener("pageshow", function (ev) { if (ev.persisted) root.sessionStorage.removeItem(KEEP); });   // back from the browser's page cache: it never left
+  root.addEventListener("pageshow", function (ev) { if (ev.persisted) root.sessionStorage.removeItem(KEEP); });
+  // F-LW-22: Sign out in another tab ended this session too: this tab shows the sign-in, not presses that fail
+  root.addEventListener("storage", function (ev) {
+    if (ev.key === LAST && !ev.newValue && session && !signingOut) { session = null; who = null; data = {}; render(); }
+  });   // back from the browser's page cache: it never left
 
   var brought = readStart(root.location.search);
   if (brought) root.sessionStorage.setItem(START, JSON.stringify(brought));   // kept through the sign-in (J1-02, J1-14)
@@ -2269,16 +2305,23 @@
     cfg = c;
     if (arrival.kind === "refused") say(arrival.why, true);
     if (arrival.kind === "checkout") say(WORDS.backFromCheckout[arrival.left ? 1 : 0], arrival.left);
-    if (arrival.kind === "none" && kept) {   // K192: a reload, still signed in, on the same screen
-      session = kept.session;
+    if ((arrival.kind === "none" || arrival.kind === "device" || arrival.kind === "checkout") && (kept || stored)) {
+      // K192: a reload, still signed in, on the same screen; F-LW-22: a new visit, still signed in, on the list
+      session = kept ? kept.session : stored;
       return call("GET", "/whoami").then(function (w) {
-        who = w; screen = kept.screen; data.appId = kept.appId || undefined; kept = null;
+        who = w;
+        if (kept) { screen = kept.screen; data.appId = kept.appId || undefined; }
+        kept = null;
         if (!arrive()) { render(); load(); }
-      }, function () { session = null; who = null; kept = null; render(); });   // the session ended meanwhile: the sign-in, as before
+      }, function (e) {   // ended meanwhile: the sign-in; the stored one goes only when it is the one the hosting ended
+        if (e && e.status === 401 && session === stored) storeSignIn(lasting, null);
+        session = null; who = null; kept = null; render();
+      });
     }
     if (arrival.kind !== "signin") { render(); return; }
     return call("POST", "/signin", { code: arrival.code, verifier: arrival.verifier, redirect_uri: PAGE }).then(function (r) {
       session = r.session; who = r; delete who.session;
+      if (lasting) storeSignIn(lasting, session, r.expires);   // F-LW-22: the next visit signs in with it
       if (!arrive()) { render(); load(); }
     }, function () { say(WORDS.m22, true); render(); });
   }, function () { cfg = { ready: false }; render(); });

@@ -57,7 +57,7 @@ check("a plain visit is nothing", a.readReturn("", null).kind === "none");
   const t = 1_700_000_000_000, keep = (o) => JSON.stringify({ session: "sess", at: t - 2000, screen: "app", appId: "acme_kit", ...o });
   let k = a.keptSignIn(keep({}), t, "reload");
   check("K192: a reload within the minute is signed in, on the same app", k && k.session === "sess" && k.screen === "app" && k.appId === "acme_kit");
-  check("K192: a tab reopened after closing, a duplicated tab, a link or Back start signed out",
+  check("K192: a tab reopened after closing, a duplicated tab, a link or Back bring back no screen (a new visit opens on the list)",
     ["back_forward", "navigate", "prerender", "", undefined].every((n) => a.keptSignIn(keep({}), t, n) === null));
   check("K192: a reload after the minute starts signed out", a.keptSignIn(keep({ at: t - a.KEEP_MS - 1 }), t, "reload") === null &&
     a.keptSignIn(keep({ at: t + 5000 }), t, "reload") === null);
@@ -83,12 +83,31 @@ check("a plain visit is nothing", a.readReturn("", null).kind === "none");
   a.keepOnLeave(st, t, { session: "sess", screen: "home", signingOut: true });
   check("K192: nothing is kept when signed out, or once Sign out is pressed", !st.m.has(a.KEEP));
   const src = readFileSync(path.join(out, "assets/apps.js"), "utf8");
-  check("K192: the page uses these two, and no lasting storage", /var kept = takeKept\(root\.sessionStorage,/.test(src) &&
-    /addEventListener\("pagehide", function \(\) \{\s*keepOnLeave\(/.test(src) && (src.match(/setItem\(KEEP,/g) || []).length === 1 && !/localStorage/.test(src));
+  check("K192: the page uses these two for the screen", /var kept = takeKept\(root\.sessionStorage,/.test(src) &&
+    /addEventListener\("pagehide", function \(\) \{\s*keepOnLeave\(/.test(src) && (src.match(/setItem\(KEEP,/g) || []).length === 1);
+  // W227 F-LW-22: a new visit is still signed in, for the session's own lifetime; Sign out takes it out at once
+  const exp = Math.floor(t / 1000) + 3 * 3600, last = (o) => JSON.stringify({ session: "sess", expires: exp, ...o });
+  check("F-LW-22: a new visit within the session's lifetime signs in with it", a.storedSignIn(last({}), t) === "sess");
+  check("F-LW-22: an ended, broken or empty one does not", [a.storedSignIn(last({ expires: Math.floor(t / 1000) }), t),
+    a.storedSignIn(last({ expires: "x" }), t), a.storedSignIn(last({ session: "" }), t), a.storedSignIn(null, t),
+    a.storedSignIn("{", t), a.storedSignIn("null", t)].every((x) => x === null));
+  st = { m: new Map(), getItem(k) { return this.m.has(k) ? this.m.get(k) : null; }, setItem(k, v) { this.m.set(k, String(v)); }, removeItem(k) { this.m.delete(k); } };
+  a.storeSignIn(st, "sess", exp);
+  check("F-LW-22: the sign-in stores the session with the hosting's expiry", a.storedSignIn(st.getItem(a.LAST), t) === "sess");
+  a.storeSignIn(st, null);
+  check("F-LW-22: no session takes it out", !st.m.has(a.LAST));
+  a.storeSignIn({ setItem() { throw new Error("blocked"); }, removeItem() { throw new Error("blocked"); } }, "sess", exp);   // a private window
+  check("F-LW-22: the page stores it at the sign-in, signs a visit in with it, and Sign out takes it out first",
+    src.includes("if (lasting) storeSignIn(lasting, session, r.expires);") &&
+    /function signOut\(\) \{\s*signingOut = true;[^\n]*\n\s*storeSignIn\(lasting, null\);/.test(src) &&
+    src.includes('(arrival.kind === "none" || arrival.kind === "device" || arrival.kind === "checkout") && (kept || stored)') &&
+    src.includes("if (e && e.status === 401 && session === stored) storeSignIn(lasting, null);") &&
+    /ev\.key === LAST && !ev\.newValue && session && !signingOut\) \{ session = null;/.test(src) &&
+    (src.match(/localStorage/g) || []).length === 1);
 }
 // the checkout opens in its own tab (this tab keeps its sign-in); its tab comes back to a line, never a sign-in alone
 r = a.readReturn("?order=0649c34008d66ea5", null);
-check("back from a paid checkout says where to carry on", r.kind === "checkout" && !r.left && /another tab, carry on there/.test(W.backFromCheckout[0]));
+check("back from a paid checkout says where to carry on", r.kind === "checkout" && !r.left && /another tab, carry on there\.$/.test(W.backFromCheckout[0]));
 check("Publish's checkout link opens in its own tab; Try has none (trying is free)", (readFileSync(path.join(out, "assets/apps.js"), "utf8")
   .match(/href: s\.checkout_url, target: "_blank", rel: "noopener"/g) || []).length === 1);
 check("back from a closed checkout says it was not paid", a.readReturn("?order=0649c34008d66ea5&left=1", null).left === true);
@@ -438,7 +457,10 @@ check("MYSITES: Install now's state is per site and version: words read first, o
   a.installState({ reading: true }) === "wait" && a.installState({ sha: "a", sections: [] }) === "ask" &&
   a.installState({ step: "installing" }) === "wait" && a.installState({ done: true }) === "done" && a.installState({}, true) === "done");
 check("MYSITES: a refused Install now brings its button back, and a refused Add keeps what was typed",
-  src.includes("function (e) { delete data.inst[k]; fail(e); }") && src.includes("data.addForm = data.addForm ||"));
+  src.includes("if (body.sha) delete data.inst[k]; else data.inst[k] = { refused: true };") && src.includes("data.addForm = data.addForm ||"));
+check("W227 F-OP-22: a refused read of the words waits for a press of Install now, never asks again by itself",
+  a.installState({ refused: true }) === "again" && a.installState({ refused: true }, true) === "done" &&
+  src.includes('state === "again"') && src.includes("button(S.installNow, function () { delete data.inst[k]; render(); })"));
 check("SANDBOXPOLICY: Get a sandbox for one of our developers with none; Ask for another sandbox opens the request form with the hosting's words; a newcomer is offered the form",
   src.includes('if (sites.sandbox === "get") out.appendChild(el("p", {}, button(S.getSandbox, get)));') &&
   src.includes('if (sites.sandbox === "ask") {') && src.includes('el("a", { href: FORM, target: "_blank", rel: "noopener", "class": "site-btn", text: S.askSandbox })') &&
