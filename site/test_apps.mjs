@@ -153,7 +153,8 @@ check("J1-03: the search's label and the three tabs", G.search === "Search by sa
 check("J1-05: the App library's twelve industries", a.INDUSTRIES.length === 12 && a.INDUSTRIES.includes("Distribution and warehousing"));
 check("J1-06: the doors' plain words, as the row's examples", a.doorWords("Check before payment") === "A check when the cashier presses Pay" &&
   a.doorWords("Till key") === "A key the cashier taps" && a.doorWords("Manifest") === "Your own lists and forms in Desk" &&
-  a.doorWords("Desk action") === "A button in Desk" && a.doorWords("Event feed") === "Something that happens after each sale");
+  a.doorWords("Desk action") === "A button in Desk" && a.doorWords("Event feed") === "Something that happens after each sale" &&
+  a.doorWords("Document check") === "A check before a back-office document is submitted");   // never a till sale (guide chapter 9)
 const doors = [...new Set(index.samples.filter((s) => a.tickable(s) && s.door).map((s) => s.door))];
 check("J1-06: every door a sample has is said in plain words", doors.every((d) => a.DOOR_WORDS[d]), doors.filter((d) => !a.DOOR_WORDS[d]).join(", "));
 

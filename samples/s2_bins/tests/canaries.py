@@ -58,7 +58,7 @@ CANARIES = [
     ("the wire asks one more row than an answer takes", W, '"limit_page_length": str(ROWS_MAX + 1)', '"limit_page_length": str(ROWS_MAX)',
      "test_where.ShopApi.test_a_list_read_sends_the_key_the_fields_and_the_filters"),
     ("a read gets the time left, all of it", W, "timeout=left)", "timeout=min(READ_TIMEOUT, left))",
-     "test_where.OneShop.test_a_read_gets_only_the_time_left"),
+     "test_where.OneShop.test_each_read_gets_all_the_time_left"),
     ("the manifest fills Location from the bin", "manifest.json", '"fetch_from": "bin.location"', '"fetch_from": "aisle.location"',
      "test_where.TheManifest.test_what_is_in_each_bin_fills_its_location_from_the_bin"),
     ("a cut answer from a list read is unreadable, never a crash", W, 'ConnectionError, ValueError, http.client.HTTPException) as e:',

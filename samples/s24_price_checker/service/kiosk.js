@@ -54,7 +54,7 @@
 
   function check(text) {
     el("prompt").hidden = true;
-    fetch("prc/price", {
+    fetch("/prc/price", {        // from the address's root: the same call when the page is at / or at /prc/
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ shop: shop, kiosk: kiosk, scan: text, date: today() })
     }).then(function (r) {

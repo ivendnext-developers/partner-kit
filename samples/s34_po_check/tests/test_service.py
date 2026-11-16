@@ -78,9 +78,9 @@ class OneShop(unittest.TestCase):
         for given in ("PP POC", "pp_poc", " PP POC "):
             svc = app.Service(dict(ONE, POC_PREFIX=given))
             self.assertEqual(svc.handle("POST", app.ROUTE, signed(raw, SECRET), raw)[1]["fields"], {FIELD: "ERP-PO-9912"}, given)
-        svc = app.Service(dict(ONE, POC_PREFIX="ACME DISTRIBUTION EXAMPLE5 POC"))
+        svc = app.Service(dict(ONE, POC_PREFIX="ACME DISTRIBUTION POC"))      # a part's prefix in an app of several
         self.assertEqual(svc.handle("POST", app.ROUTE, signed(raw, SECRET), raw)[1]["fields"],
-                         {"acme_distribution_example5_poc_erp_number": "ERP-PO-9912"})
+                         {"acme_distribution_poc_erp_number": "ERP-PO-9912"})
 
 
 class ManyShops(unittest.TestCase):

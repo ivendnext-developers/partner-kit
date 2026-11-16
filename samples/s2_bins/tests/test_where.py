@@ -179,7 +179,7 @@ class OneShop(unittest.TestCase):
         self.assertEqual(body(out), where.UNREADABLE)
         self.assertEqual(len(reader.calls), 1)
 
-    def test_a_read_gets_only_the_time_left(self):
+    def test_each_read_gets_all_the_time_left(self):
         t = [100.0]
         reader = Reader()
         def slow(*a, **k):
@@ -307,6 +307,7 @@ class NamedAsTheBasketShows(unittest.TestCase):
     def test_an_item_with_no_bin_is_named(self):
         out, _ = self.press(Reader({"https://shop.example": self.WALK}), "LMK-PT-06")
         self.assertEqual(lacks(body(out), [("Paper towels, 6 rolls", None, None)]), [])
+        self.assertNotIn("AU-", body(out))                       # no bin named at all
         nothing_here = dict(self.WALK, **{"IVENDNEXT BLN Location": []})     # a store with no locations yet
         out, _ = self.press(Reader({"https://shop.example": nothing_here}), "LMK-PA-01")
         self.assertEqual(lacks(body(out), [("Long-grain white rice", None, None)]), [])
@@ -340,7 +341,7 @@ class TheManifest(unittest.TestCase):
 
     def test_the_install_makes_the_user_whose_key_the_site_hands_over(self):  # F-GR-27: no user, no key, never set up
         m = json.loads((HERE.parent / "manifest.json").read_text())
-        self.assertEqual([r["events"] for r in m["registered_applications"]], [["PP BLN Item In Bin"]])
+        self.assertEqual([r["events"] for r in m["registered_applications"]], [["PP BLN Location"]])   # seldom changes: no queue
         dt = {d["name"]: d for d in m["doctypes"]}
         for name in ("PP BLN Location", "PP BLN Item In Bin"):        # what the press reads, besides Item
             self.assertTrue(any(p["role"] == "PP Integration" and p.get("read") for p in dt[name]["permissions"]), name)

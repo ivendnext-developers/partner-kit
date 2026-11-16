@@ -33,7 +33,7 @@ The service runs on your server with the integration user's key in the environme
 
 ## Try it at the till
 
-- Try installs the rule list but does not run the service. Run it against the tried site yourself, from `service/dpl/` in the app you made, with the key of the app's own user (*Generate Keys* on that user in Desk): `DPL_KEY=… DPL_SECRET=… python3 sync.py run --base https://<the tried site> --state state/dpl.sqlite --watch 5`.
+- Try installs the rule list but does not run the service. On the tried site, make a user of your own, give it the role *PP DPL Integration* and press *Generate Keys* on it (not on the app's own user: its key is the hosted part's). Then run it from `service/dpl/` in the app you made: `DPL_KEY=… DPL_SECRET=… python3 sync.py run --base https://<the tried site> --state state/dpl.sqlite --watch 5`.
 - In Desk, make a *PP DPL Rule* from one price list to another and tick *Enabled*. Change an item's price on the source list: its derived price on the target list changes within seconds.
 
 ## Versions

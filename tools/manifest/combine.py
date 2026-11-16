@@ -773,21 +773,27 @@ def lists_words(names: list[str]) -> str:
     return f"{NUMBERS[n] if n < len(NUMBERS) else n} list{'' if n == 1 else 's'} ({shown})"
 
 
-BY_HAND = "a script that Try does not run, started from your own computer or scheduler as its README's Run it says"
+def by_hand(part: Part) -> str | None:
+    """For a part with a script of its own (S26's ``sync.py``, S27's ``run.py``) and no hosted service, which the partner
+    starts on their own computer or scheduler (the hosted copy carries its lists, never the script): the words that say
+    so and where its command is, the top of the script in the made app. Else None."""
+    if handler_of(part):
+        return None
+    script = next((p.name for p in sorted(part.folder.glob("*.py"))
+                   if p.read_text(encoding="utf-8", errors="ignore").startswith("#!")), None)
+    return (f"a script that Try does not run, started from your own computer or scheduler as the top of "
+            f"service/{part.tag}/{script} says") if script else None
 
 
 def runs_by_hand(part: Part) -> bool:
-    """The part has a script of its own (S26's ``sync.py``, S27's ``run.py``) and no hosted service: the partner starts it
-    on their own computer or scheduler; the hosted copy carries its lists, never the script."""
-    return not handler_of(part) and any(p.read_text(encoding="utf-8", errors="ignore").startswith("#!")
-                                        for p in part.folder.glob("*.py"))
+    return by_hand(part) is not None
 
 
 def does(part: Part) -> str:
     """What a sample puts in the app, in plain words and with no brackets inside brackets: its own *What is in it* line,
     else its points and its lists; and, for a script the partner runs, that Try does not run it."""
     words = _does(part)
-    return f"{words} and {BY_HAND}" if runs_by_hand(part) else words
+    return f"{words} and {by_hand(part)}" if runs_by_hand(part) else words
 
 
 def _does(part: Part) -> str:
@@ -825,7 +831,7 @@ def in_folder(part: Part) -> str:
             words.append(f"the capture on {(s.get('settings') or {}).get('event', 'the till').replace('_', ' ')}")
     words = list(dict.fromkeys(words))
     if runs_by_hand(part):
-        words.append(BY_HAND)
+        words.append(by_hand(part))
     if not words:
         return part.title
     return f"{part.title}, " + (words[0] if len(words) == 1 else ", ".join(words[:-1]) + " and " + words[-1])

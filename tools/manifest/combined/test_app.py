@@ -164,10 +164,14 @@ class TheService(unittest.TestCase):
         for tag in MOUNTS:
             self.assertNotEqual(self.call(f"/{tag}/no_such_point")[0], 200)
 
-    def test_a_page_at_the_apps_own_address_is_the_one_part_that_serves_one(self):
+    def test_each_page_is_under_its_tag_and_the_one_page_at_the_apps_own_address(self):
         pages = [t for t, m in MOUNTS.items() if m.get("page") and m.get("handler")]
         with redirect_stdout(io.StringIO()):
             out = self.service.lambda_handler(event("/", b"", {}, "GET"))
+            for tag in pages:                   # each page part's page under its own tag, whatever else the app holds
+                at = self.service.lambda_handler(event(f"/{tag}/", b"", {}, "GET"))
+                self.assertEqual(at["statusCode"], 200, tag)
+                self.assertIn("text/html", (at.get("headers") or {}).get("Content-Type", ""), tag)
         if len(pages) != 1:                 # none, or two that would both want /: no part is guessed
             self.assertEqual(out["statusCode"], 404)
             return

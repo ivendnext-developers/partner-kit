@@ -399,7 +399,7 @@
     "Save rules": "A check when a record is saved in Desk",
     "Partner page": "Your own page inside iVendNext",
     "Scan source": "What the scanner reads",
-    "Document check": "A check before a document is submitted in Desk",
+    "Document check": "A check before a back-office document is submitted",
     "Register books": "A register written as each sale is made",
     "Payer": "Someone else who pays part of a sale",
     "Open check": "An open check at a table",

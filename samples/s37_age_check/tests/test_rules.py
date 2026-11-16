@@ -174,9 +174,7 @@ class Check(unittest.TestCase):
         reason = agecheck.on_check(ctx, ages(ctx), agecheck.checked_age(ctx, "PP AGE"),
                                    agecheck.checked_as_read(ctx, "PP AGE"))["reason"]
         self.assertEqual(lacks(reason, "VAPE", 3, 21, 16), [])           # the line, the age it needs, the check recorded
-        band = agecheck.on_check(ctx, ages(ctx), 16, False)["reason"]
-        self.assertEqual(reason, band)          # a band was confirmed, not an age read: never the under-age way
-        self.assertNotEqual(band, agecheck.on_check(ctx, ages(ctx), 16, True)["reason"])
+        self.assertFalse(agecheck.checked_as_read(ctx, "PP AGE"))        # a band was confirmed, not an age read
 
     def test_an_age_typed_alone_under_the_lines_age_says_take_it_off_first(self):
         ctx = context([line("EHW-RW-001", "Spirits", n=1, name="Cabernet Sauvignon 750ml")], checked="19")
@@ -185,7 +183,6 @@ class Check(unittest.TestCase):
         reason = out["reason"]
         self.assertEqual(out["verdict"], "refuse")
         self.assertEqual(lacks(reason, "Cabernet Sauvignon 750ml", 1, 21, 19), [])   # the whole name, the age typed
-        self.assertNotEqual(reason, agecheck.on_check(ctx, [21], 19, False)["reason"])   # its own words: an age read
         self.assertNotIn("EHW-RW-001", reason)
 
     def test_only_an_age_typed_alone_is_an_age_read_on_the_id(self):

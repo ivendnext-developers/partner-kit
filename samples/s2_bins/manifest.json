@@ -5,7 +5,7 @@
  "title": "Bin locations",
  "version": "0.1.6",
  "publisher": "Partner Programme sample",
- "description": "Where stock sits inside a store: locations (back room, shop floor), aisles, bins and what is in each bin. The retailer's own stock and valuation stay in iVendNext; these records only say where.",
+ "description": "Where stock sits inside a store: locations (back room, shop floor), aisles, bins and what is in each bin. The retailer's own stock and valuation stay in iVendNext; these records only say where. The install makes the app's own user, with the role PP BLN Integration, and names it on the feed registration PP BLN Bins feed, which follows the locations (they seldom change); the site connects the app and hands the Where is it? service that user's key.",
  "allowed_urls": [
   "http://host.docker.internal:8123/webhook",
   "https://bins.partner.example/point/where_is_it"
@@ -537,7 +537,7 @@
   }
  ],
  "registered_applications": [
-  {"name": "PP BLN Bins feed", "description": "the Where is it? service reads the site's bin records", "events": ["PP BLN Item In Bin"]}
+  {"name": "PP BLN Bins feed", "description": "the Where is it? service reads the site's bin records", "events": ["PP BLN Location"]}
  ],
  "role_rights": [
   {"doctype": "Item", "role": "PP BLN Integration", "rights": ["read"]}

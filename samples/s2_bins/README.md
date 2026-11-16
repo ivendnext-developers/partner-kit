@@ -43,7 +43,7 @@ ivn try
 
 ### 1.1.4
 
-- The install makes the app's own user: the manifest registers *PP BLN Bins feed* (*What is in each bin*), as the App library's copy does, so a site hands the hosted *Where is it?* its key; an app made from S2 alone, or with S27, no longer answers *Bin locations is not set up yet* on every press. Manifest 0.1.6.
+- The install makes the app's own user: the manifest registers *PP BLN Bins feed*, which follows the locations (they seldom change, so no queue builds up), and its description says so; a site then hands the hosted *Where is it?* that user's key, and an app made from S2 alone, or with S27, no longer answers *Bin locations is not set up yet* on every press. Manifest 0.1.6.
 - Each read of a press may take what is left of its 2.2 seconds, where each was cut at 0.8 s: a slow site's first read no longer answers *The bins cannot be read right now* while the till still waits.
 - The tests check the answer's facts (each item, its bin, the quantity there), not its sentence, so `core.where_answer` can be reworded with them green.
 
