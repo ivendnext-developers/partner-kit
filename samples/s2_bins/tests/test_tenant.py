@@ -10,8 +10,9 @@ from unittest import mock
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "service"))
-sys.path.insert(1, str(HERE.parent))               # core, for the own-server key
+sys.path[1:1] = [str(HERE.parent), str(HERE)]     # core, for the own-server key; the answer's facts
 import tenant  # noqa: E402
+from facts import lacks  # noqa: E402
 
 
 def cut_answer(*args, **kwargs):
@@ -58,4 +59,5 @@ class OwnServerNames(unittest.TestCase):
         ctx = {"store": "Austin", "lines": [{"item_code": "LMK-PA-01", "qty": 1, "uom": "Nos", "luid": "1"}]}
         self.assertEqual(bins.point_names(Shop(), ctx), {})
         m = core.where_answer(ctx, bins.point_rows(Shop(), ctx), bins.point_names(Shop(), ctx))["message"]
-        self.assertEqual((m["body"], m["level"]), ("LMK-PA-01: shop floor AU-E1-49 (40)", "success"))
+        self.assertEqual(m["level"], "success")
+        self.assertEqual(lacks(m["body"], [("LMK-PA-01", "AU-E1-49", 40)]), [])   # the facts, never the sentence

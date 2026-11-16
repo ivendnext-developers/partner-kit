@@ -78,8 +78,9 @@ class OneShop(unittest.TestCase):
         return self.svc.answer("/rfr/check", signed(raw, secret, ts), raw)
 
     def test_a_card_sales_refund_keeps_the_card_and_store_credit(self):
-        self.assertEqual(self.check(context()), (200, {"verdict": "allow", "exclude_tenders": [CASH, ONLINE],
-                                                       "reason": "Refunded only by the methods your rules keep for this sale."}))
+        code, out = self.check(context())
+        self.assertEqual((code, out["verdict"], out["exclude_tenders"]), (200, "allow", [CASH, ONLINE]))
+        self.assertTrue(out["reason"])          # a reason, in words the partner may change
 
     def test_the_settings_are_read_with_the_apps_key_and_kept_a_minute(self):
         self.check(context())

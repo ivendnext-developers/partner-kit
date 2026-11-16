@@ -16,7 +16,7 @@ ONE SHOP (env or an env file):
 MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 1a):
     IVN_LIBRARY_APP    the App library's id, with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE. Each shop
                        connects itself after its install and hands over the secret; every call names its shop.
-POC_PREFIX (default pp_poc: the fill field is <prefix>_erp_number) · ERP_STANDIN (default: erp_standin.json) · PORT (8080)
+POC_PREFIX (default pp_poc: the fill field is <prefix>_erp_number; PP POC, as an app of several samples hands it, reads the same) · ERP_STANDIN (default: erp_standin.json) · PORT (8080)
 
     python3 service/app.py [service/.env.local]
 """
@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import signal
 import sys
 import threading
@@ -46,9 +47,14 @@ import testcall  # noqa: E402
 ROUTE, SUB = "/poc/check", "po_check"
 
 
+def field_of(prefix: str) -> str:
+    """The fill field the manifest names: the prefix in the field's form (``PP POC`` and ``pp_poc`` -> ``pp_poc_erp_number``)."""
+    return re.sub(r"\W+", "_", prefix.strip()).strip("_").lower() + "_erp_number"
+
+
 class Service:
     def __init__(self, conf: dict, store=None, ledger=None):
-        self.field = (conf.get("POC_PREFIX") or "pp_poc").strip() + "_erp_number"
+        self.field = field_of(conf.get("POC_PREFIX") or "pp_poc")
         self.app = oneshop.value(conf, oneshop.MANY)
         self.erp = ledger or erp.StandIn(conf.get("ERP_STANDIN") or None)
         if self.app:                                    # many shops: each connects itself

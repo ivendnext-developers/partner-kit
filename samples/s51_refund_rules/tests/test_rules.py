@@ -56,10 +56,21 @@ def check(ctx=None, s=None):
     return refunds.on_check(ctx or context(), settings() if s is None else s)
 
 
+def reason_lacks(out: dict, *kept) -> list[str]:
+    """What the answer's reason lacks: a reason, as plain text the till takes, naming each method ``kept`` (each once).
+    The facts, never the sentence: the words in ``refunds.py`` are yours to change."""
+    reason = out.get("reason")
+    if not isinstance(reason, str) or not reason.strip():
+        return [f"no reason given: {out!r}"]
+    bad = [] if reason == refunds.plain(reason) else [f"not plain text the till takes: {reason!r}"]
+    return bad + [f"{m!r} is not named once: {reason!r}" for m in kept if reason.count(m) != 1]
+
+
 class SameMethods(unittest.TestCase):
     def test_a_card_sale_is_refunded_by_card_or_store_credit_only(self):
-        self.assertEqual(check(), {"verdict": "allow", "exclude_tenders": [CASH, ONLINE],
-                                   "reason": "Refunded only by the methods your rules keep for this sale."})
+        out = check()
+        self.assertEqual((out["verdict"], out["exclude_tenders"]), ("allow", [CASH, ONLINE]))
+        self.assertEqual(reason_lacks(out), [])
 
     def test_every_method_that_paid_the_sale_stays(self):
         out = check(context(paid_by=(CASH, CARD)))
@@ -76,8 +87,8 @@ class SameMethods(unittest.TestCase):
 
     def test_none_of_the_sales_methods_offered_refuses_the_refund(self):
         out = check(context(paid_by=(VOUCHER,), offered=[CASH, CARD]))
-        self.assertEqual(out, {"verdict": "refuse", "reason": "None of the methods that paid for this can take its refund "
-                                                              "here. Get a manager."})
+        self.assertEqual((out["verdict"], set(out)), ("refuse", {"verdict", "reason"}))
+        self.assertEqual(reason_lacks(out), [])
 
     def test_nothing_to_take_off_is_a_plain_allow(self):
         self.assertEqual(check(context(paid_by=(CASH, CARD, ONLINE))), {"verdict": "allow"})
@@ -109,8 +120,8 @@ class SameMethods(unittest.TestCase):
 class WithoutItsSale(unittest.TestCase):
     def test_a_return_without_its_sale_goes_back_by_the_methods_named(self):
         out = check(context(channel="none"), s=settings(without_sale=rows(CASH)))
-        self.assertEqual(out, {"verdict": "allow", "exclude_tenders": [CARD, ONLINE],
-                               "reason": "Without its sale, refunded only by Cash, Store Credit."})
+        self.assertEqual((out["verdict"], out["exclude_tenders"]), ("allow", [CARD, ONLINE]))
+        self.assertEqual(reason_lacks(out, CASH, CREDIT), [])           # the reason names the methods kept
 
     def test_none_named_with_the_methods_rule_off_leaves_it_as_today(self):
         self.assertEqual(check(context(channel="none"), s=settings(without_sale=[], same_methods=0)), {"verdict": "allow"})
@@ -124,11 +135,12 @@ class WithoutItsSale(unittest.TestCase):
 
     def test_nothing_set_for_a_return_without_its_sale_refuses_in_plain_words(self):
         out = check(context(channel="none"), s=settings(without_sale=[], store_credit=""))
-        self.assertEqual(out, {"verdict": "refuse", "reason": "No method is set for a return without its sale. Get a manager."})
+        self.assertEqual(out, {"verdict": "refuse", "reason": refunds.NOTHING_SET})     # its own words, whatever they say
+        self.assertEqual(reason_lacks(out), [])
 
     def test_store_credit_named_twice_is_said_once(self):
         out = check(context(channel="none"), s=settings(without_sale=rows(CREDIT)))
-        self.assertEqual(out["reason"], "Without its sale, refunded only by Store Credit.")
+        self.assertEqual(reason_lacks(out, CREDIT), [])                  # named once
 
     def test_none_of_the_named_methods_offered_refuses(self):
         out = check(context(channel="none", offered=[CASH, CARD]), s=settings(without_sale=rows(VOUCHER), store_credit=""))

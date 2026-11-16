@@ -10,6 +10,8 @@ reads ``service/dispatch.json`` (which part answers which routes) and sends each
                                        sample whose own routes did not start with /<tag>/ gets the call with
                                        /<tag> taken off, as it answered on its own
     POST /ivendnext/connect|disconnect the site connects the app once; every part reads the same shops store
+    GET  anything else                 the one part that serves a page of its own (``page`` in dispatch.json: S24's
+                                       kiosk at /, /kiosk.js), its path unchanged; 404 when no part, or two, do
     anything else                      404
 
 As a function on CitiXsys hosting it is ``service/app.lambda_handler`` (``app.json`` ``"handler"``); a schedule named
@@ -123,6 +125,8 @@ def _call(tag: str, event, context=None):
 
 
 ROUTES = {path: tag for tag, m in MOUNTS.items() for path in (m.get("points") or {})}
+_PAGES = [tag for tag, m in MOUNTS.items() if m.get("page") and m.get("handler")]
+PAGE = _PAGES[0] if len(_PAGES) == 1 else None     # the one part a GET no other part answers goes to
 FEED = DISPATCH.get("feed") or {}
 READERS = FEED.get("parts") or {}           # the parts that read the feed: tag -> {"pass": its pass, "reads": record types}
 HANDOFF_MODULE = "ivn_feed_handoff"         # feed_client.HANDOFF_MODULE: where every part's poll finds the one reader
@@ -260,6 +264,10 @@ def lambda_handler(event, context=None):
         tag = _tag(path)
         if path in (shops.CONNECT, shops.DISCONNECT):
             tag = next((t for t, m in MOUNTS.items() if m.get("handler")), None)   # one store: any part with a service
+        elif tag is None and method == "GET" and PAGE:      # the page's own address, as the part answered it alone
+            out = _call(PAGE, event, context)
+            status = int(out.get("statusCode") or 500) if isinstance(out, dict) else 500
+            return out
         if tag is None or not MOUNTS[tag].get("handler"):     # no part answers it (a part may have no service)
             status, out = 404, function.response(404, {"error": "no such route"})
             return out

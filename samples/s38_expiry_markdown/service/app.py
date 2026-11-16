@@ -56,6 +56,8 @@ SUB = "markdown"        # the manifest's extension_subscriptions[].key; its secr
 STALE = "TimestampMismatchError"     # the shop's refusal of a write whose ``modified`` is not the row's own
 BUDGET_S = 5.0          # no new lot is started after this: the shop waits 10 seconds at most, and a hosted function's
                         # cold start (about 2.5 s, APPF run 9) comes before this clock starts
+PRESS_S = 7.0           # every site call of one press may take what is left of this: the shop waits 10 seconds, a hosted
+                        # function's cold start (about 2.5 s) comes first, and the answer needs a moment
 SWEEP = 20              # expired prices of the app's own removed per press, at most
 APP_NAME = "Mark down"
 NOT_SET_UP = (f"{APP_NAME} is not set up yet: no key from this shop has reached it. Ask your manager to check that the "
@@ -95,8 +97,19 @@ def _kind(e: urllib.error.HTTPError) -> str:
 class Tenant:
     """The service's only door into iVendNext: the record API, as the integration user (token key:secret)."""
 
-    def __init__(self, base: str, key: str, secret: str, timeout: float = 3):
+    def __init__(self, base: str, key: str, secret: str, timeout: float = 3, clock=time.monotonic):
         self.base, self.timeout, self._auth = base.rstrip("/"), timeout, f"token {key}:{secret}"
+        self.clock, self.until = clock, None        # until: the press's deadline, while one runs (Service.timed)
+
+    def _timeout(self) -> float:
+        """One call's time: what is left of the press, so a slow site's read is not given up while the shop still waits;
+        outside a press, ``timeout``."""
+        if self.until is None:
+            return self.timeout
+        left = self.until - self.clock()
+        if left <= 0:
+            raise TenantError("out of time")
+        return left
 
     def _call(self, method: str, path: str, body: dict | None = None, query: dict | None = None) -> dict:
         url = f"{self.base}/api/resource/" + "/".join(urllib.parse.quote(p, safe="") for p in path.split("/", 1))
@@ -107,7 +120,7 @@ class Tenant:
                                      headers={"Authorization": self._auth, "Accept": "application/json",
                                               "Content-Type": "application/json"})
         try:
-            with urllib.request.build_opener(_NoRedirect).open(req, timeout=self.timeout) as r:
+            with urllib.request.build_opener(_NoRedirect).open(req, timeout=self._timeout()) as r:
                 return json.loads(r.read() or b"{}")
         except urllib.error.HTTPError as e:
             kind = _kind(e)
@@ -263,6 +276,16 @@ class Service:
                     swept += 1
         return markdown.answer(outcomes, done, len(lots), swept)
 
+    def timed(self, door, lots: list[str]) -> dict:
+        """``mark_down`` with every site call sharing one deadline, ``PRESS_S`` from now."""
+        if not isinstance(door, Tenant):
+            return self.mark_down(door, lots)
+        door.until = door.clock() + PRESS_S
+        try:
+            return self.mark_down(door, lots)
+        finally:
+            door.until = None
+
     def press(self, headers, raw: bytes) -> tuple[int, dict]:
         try:
             site, secrets, door = self.caller(headers)
@@ -283,8 +306,8 @@ class Service:
         try:
             if not self.app:
                 with self._lock:        # one shop: one press at a time
-                    return 200, self.mark_down(door, lots)
-            return 200, self.mark_down(door, lots)
+                    return 200, self.timed(door, lots)
+            return 200, self.timed(door, lots)
         except TenantError as e:
             if e.code in (401, 403):    # the shop refused the app's user: say so
                 return 200, _warning(REFUSED + (CONNECT_AGAIN if self.app else ""))

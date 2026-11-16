@@ -223,7 +223,7 @@
     settingsLede: "Your app's own values, the same for every site. A customer's own account (their wallet) goes in the app's " +
       "settings in their Desk.",
     addresses: "Outside addresses", secrets: "Secrets your own service needs",
-    required: "Required: publishing waits until it is set", optional: "Optional: the feature behind it stays off until you set it",
+    required: "Required: Try and publishing wait until it is set", optional: "Optional: the feature behind it stays off until you set it",
     together: "Set both, or neither", notOnSite: "Not yet on any site",
     upload: "Upload a new version", uploadHint: "Choose the app folder's zip. We check it before we keep it.", toBuild: "From its recipe, not a sample: ", extra: "Also in this app: ",
     download: "Download the app folder", addSample: "Add a sample", tryIt: "Try", tryOn: "Try on {site}", addSite: "Add a site", publish: "Publish",
@@ -399,7 +399,7 @@
     "Save rules": "A check when a record is saved in Desk",
     "Partner page": "Your own page inside iVendNext",
     "Scan source": "What the scanner reads",
-    "Document check": "A check on a customer's document at the till",
+    "Document check": "A check before a document is submitted in Desk",
     "Register books": "A register written as each sale is made",
     "Payer": "Someone else who pays part of a sale",
     "Open check": "An open check at a table",

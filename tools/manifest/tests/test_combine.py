@@ -414,7 +414,31 @@ class Refusals(Base):
                 r = subprocess.run([sys.executable, "-c", code], cwd=folder, env=env, capture_output=True, text=True, timeout=120)
                 self.assertEqual(r.stdout.strip().splitlines()[-1], "403", r.stderr)    # the board's own answer, not the dispatcher's 404
 
-    def test_what_is_in_it_has_no_brackets_inside_brackets(self):  # F7
+    def test_a_page_at_the_apps_address_reaches_the_one_part_that_serves_it(self):  # F-HD-31: S24's kiosk in an app of two
+        probe = ("import json, sys, importlib.util as u\n"
+                 "s = u.spec_from_file_location('a', 'service/app.py'); m = u.module_from_spec(s); s.loader.exec_module(m)\n"
+                 "out = {}\n"
+                 "for path in ('/', '/kiosk.js', '/kiosk.css', '/nothing'):\n"
+                 "    r = m.lambda_handler(dict(httpMethod='GET', path=path, headers={}, body='', isBase64Encoded=False))\n"
+                 "    out[path] = [r['statusCode'], (r.get('headers') or {}).get('Content-Type', '').split(';')[0]]\n"
+                 "print(json.dumps(out))\n")
+        for samples, served in ((["s24_price_checker", "s2_bins"], True), (["s24_price_checker", "s56_guest_ordering"], False)):
+            with self.subTest(samples), tempfile.TemporaryDirectory() as tmp:
+                folder = combine.combine(samples, "ACME ONE", pathlib.Path(tmp))
+                mounts = json.loads((folder / "service" / "dispatch.json").read_text(encoding="utf-8"))["mounts"]
+                self.assertEqual(sorted(t for t, m in mounts.items() if m.get("page")), ["prc"] if served else ["gor", "prc"])
+                env = {"PATH": os.environ.get("PATH", ""), "IVN_LIBRARY_APP": "acme_one", "IVN_SHOPS_FILE": str(pathlib.Path(tmp) / "s.json"),
+                       "PRC_PREFIX": "ACME ONE PRC", "GOR_PREFIX": "ACME ONE GOR"}
+                r = subprocess.run([sys.executable, "-c", probe], cwd=folder, env=env, capture_output=True, text=True, timeout=120)
+                out = json.loads(r.stdout.strip().splitlines()[-1])
+                if served:
+                    self.assertEqual(out, {"/": [200, "text/html"], "/kiosk.js": [200, "text/javascript"],
+                                           "/kiosk.css": [200, "text/css"], "/nothing": [404, "application/json"]}, r.stderr[-1500:])
+                else:                       # two parts with a page of their own: neither is guessed
+                    self.assertEqual({p: c for p, (c, _) in out.items()}, {"/": 404, "/kiosk.js": 404, "/kiosk.css": 404, "/nothing": 404})
+        part = combine.make_part("s17_partner_page", "ACME ONE", "acme_one", True, KIT / "samples")
+        self.assertFalse(combine.serves_page(part))         # its board is under its own point's address
+
         for sample, words in (("s3_price_audit", "runs on its own server and keeps one list (deviation)"),
                               ("s1_warranty", "a till key, a warranty registered on each booked sale and one list (warranty term)"),
                               ("s2_bins", "a till key and five lists (bin movement, location, aisle and 2 more)"),
@@ -423,6 +447,29 @@ class Refusals(Base):
                 part = combine.make_part(sample, "ACME ONE", "acme_one", False, KIT / "samples")
                 self.assertEqual(combine.does(part), words)
         self.assertEqual(combine.make_part("s3_price_audit", "ACME ONE", "acme_one", False, KIT / "samples").title, "Price-deviation audit")
+
+    def test_s2_brings_its_feed_so_the_install_makes_the_user_its_key_needs(self):  # F-GR-27: alone, or with S27
+        for samples in (["s2_bins"], ["s2_bins", "s27_stock_alerts"]):
+            with self.subTest(samples), tempfile.TemporaryDirectory() as tmp:
+                folder = combine.combine(samples, "ACME ONE", pathlib.Path(tmp))
+                m = self.manifest(folder)
+                bins = next(d["name"] for d in m["doctypes"] if d["name"].endswith("Item In Bin"))
+                self.assertEqual([r["events"] for r in m["registered_applications"]], [[bins]])
+                self.assertTrue(any(p["role"] == "ACME ONE Integration" and p.get("read")
+                                    for p in next(d for d in m["doctypes"] if d["name"] == bins)["permissions"]))
+                self.check(folder)
+
+    def test_a_script_the_partner_runs_says_try_does_not_run_it(self):  # F-DW-34, F-GR-28: S26 and S27 have no hosted handler
+        for sample, words in (("s26_derived_prices", "one list (rule)"), ("s27_stock_alerts", "two lists (store, alert)")):
+            with self.subTest(sample):
+                part = combine.make_part(sample, "ACME ONE", "acme_one", False, KIT / "samples")
+                self.assertEqual(combine.does(part), f"{words} and {combine.BY_HAND}")
+                self.assertTrue(combine.in_folder(part).endswith(combine.BY_HAND))
+        for sample in ("s4_receipt_pack", "s41_regulated_register", "s2_bins"):    # a build tool, or a hosted service
+            self.assertFalse(combine.runs_by_hand(combine.make_part(sample, "ACME ONE", "acme_one", False, KIT / "samples")), sample)
+        folder, out = self.make(["s26_derived_prices", "s2_bins"])
+        self.assertIn(f"Derived price lists (dpl): one list (rule) and {combine.BY_HAND}; ", out)
+        self.assertIn(combine.BY_HAND, (folder / "README.md").read_text(encoding="utf-8"))
 
     def test_m35_a_sample_with_no_manifest_of_its_own(self):
         with self.assertRaises(combine.Refused) as e:

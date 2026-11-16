@@ -220,7 +220,7 @@ check("Start blank goes to Name your app with no sample ticked, and Make sends t
 check("J2-07: Making, and the next step", a.making("ACME MEMBER TILL", 2) === "Making ACME MEMBER TILL from 2 samples…" && G.nextSettings === "Next: its settings");
 check("J2-09: the settings' words", G.settingsLede === "Your app's own values, the same for every site. A customer's own account (their wallet) goes in the app's settings in their Desk." &&
   G.addresses === "Outside addresses" && G.secrets === "Secrets your own service needs" &&
-  a.settingNote({ required: true, together: ["X"] }) === "Required: publishing waits until it is set. Set both, or neither" &&
+  a.settingNote({ required: true, together: ["X"] }) === "Required: Try and publishing wait until it is set. Set both, or neither" &&
   a.settingNote({ required: false, together: [] }) === "Optional: the feature behind it stays off until you set it" &&
   a.isAddress({ name: "HKD_WALLET_URL" }) && !a.isAddress({ name: "HKD_WALLET_SECRET", purpose: "the key your wallet provider gave you" }));
 check("J2-10: the app's four buttons and Not yet on any site", a.tryLabel("demo-1.sandbox.ivend.co") === "Try on demo-1.sandbox.ivend.co" &&

@@ -27,6 +27,8 @@ CANARIES = [
      M + "ManyShops.test_each_shop_is_written_with_its_own_key_under_the_librarys_prefix"),
     ("a press before the shop's key arrives is answered in words", S, "        if door is None:\n            return 200, _warning(NOT_SET_UP)\n",
      "", M + "ManyShops.test_a_press_before_connect_again_is_answered_in_words_and_writes_nothing"),
+    ("a site call may take what is left of the press", S, "        door.until = door.clock() + PRESS_S", "        door.until = None",
+     "test_service.ServiceTest.test_s15b_a_slow_site_is_answered_while_the_shop_still_waits"),
     ("a refused user is named in words", S, "            if e.code in (401, 403):", "            if False:",
      T + "test_s15_the_apps_user_refused_by_the_shop_is_said_in_words"),
     ("a price the shop typed is never changed", R, "    if any(not own(r) for r in lot_rows):", "    if False:",

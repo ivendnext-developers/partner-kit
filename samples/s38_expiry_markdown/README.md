@@ -44,6 +44,10 @@ ivn try
 
 ## Versions
 
+### 1.1.5
+
+- Each site call of a press may take what is left of 7 seconds from the press's start, where each was cut at 3 s: a slow read no longer makes Desk say *Mark down did not answer in time* with most of the shop's 10 seconds unused. `BUDGET_S` still decides when no new lot is started. The manifest is unchanged.
+
 ### 1.1.4
 
 - *Try it at the till*'s first step sets the store's hours from UTC with the price list: blank, the markdown counts the day in UTC, so in an American evening its price started tomorrow and the lot rang at its full price. The service and the manifest are unchanged.
