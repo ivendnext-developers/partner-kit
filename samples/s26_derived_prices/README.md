@@ -34,9 +34,13 @@ The service runs on your server with the integration user's key in the environme
 ## Try it at the till
 
 - Try installs the rule list but does not run the service. On the tried site, make a user of your own, give it your app's role ending *Integration* (your prefix, then Integration) and press *Generate Keys* on it (not on the app's own user: its key is the hosted part's). Then run it from `service/dpl/` in the app you made, as [Run it](#run-it) says, with `DPL_KEY` and `DPL_SECRET` that key's and `--base https://<the tried site>`.
-- In Desk, make a *PP DPL Rule* from one price list to another and tick *Enabled*. Change an item's price on the source list: its derived price on the target list changes within seconds.
+- In Desk, open your app's rule list (its name starts with your prefix and ends in *Rule*), make a rule from one price list to another and tick *Enabled*. Change an item's price on the source list: its derived price on the target list changes within seconds.
 
 ## Versions
+
+### 0.2.3
+
+- *Try it at the till* names the rule list as your app has it (your prefix, ending in *Rule*), never the sample's own `PP` name, which a tried or published app does not have. Words only.
 
 ### 0.2.2
 

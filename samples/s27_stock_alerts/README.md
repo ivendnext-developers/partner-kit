@@ -36,10 +36,14 @@ Then, from `service/stk/` in the app you made, with the key of a user that holds
 
 ## Try it at the till
 
-- Try installs the lists but does not run the alerts. In Desk, fill *PP STK Settings* `Default` (the source warehouse, the days before expiry), tick *Enabled*, and give an item a reorder row of type *Transfer* for a store whose stock is below its level.
-- On the tried site, make a user of your own, give it your app's role ending *Integration* (your prefix, then Integration) and press *Generate Keys* on it. Then run it once, as [Run it](#run-it) says, with `--base https://<the tried site>`. The *PP STK Alert* list shows the low stock, and a draft transfer request *PP-STK ⟨store⟩ ⟨day⟩* waits in Desk for a person to submit.
+- Try installs the lists but does not run the alerts. In Desk, fill your app's settings record `Default` (in the list whose name starts with your prefix and ends in *Settings*: the source warehouse, the days before expiry), tick *Enabled*, and give an item a reorder row of type *Transfer* for a store whose stock is below its level.
+- On the tried site, make a user of your own, give it your app's role ending *Integration* (your prefix, then Integration) and press *Generate Keys* on it. Then run it once, as [Run it](#run-it) says, with `--base https://<the tried site>`. Your app's alert list (your prefix, ending in *Alert*) shows the low stock, and a draft transfer request titled with your prefix, the store and the day waits in Desk for a person to submit.
 
 ## Versions
+
+### 0.2.3
+
+- *Try it at the till* names the settings record, the alert list and the draft request as your app has them (they start with your prefix), never the sample's own `PP` names, which a tried or published app does not have. Words only.
 
 ### 0.2.2
 
