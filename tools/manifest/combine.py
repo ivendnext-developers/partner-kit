@@ -864,8 +864,8 @@ def readme(parts: list[Part], app: str, prefix: str, manifest: dict, app_json: d
     else:
         server = "For one that runs only when called: `ivn package` writes `package.zip` for your own function host."
     names = ", ".join(p.label for p in parts)
-    built = "".join(f" After a change in `service/{p.tag}/` (S4's `receipt.html`), run `python3 build.py` there: it writes "
-                    "that part into `manifest.json`." for p in parts if BUILDS in _text(p.folder / "build.py"))
+    built = "".join(f" After a change to {number(p.sample)}'s files in `service/{p.tag}/`, run `python3 build.py` there: it "
+                    "writes that part into `manifest.json`." for p in parts if BUILDS in _text(p.folder / "build.py"))
     return f"""# {prefix}
 
 {manifest.get('title')}: one app made by New app from {len(parts)} sample{'s' if len(parts) != 1 else ''} of the iVendNext partner kit ({names}). Its names start with `{prefix}` and `{app}`.

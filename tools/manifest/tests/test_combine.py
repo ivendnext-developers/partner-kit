@@ -6,6 +6,7 @@ Each refusal's words are fixed (M01-M05, M34, M35). Each app is made in a scratc
 the kit's own, except where a refusal needs a pair the kit does not have (two modules at one extension point, two samples
 answering the same route): those are made from the kit's samples in a scratch samples folder.
 """
+import base64
 import copy
 import hashlib
 import io
@@ -481,18 +482,18 @@ class Refusals(Base):
                 folder = combine.combine(samples, "ACME ONE", pathlib.Path(tmp))
                 part = folder / "service" / "rcp"
                 html = (part / "receipt.html").read_text(encoding="utf-8")
-                (part / "receipt.html").write_text(html.replace("Total", "Grand total", 1), encoding="utf-8")
+                self.assertIn("<td>Invoice No.</td>", html)                 # a word the receipt prints
+                (part / "receipt.html").write_text(html.replace("<td>Invoice No.</td>", "<td>Receipt No.</td>"), encoding="utf-8")
                 r = subprocess.run([sys.executable, "build.py"], cwd=part, capture_output=True, text=True, timeout=60)
                 self.assertEqual(r.returncode, 0, r.stderr)
                 self.assertFalse((part / "manifest.json").exists())                   # no stray copy nothing reads
+                logo = base64.b64encode((part / "logo.png").read_bytes()).decode()
+                layout = (part / "receipt.html").read_text(encoding="utf-8").replace("@@LOGO@@", logo)
                 for m in (self.manifest(folder), json.loads((folder / "tests" / "rcp" / "_manifest.json").read_text("utf-8"))):
                     receipt = next(p for p in m["print_formats"] if p["name"].endswith("UAE Tax Invoice"))
-                    self.assertIn("Grand total", receipt["html"])
+                    self.assertEqual(receipt["html"], layout)        # what S4's own test of the manifest holds it to
                 self.check(folder)
-                r = subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests"], cwd=folder,
-                                   capture_output=True, text=True, timeout=600)
-                self.assertEqual(r.returncode, 0, r.stderr[-2000:])                     # the app's tests read the change
-                self.assertIn("After a change in `service/rcp/` (S4's `receipt.html`), run `python3 build.py` there",
+                self.assertIn("After a change to S4's files in `service/rcp/`, run `python3 build.py` there",
                               (folder / "README.md").read_text(encoding="utf-8"))
 
     def test_s2_brings_its_feed_so_the_install_makes_the_user_its_key_needs(self):  # F-GR-27: alone, or with S27

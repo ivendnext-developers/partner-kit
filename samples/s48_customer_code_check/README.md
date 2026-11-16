@@ -38,7 +38,8 @@ ivn try
 
 ## Try it at the till
 
-- Choose a customer in a group that needs a code; the till asks for the code texted to their mobile.
+- First, in Desk, make a *Customer code rule*: *Customer group*, *A code* set to *Ask for a code*, and *Words the cashier reads*; give a customer in that group a mobile number. The app installs no rule, so until then no code is asked.
+- Choose that customer; the till asks for the code texted to their mobile.
 - Type the code the customer reads out, then sell as usual. On a site with no text gateway (a demo or sandbox site), read the code in Desk instead: *Customer check code*, the newest row.
 - Close the till day when you are done.
 
@@ -46,7 +47,7 @@ ivn try
 
 ### 1.1.2
 
-- *Try it at the till* says where to read the code on a site with no text gateway: *Customer check code* in Desk, the newest row. Words only; no service or manifest changes.
+- *Try it at the till* starts with the *Customer code rule* to make first (the app installs none, so a first try asked for no code), and says where to read the code on a site with no text gateway: *Customer check code* in Desk, the newest row. Words only; no service or manifest changes.
 
 ### 1.1.1
 

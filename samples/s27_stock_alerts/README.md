@@ -32,14 +32,18 @@ ivn check
 ivn try
 ```
 
-Then, from `service/stk/` in the app you made, with the key of a user that holds *PP STK Integration*: `STK_KEY=… STK_SECRET=… python3 run.py --base https://shop.example`. One run each time it starts; start it once a day from any scheduler.
+Then, from `service/stk/` in the app you made, with the key of a user that holds your app's role ending *Integration* (your prefix, then Integration): `STK_KEY=… STK_SECRET=… python3 run.py --base https://shop.example`. One run each time it starts; start it once a day from any scheduler.
 
 ## Try it at the till
 
 - Try installs the lists but does not run the alerts. In Desk, fill *PP STK Settings* `Default` (the source warehouse, the days before expiry), tick *Enabled*, and give an item a reorder row of type *Transfer* for a store whose stock is below its level.
-- On the tried site, make a user of your own, give it the role *PP STK Integration* and press *Generate Keys* on it. Then run it once, as *Run it* says: `STK_KEY=… STK_SECRET=… python3 run.py --base https://<the tried site>`. The *PP STK Alert* list shows the low stock, and a draft transfer request *PP-STK ⟨store⟩ ⟨day⟩* waits in Desk for a person to submit.
+- On the tried site, make a user of your own, give it your app's role ending *Integration* (your prefix, then Integration) and press *Generate Keys* on it. Then run it once, as [Run it](#run-it) says, with `--base https://<the tried site>`. The *PP STK Alert* list shows the low stock, and a draft transfer request *PP-STK ⟨store⟩ ⟨day⟩* waits in Desk for a person to submit.
 
 ## Versions
+
+### 0.2.2
+
+- *Try it at the till* names the role as your app has it (your prefix, then Integration), never the sample's own name, and points at *Run it* for the command. Words only.
 
 ### 0.2.1
 

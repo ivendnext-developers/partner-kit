@@ -33,7 +33,7 @@ A receipt prints money; it never decides money. If you need the tax authority's 
 
 4. **Try it** on your sandbox with `ivn try`; a customer's administrator installs it from **App library**.
 
-5. **Set the format on the till's POS Profile.** This is configuration: iVendNext Desk → **POS Profile** → open the profile → the **Print Format** field → pick your format → **Save**. ⚠ A manifest cannot do this step yet. It may not change a POS Profile: the manifest key for a register's format has not shipped. The till reads the profile's format each time it prints, so the change is live on the next receipt, with no restart. **Before the app is removed** (*Export and uninstall*), set the profile's **Print Format** back to the store's own: otherwise the profile names a format that is gone, and the till prints the sale's plain form.
+5. **Set the format on the till's POS Profile.** This is configuration: iVendNext Desk → **POS Profile** → open the profile → the **Print Format** field → pick your format → **Save**. ⚠ A manifest cannot do this step yet. It may not change a POS Profile: the manifest key for a register's format has not shipped. The till reads the profile's format each time it prints, so the change is live on the next receipt, with no restart. **Before the app is removed** (*Export and uninstall*), set the profile's **Print Format** back to what it was (or empty it): otherwise the profile names a format that is gone, and the till prints the sale's plain form.
 
 6. **Look at a real sale.** Book a sale on the till. Here, one item at 15% VAT and one zero-rated:
 
