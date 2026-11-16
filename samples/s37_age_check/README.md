@@ -37,12 +37,17 @@ ivn try
 ## Try it at the till
 
 - First, in iVendNext Desk, make the *Age check settings* record `Default` with *Hours from UTC at your store* (-5 for New York), so the till counts the store's day, not UTC's.
-- Then set *Customers must be at least this old* on the wine's item group (21, say), and add that group to the scan service's settings (`item_groups`), as *The customer sets* says.
+- Then set *Customers must be at least this old* on the wine's item group (21, say), and name that group for the scan: in Desk, *Retail Extension Subscription*, the *Age check* row whose *Partner* is your app, box *Settings for this extension point*. Make it read `{"event": "scan", "item_field": "<prefix>_age_min_age", "item_groups": ["<your group>"]}`, keeping the `item_field` it already holds, and save.
 - Scan a bottle of wine; the till shows the date of birth to check. Press Add with these details.
-- Pick a restricted item from the list instead of scanning it; the till stops it at Pay.
+- To see the check at *Checkout*, type 19 in *ID checked* under *Sale details* and press *Checkout*: the till refuses the sale and names the wine.
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.1.7
+
+- *Try it at the till* names the screen for the scan's item groups (*Retail Extension Subscription*, the app's *Age check* row, *Settings for this extension point*) and the whole settings line it should read, and its last step types 19 in *ID checked* and presses *Checkout*, where the till refuses the sale and names the item (picking an item from the list asks the age too, so that step could not be done).
+- The tests check the refusal's facts (the item, its line, the age needed, the age typed), not its sentence, so the words in `agecheck.py` can be changed with them green. The service and the manifest are unchanged.
 
 ### 1.1.6
 

@@ -575,14 +575,26 @@ def schedule_name(tag: str, name: str, taken: dict) -> str:
     return f"{tag}-s{n}"
 
 
+def serves_page(part: Part) -> bool:
+    """The part's service serves a page of its own at its own address (S24's kiosk at ``/``, ``/kiosk.js``), not under a
+    connection point's address as S17's board is: in an app, a GET for a path no part answers goes to it, when it is the
+    app's only such part (the dispatcher's ``page``)."""
+    service = part.folder / "service"
+    return bool(handler_of(part)) and service.is_dir() and any(service.glob("*.html")) \
+        and not any(path.endswith("/") for path in routes(app_view(part)))
+
+
 def mount(part: Part, app_manifest: dict) -> dict:
     """The dispatcher's entry for one part."""
     handler = handler_of(part)          # None: a sample with no service of its own (lists and settings only)
     points = {}
     for path, (kind, key, label) in routes(app_view(part)).items():
         points[path] = {"kind": kind, "key": key, "label": label}
-    return {"sample": part.sample, "title": part.title, "handler": handler, "prefix": part.prefix,
-            "prefix_setting": f"{part.tag.upper()}_PREFIX", "aliases": part.aliases, "strip": part.strip, "points": points}
+    out = {"sample": part.sample, "title": part.title, "handler": handler, "prefix": part.prefix,
+           "prefix_setting": f"{part.tag.upper()}_PREFIX", "aliases": part.aliases, "strip": part.strip, "points": points}
+    if serves_page(part):
+        out["page"] = True
+    return out
 
 
 NOT_COMPARED = ("app.json:version", "app.json:base")   # set for the developer, never their edit
@@ -761,9 +773,30 @@ def lists_words(names: list[str]) -> str:
     return f"{NUMBERS[n] if n < len(NUMBERS) else n} list{'' if n == 1 else 's'} ({shown})"
 
 
+def by_hand(part: Part) -> str | None:
+    """For a part with a script of its own (S26's ``sync.py``, S27's ``run.py``) and no hosted service, which the partner
+    starts on their own computer or scheduler (the hosted copy carries its lists, never the script): the words that say
+    so and where its command is, the top of the script in the made app. Else None."""
+    if handler_of(part):
+        return None
+    script = next((p.name for p in sorted(part.folder.glob("*.py"))
+                   if p.read_text(encoding="utf-8", errors="ignore").startswith("#!")), None)
+    return (f"a script that Try does not run, started from your own computer or scheduler as the top of "
+            f"service/{part.tag}/{script} says") if script else None
+
+
+def runs_by_hand(part: Part) -> bool:
+    return by_hand(part) is not None
+
+
 def does(part: Part) -> str:
     """What a sample puts in the app, in plain words and with no brackets inside brackets: its own *What is in it* line,
-    else its points and its lists."""
+    else its points and its lists; and, for a script the partner runs, that Try does not run it."""
+    words = _does(part)
+    return f"{words} and {by_hand(part)}" if runs_by_hand(part) else words
+
+
+def _does(part: Part) -> str:
     line = re.search(r"^\*\*What is in it:\*\*\s*(.+?)\s*$", sample_info.readme(part.folder), re.M)
     if line:
         return line.group(1).rstrip(".")
@@ -797,6 +830,8 @@ def in_folder(part: Part) -> str:
         elif s.get("point") == "capture":
             words.append(f"the capture on {(s.get('settings') or {}).get('event', 'the till').replace('_', ' ')}")
     words = list(dict.fromkeys(words))
+    if runs_by_hand(part):
+        words.append(by_hand(part))
     if not words:
         return part.title
     return f"{part.title}, " + (words[0] if len(words) == 1 else ", ".join(words[:-1]) + " and " + words[-1])

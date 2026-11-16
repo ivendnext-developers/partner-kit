@@ -41,6 +41,7 @@ import time
 SKEW_S = 300          # a request stamped further than this from our clock is refused (a replay window, not a clock)
 TEXT_MAX = 140        # every sentence the till shows: plain text, 1 to 140 characters (the extension points' rule)
 EXCLUDE_MAX = 20      # the check takes off 1 to 20 methods (the contract's limit)
+NOTHING_SET = "No method is set for a return without its sale. Get a manager."   # yours to reword, as every sentence here
 
 
 def verify(timestamp: str | None, signature: str | None, raw: bytes, secret: str, now: float | None = None) -> str:
@@ -131,7 +132,7 @@ def on_check(ctx: dict, settings: dict | None) -> dict:
         else:
             return {"verdict": "allow"}
         if not keep:                            # nothing set for it (a blank store credit method written over the API)
-            return {"verdict": "refuse", "reason": "No method is set for a return without its sale. Get a manager."}
+            return {"verdict": "refuse", "reason": NOTHING_SET}
         some = plain(f"Without its sale, refunded only by {_names(keep)}.")
         none = plain(f"A return without its sale is refunded only by {_names(keep)}, not offered at this till.")
     elif settings["same_methods"]:

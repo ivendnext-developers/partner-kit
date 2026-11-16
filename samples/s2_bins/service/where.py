@@ -69,7 +69,7 @@ import testcall  # noqa: E402
 
 ROUTE, KEY = "/point/where_is_it", "where_is_it"       # the manifest's remote_keys[].key; its secret is "<app>:<key>"
 SKEW_S = 300
-READ_TIMEOUT, DEADLINE = 0.8, 2.2      # each read, and all of them together: inside the till's 3 seconds
+READ_TIMEOUT, DEADLINE = 0.8, 2.2      # one read outside a press; a press's reads together, inside the till's 3 seconds
 CODES_MAX, ROWS_MAX = 30, 1000      # items looked up; rows one read may return
 NOT_SET_UP = ("Bin locations is not set up yet: no key from this shop has reached it. Ask your manager to check that the "
               "app's user has its key and, if the site could not reach the app, or a key was lost or changed, to press Connect again on the app.")
@@ -198,12 +198,13 @@ class Service:
         return secrets, shop
 
     def _read(self, shop: dict, until: float):
-        """A reader for one press: every read shares the press's deadline."""
+        """A reader for one press: every read shares the press's deadline, and each may take what is left of it (a slow
+        site's first read is not given up while the till still waits; the item names, only a help, take what remains)."""
         def read(doctype, fields, filters):
             left = until - self.clock()
             if left <= 0:
                 raise ShopUnreadable("out of time")
-            return self.reader(shop["url"], shop["key"], doctype, fields, filters, timeout=min(READ_TIMEOUT, left))
+            return self.reader(shop["url"], shop["key"], doctype, fields, filters, timeout=left)
         return read
 
     def answer(self, headers, raw: bytes, note: dict) -> tuple[int, dict]:

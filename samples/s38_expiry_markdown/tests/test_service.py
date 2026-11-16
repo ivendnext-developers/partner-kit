@@ -175,6 +175,40 @@ class FakeTenant:
         return sorted((r for r in self.prices.values() if r.get("batch_no") == lot), key=lambda r: r["uom"])
 
 
+class SlowSite(app.Tenant):
+    """The service's own door, its timing kept, over FakeTenant's records: each call takes the seconds ``took`` gives in
+    turn (0.05 after), and a call slower than the time the door gives it times out, as the wire would."""
+
+    def __init__(self, took, timeout=3):
+        super().__init__("https://shop.example", "k", "s", timeout=timeout, clock=lambda: self.t)
+        self.t, self.took, self.records, self.given = 100.0, iter(took), FakeTenant(), []
+
+    def _slow(self, name, *a):
+        limit = self._timeout()
+        self.given.append(limit)
+        d = next(self.took, 0.05)
+        if d > limit:
+            self.t += limit
+            raise app.TenantError(f"{name} -> TimeoutError")
+        self.t += d
+        return getattr(self.records, name)(*a)
+
+    def doc(self, *a):
+        return self._slow("doc", *a)
+
+    def rows(self, *a):
+        return self._slow("rows", *a)
+
+    def create(self, *a):
+        return self._slow("create", *a)
+
+    def update(self, *a):
+        return self._slow("update", *a)
+
+    def delete(self, *a):
+        return self._slow("delete", *a)
+
+
 class Clock:
     """A clock the tenant moves one second per call: a press stops starting lots after the budget."""
 
@@ -373,6 +407,21 @@ class ServiceTest(unittest.TestCase):
         self.use(FakeTenant(refuse=403))
         self.assertEqual(self.press()[1]["message"]["body"], app.REFUSED)
         self.use(FakeTenant(refuse=500))
+        self.assertEqual(self.press()[0], 502)
+
+    def test_s15b_a_slow_site_is_answered_while_the_shop_still_waits(self):  # F-LW-24: a read over 3 s was a 502
+        site = SlowSite([0.2, 3.5])             # the settings, then the price list, slow at a busy moment
+        self.use(site)
+        code, out = self.press()
+        self.assertEqual(code, 200, out)
+        self.assertIn("message", out)
+        self.assertAlmostEqual(site.given[0], app.PRESS_S)      # each call may take what is left of the press
+        self.assertAlmostEqual(site.given[1], app.PRESS_S - 0.2)
+        self.assertIsNone(site.until)                            # outside a press, the door's own timeout again
+        self.assertEqual(site._timeout(), 3)
+
+    def test_s15c_a_site_slower_than_the_whole_press_is_still_a_502(self):
+        self.use(SlowSite([0.2, app.PRESS_S]))
         self.assertEqual(self.press()[0], 502)
 
     def test_s16_the_shops_day_decides_the_days_left(self):

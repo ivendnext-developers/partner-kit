@@ -43,6 +43,10 @@ ivn try
 
 ## Versions
 
+### 1.0.2
+
+- The tests check that a refusal or a refund gives a reason and that it names the methods kept, not the sentence, so the words in `refunds.py` can be changed with them green. The refusal when nothing is set is `NOTHING_SET`. The manifest is unchanged.
+
 ### 1.0.1
 
 - Desk shows plain names (Refund rules settings, Refund method) through the manifest's `translations` block, so a search for *refund* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.1.1.

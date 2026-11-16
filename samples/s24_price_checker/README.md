@@ -33,6 +33,10 @@ ivn try
 
 ## Versions
 
+### 1.1.4
+
+- The kiosk asks for a price at `/prc/price` from the address's root, so its page works at the app's own address and at `/prc/` in an app made from S24 and another sample with a page. The manifest is unchanged.
+
 ### 1.1.3
 
 - Desk shows plain names (Price-checker kiosk) through the manifest's `translations` block, so a search for *kiosk* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.2.3.

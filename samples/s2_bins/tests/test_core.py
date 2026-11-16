@@ -5,8 +5,9 @@ import sys
 import unittest
 
 HERE = pathlib.Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parent))
+sys.path[:0] = [str(HERE.parent), str(HERE)]
 import core  # noqa: E402
+from facts import lacks  # noqa: E402   the answer's facts, never its sentence: reword it freely
 
 ROWS = [
     {"name": "SF-01--A", "item": "A", "bin": "SF-01", "qty": 5, "kind": "Shop floor"},
@@ -24,18 +25,19 @@ class WhereAnswer(unittest.TestCase):
     def test_shop_floor_first_with_the_fullest_bin(self):
         m = core.where_answer(ctx("A"), ROWS)["message"]
         self.assertEqual((m["title"], m["level"]), ("Where is it?", "success"))
-        self.assertIn("A: shop floor SF-01 (5) (+1 more bin)", m["body"])
+        self.assertEqual(lacks(m["body"], [("A", "SF-01", 5)]), [])
+        self.assertNotIn("SF-02", m["body"])                      # the fullest bin; the other is counted, not named
 
     def test_back_room_when_the_floor_has_none(self):
         m = core.where_answer(ctx("B"), ROWS)["message"]
         self.assertEqual(m["level"], "info")
-        self.assertIn("B: back room BR-01 (8), fetch it", m["body"])
+        self.assertEqual(lacks(m["body"], [("B", "BR-01", 8)]), [])
 
     def test_no_bin_and_an_empty_bin_both_warn(self):
         m = core.where_answer(ctx("A", "C", "Z"), ROWS)["message"]
         self.assertEqual(m["level"], "warning")
-        self.assertIn("C: no bin recorded", m["body"])
-        self.assertIn("Z: no bin recorded", m["body"])
+        self.assertEqual(lacks(m["body"], [("A", "SF-01", 5), ("C", None, None), ("Z", None, None)]), [])
+        self.assertNotIn("SF-03", m["body"])                      # an empty bin is no bin
 
     def test_empty_sale_and_the_cap(self):
         self.assertEqual(core.where_answer(ctx(), ROWS)["message"]["level"], "info")
@@ -54,18 +56,19 @@ class NamedAsTheBasketShows(unittest.TestCase):
 
     def test_the_walks_three_line_basket(self):
         m = core.where_answer(ctx("LMK-CD-01", "LMK-PA-01", "LMK-PR-4011"), self.WALK, self.NAMES)["message"]
-        self.assertEqual(m["body"], "Milk chocolate bar: shop floor AU-E3-57 (40); Long-grain white rice: shop floor "
-                                    "AU-E1-49 (40); Bananas: shop floor AU-A1-01 (60)")
+        self.assertEqual(lacks(m["body"], [("Milk chocolate bar", "AU-E3-57", 40), ("Long-grain white rice", "AU-E1-49", 40),
+                                           ("Bananas", "AU-A1-01", 60)]), [])
+        self.assertNotIn("LMK-", m["body"])                      # by their names, not their codes
         self.assertEqual(m["level"], "success")
 
     def test_an_item_with_no_bin_is_named_too(self):
         body = core.where_answer(ctx("LMK-PA-01", "Z"), self.WALK, dict(self.NAMES, Z="Paper towels, 6 rolls"))
-        self.assertEqual(body["message"]["body"], "Long-grain white rice: shop floor AU-E1-49 (40); "
-                                                  "Paper towels, 6 rolls: no bin recorded")
+        self.assertEqual(lacks(body["message"]["body"], [("Long-grain white rice", "AU-E1-49", 40),
+                                                         ("Paper towels, 6 rolls", None, None)]), [])
 
     def test_an_item_without_a_name_keeps_its_code(self):
         body = core.where_answer(ctx("LMK-PR-4011", "B"), self.WALK + ROWS, {"LMK-PR-4011": "Bananas"})["message"]["body"]
-        self.assertEqual(body, "Bananas: shop floor AU-A1-01 (60); B: back room BR-01 (8), fetch it")
+        self.assertEqual(lacks(body, [("Bananas", "AU-A1-01", 60), ("B", "BR-01", 8)]), [])
 
     def test_a_long_name_is_cut_never_the_bin(self):
         long = "Organic extra virgin olive oil, cold pressed, single estate, glass bottle " * 2
@@ -74,11 +77,13 @@ class NamedAsTheBasketShows(unittest.TestCase):
         body = core.where_answer(ctx(*codes), rows, {c: long for c in codes})["message"]["body"]
         self.assertLessEqual(len(body), core.BODY_MAX)
         self.assertNotIn("more", body)                           # all five fit once the names are cut
-        for i in range(5):
-            self.assertIn(f": shop floor AU-B{i}-0{i} (7)", body)   # every bin whole
-        self.assertIn("Organic extra virgin ol…: shop floor AU-B0-00 (7)", body)
+        cut = body[:body.index("…") + 1]                          # the name as cut to fit, however the answer reads
+        self.assertTrue(long.startswith(cut[:-1]) and len(cut) < 40, cut)
+        self.assertEqual(body.count(cut), 5)                                  # each name cut,
+        self.assertEqual(lacks(body, [(cut, f"AU-B{i}-0{i}", 7) for i in range(5)]), [])   # every bin whole
         one = core.where_answer(ctx("OIL-0"), rows, {"OIL-0": long[:140]})["message"]["body"]
-        self.assertEqual(one, long[:140] + ": shop floor AU-B0-00 (7)")   # one item: its whole name fits
+        self.assertEqual(lacks(one, [(long[:140].rstrip(), "AU-B0-00", 7)]), [])   # one item: its whole name fits
+        self.assertNotIn("…", one)
 
     def test_a_code_is_never_cut_the_last_items_are_left_out(self):
         codes = [f"TSHIRT-RED-XL-ORGANIC-COTTON-{i}" for i in range(7)]
@@ -86,7 +91,8 @@ class NamedAsTheBasketShows(unittest.TestCase):
         body = core.where_answer(ctx(*codes), rows)["message"]["body"]
         self.assertLessEqual(len(body), core.BODY_MAX)
         self.assertNotIn("…:", body)                              # no code cut short
-        shown = [c for c in codes if f"{c}: shop floor" in body]
+        shown = [c for c in codes if c in body]
+        self.assertEqual(lacks(body, [(c, f"AU-C{i}-0{i}", 3) for i, c in enumerate(shown)]), [])
         self.assertEqual(shown, codes[:len(shown)])
         self.assertTrue(body.endswith(f"; … and {7 - len(shown)} more"))
 

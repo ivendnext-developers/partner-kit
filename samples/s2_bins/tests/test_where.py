@@ -24,8 +24,9 @@ from unittest import mock
 
 HERE = Path(__file__).resolve().parent
 KIT = HERE.parents[2]
-sys.path[:0] = [str(HERE.parent), str(HERE.parent / "service"), str(KIT / "tools" / "contracts")]
+sys.path[:0] = [str(HERE.parent), str(HERE.parent / "service"), str(KIT / "tools" / "contracts"), str(HERE)]
 import check  # noqa: E402
+from facts import lacks  # noqa: E402   the answer's facts, never its sentence (core.where_answer may be reworded)
 import core  # noqa: E402
 import where  # noqa: E402
 import shops  # noqa: E402
@@ -110,18 +111,19 @@ class OneShop(unittest.TestCase):
     def test_each_item_is_named_with_its_bin_at_this_store(self):
         code, out = self.press(ctx("CASE", "CABLE"))
         self.assertEqual(code, 200)
-        self.assertEqual(out["message"]["body"], "CASE: shop floor F1-01 (4); CABLE: back room B1-07 (12), fetch it")
+        self.assertEqual(lacks(out["message"]["body"], [("CASE", "F1-01", 4), ("CABLE", "B1-07", 12)]), [])
         self.assertEqual(out["message"]["level"], "info")
 
     def test_another_stores_bin_is_never_named(self):
         code, out = self.press(ctx("EARBUDS"))
-        self.assertEqual(body((code, out)), "EARBUDS: no bin recorded")
+        self.assertEqual(lacks(body((code, out)), [("EARBUDS", None, None)]), [])
         self.assertNotIn("F2-01", json.dumps(out))
         code, out = self.press(ctx("CABLE"))
         self.assertNotIn("F2-01", body((code, out)))
 
     def test_an_empty_bin_is_not_named(self):
-        self.assertEqual(body(self.press(ctx("PHONE"))), "PHONE: no bin recorded")
+        self.assertEqual(lacks(body(self.press(ctx("PHONE"))), [("PHONE", None, None)]), [])
+        self.assertNotIn("F1-01", body(self.press(ctx("PHONE"))))   # its bin holds none
 
     def test_the_reads_ask_only_for_held_items_and_this_stores_locations(self):
         self.press(ctx("CASE", "CABLE"))
@@ -130,7 +132,7 @@ class OneShop(unittest.TestCase):
         self.assertEqual(self.reader.filters["IVENDNEXT BLN Location"], [["store", "=", STORE]])
 
     def test_a_record_with_no_location_yet_is_not_named(self):
-        self.assertEqual(body(self.press(ctx("CASE"))), "CASE: shop floor F1-01 (4)")   # not the location-less B1-07 row
+        self.assertEqual(lacks(body(self.press(ctx("CASE"))), [("CASE", "F1-01", 4)]), [])   # not the location-less row
 
     def test_a_chain_is_read_only_at_the_tills_store(self):
         """Forty stores, thirty items, a bin for each item in each store: one store's rows come back, never 1,200."""
@@ -141,11 +143,14 @@ class OneShop(unittest.TestCase):
         svc = where.Service(ONE, reader=reader)
         raw = raw_of(ctx(*[f"I{i:02d}" for i in range(30)], store="Store 7"))
         out = svc.handle("POST", where.ROUTE, signed(raw, SECRET), raw)
-        self.assertTrue(body(out).startswith("I00: shop floor S7-00 (1)"), body(out))
+        self.assertTrue(body(out).startswith("I00"), body(out))
+        self.assertEqual(lacks(body(out), [("I00", "S7-00", 1)]), [])
         self.assertNotIn("too many", body(out))
 
     def test_a_store_with_no_location_reads_no_bins(self):
-        self.assertEqual(body(self.press(ctx("CASE", store="Store 9 - DR"))), "CASE: no bin recorded")
+        said = body(self.press(ctx("CASE", store="Store 9 - DR")))
+        self.assertEqual(lacks(said, [("CASE", None, None)]), [])
+        self.assertNotIn("F1-01", said)
         self.assertEqual([c[2] for c in self.reader.calls], ["IVENDNEXT BLN Location", "Item"])   # the name, for its line
 
     def test_more_rows_than_one_answer_takes_is_said_never_cut(self):
@@ -174,7 +179,7 @@ class OneShop(unittest.TestCase):
         self.assertEqual(body(out), where.UNREADABLE)
         self.assertEqual(len(reader.calls), 1)
 
-    def test_a_read_gets_only_the_time_left(self):
+    def test_each_read_gets_all_the_time_left(self):
         t = [100.0]
         reader = Reader()
         def slow(*a, **k):
@@ -184,8 +189,24 @@ class OneShop(unittest.TestCase):
         svc = where.Service(ONE, reader=slow, clock=lambda: t[0])
         raw = raw_of(ctx("CASE"))
         svc.handle("POST", where.ROUTE, signed(raw, SECRET), raw)
-        self.assertEqual(reader.timeouts[0], where.READ_TIMEOUT)
+        self.assertAlmostEqual(reader.timeouts[0], where.DEADLINE)    # the first read may take the whole press
         self.assertAlmostEqual(reader.timeouts[1], where.DEADLINE - 1.5)
+
+    def test_a_slow_site_is_still_answered_while_the_press_has_time(self):  # F-HD-29: 956 ms on the first read, hosted
+        t, reader = [100.0], Reader()
+        took = iter([0.96, 0.6, 0.5])           # the locations, what is in each bin, the item names: 2.06 s of the 2.2
+        def slow(url, key, doctype, fields, filters, timeout=None):
+            d = next(took)
+            if d > timeout:                      # a site slower than the read may wait: given up, as the wire would
+                t[0] += timeout
+                raise where.ShopUnreadable("timed out")
+            t[0] += d
+            return reader(url, key, doctype, fields, filters, timeout)
+        svc = where.Service(ONE, reader=slow, clock=lambda: t[0])
+        raw, note = raw_of(ctx("CASE")), {}
+        out = svc.handle("POST", where.ROUTE, signed(raw, SECRET), raw, note)
+        self.assertEqual(lacks(body(out), [("CASE", "F1-01", 4)]), [])
+        self.assertEqual(note, {})
 
     def test_a_refused_key_is_a_set_up_problem_not_an_outage(self):
         self.reader.refuse = 401
@@ -208,7 +229,8 @@ class OneShop(unittest.TestCase):
         svc = where.Service(ONE, reader=Reader(lax=True))
         raw = raw_of(ctx("EARBUDS", "CABLE"))
         out = svc.handle("POST", where.ROUTE, signed(raw, SECRET), raw)
-        self.assertEqual(body(out), "EARBUDS: no bin recorded; CABLE: back room B1-07 (12), fetch it")
+        self.assertEqual(lacks(body(out), [("EARBUDS", None, None), ("CABLE", "B1-07", 12)]), [])
+        self.assertNotIn("F2-", body(out))
 
     def test_the_shop_is_read_with_the_apps_key_and_only_read(self):
         self.press(ctx("CASE"))
@@ -277,17 +299,19 @@ class NamedAsTheBasketShows(unittest.TestCase):
 
     def test_the_walks_three_line_basket(self):
         out, _ = self.press(Reader({"https://shop.example": self.WALK}), "LMK-CD-01", "LMK-PA-01", "LMK-PR-4011")
-        self.assertEqual(body(out), "Milk chocolate bar: shop floor AU-E3-57 (40); Long-grain white rice: shop floor "
-                                    "AU-E1-49 (40); Bananas: shop floor AU-A1-01 (60)")
+        self.assertEqual(lacks(body(out), [("Milk chocolate bar", "AU-E3-57", 40), ("Long-grain white rice", "AU-E1-49", 40),
+                                           ("Bananas", "AU-A1-01", 60)]), [])
         if check.available():
             self.assertEqual(check.errors("remote_till_key", "answer", out[1]), [])
 
     def test_an_item_with_no_bin_is_named(self):
         out, _ = self.press(Reader({"https://shop.example": self.WALK}), "LMK-PT-06")
-        self.assertEqual(body(out), "Paper towels, 6 rolls: no bin recorded")
+        self.assertEqual(lacks(body(out), [("Paper towels, 6 rolls", None, None)]), [])
+        self.assertNotIn("AU-", body(out))                       # no bin named at all
         nothing_here = dict(self.WALK, **{"IVENDNEXT BLN Location": []})     # a store with no locations yet
         out, _ = self.press(Reader({"https://shop.example": nothing_here}), "LMK-PA-01")
-        self.assertEqual(body(out), "Long-grain white rice: no bin recorded")
+        self.assertEqual(lacks(body(out), [("Long-grain white rice", None, None)]), [])
+        self.assertNotIn("AU-E1-49", body(out))
 
     def test_names_that_cannot_be_read_leave_the_codes_never_a_refusal(self):
         """A shop still on the version before the read on Item was granted refuses it (403): the bins are answered."""
@@ -297,7 +321,7 @@ class NamedAsTheBasketShows(unittest.TestCase):
                 raise where.ShopUnreadable("refused", 403)
             return inner(url, key, doctype, fields, filters, timeout)
         out, note = self.press(no_items, "LMK-CD-01", "LMK-PA-01")
-        self.assertEqual(body(out), "LMK-CD-01: shop floor AU-E3-57 (40); LMK-PA-01: shop floor AU-E1-49 (40)")
+        self.assertEqual(lacks(body(out), [("LMK-CD-01", "AU-E3-57", 40), ("LMK-PA-01", "AU-E1-49", 40)]), [])
         self.assertEqual((out[1]["message"]["level"], note), ("success", {"names": 403}))
 
 
@@ -314,6 +338,13 @@ class TheManifest(unittest.TestCase):
     def test_the_apps_own_role_reads_the_items_names(self):
         m = json.loads((HERE.parent / "manifest.json").read_text())
         self.assertIn({"doctype": "Item", "role": "PP BLN Integration", "rights": ["read"]}, m["role_rights"])
+
+    def test_the_install_makes_the_user_whose_key_the_site_hands_over(self):  # F-GR-27: no user, no key, never set up
+        m = json.loads((HERE.parent / "manifest.json").read_text())
+        self.assertEqual([r["events"] for r in m["registered_applications"]], [["PP BLN Location"]])   # seldom changes: no queue
+        dt = {d["name"]: d for d in m["doctypes"]}
+        for name in ("PP BLN Location", "PP BLN Item In Bin"):        # what the press reads, besides Item
+            self.assertTrue(any(p["role"] == "PP Integration" and p.get("read") for p in dt[name]["permissions"]), name)
 
 
 class ShopApi(unittest.TestCase):
@@ -385,8 +416,8 @@ class ManyShops(unittest.TestCase):
         return self.svc.handle("POST", where.ROUTE, signed(raw, secret, site=site), raw)
 
     def test_each_shop_is_answered_from_its_own_records_with_its_own_key(self):
-        self.assertEqual(body(self.press("a.example.com", "secret-a.example.com")), "CASE: shop floor F1-01 (4)")
-        self.assertEqual(body(self.press("b.example.com", "secret-b.example.com")), "CASE: shop floor F2-01 (1)")
+        self.assertEqual(lacks(body(self.press("a.example.com", "secret-a.example.com")), [("CASE", "F1-01", 4)]), [])
+        self.assertEqual(lacks(body(self.press("b.example.com", "secret-b.example.com")), [("CASE", "F2-01", 1)]), [])
         self.assertEqual({(u, k) for u, k, _ in self.reader.calls}, {("https://a.example.com", "ka:sa"),
                                                                      ("https://b.example.com", "kb:sb")})
 
@@ -427,7 +458,8 @@ class AsAFunction(unittest.TestCase):
             pressed = entry(ok)
             refused = entry(dict(ok, headers={}))
         self.assertEqual(health["statusCode"], 200)
-        self.assertEqual((pressed["statusCode"], json.loads(pressed["body"])["message"]["body"]), (200, "CASE: shop floor F1-01 (4)"))
+        self.assertEqual(pressed["statusCode"], 200)
+        self.assertEqual(lacks(json.loads(pressed["body"])["message"]["body"], [("CASE", "F1-01", 4)]), [])
         self.assertEqual(refused["statusCode"], 401)
         lines = [json.loads(x) for x in log.getvalue().splitlines()]
         self.assertEqual([x["status"] for x in lines], [200, 200, 401])

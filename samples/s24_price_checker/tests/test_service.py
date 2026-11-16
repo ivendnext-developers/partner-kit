@@ -177,6 +177,7 @@ class Page(unittest.TestCase):
         self.assertNotIn("innerHTML", js)
         self.assertNotIn("eval(", js)
         self.assertIn("location.hash", js)                         # the shop and kiosk come from the fragment
+        self.assertIn('fetch("/prc/price"', js)        # from the root: the page works at / and at /prc/ in an app of several
 
     def test_a_shop_on_plain_http_may_show_its_pictures_on_the_bench_only(self):
         csp = one(IVN_SHOP_URL="http://localhost:8110").csp()

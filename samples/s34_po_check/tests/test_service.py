@@ -71,6 +71,17 @@ class OneShop(unittest.TestCase):
         raw = raw_of(context())
         self.assertEqual(svc.handle("POST", app.ROUTE, signed(raw, SECRET), raw)[1]["fields"], {"ivendnext_poc_erp_number": "ERP-PO-9912"})
 
+    def test_the_prefix_as_names_write_it_names_the_same_field(self):
+        # an app made of several samples hands each part its prefix as names write it (PP POC), as every other sample
+        # takes it: the fill field is still the one the manifest adds
+        raw = raw_of(context())
+        for given in ("PP POC", "pp_poc", " PP POC "):
+            svc = app.Service(dict(ONE, POC_PREFIX=given))
+            self.assertEqual(svc.handle("POST", app.ROUTE, signed(raw, SECRET), raw)[1]["fields"], {FIELD: "ERP-PO-9912"}, given)
+        svc = app.Service(dict(ONE, POC_PREFIX="ACME DISTRIBUTION POC"))      # a part's prefix in an app of several
+        self.assertEqual(svc.handle("POST", app.ROUTE, signed(raw, SECRET), raw)[1]["fields"],
+                         {"acme_distribution_poc_erp_number": "ERP-PO-9912"})
+
 
 class ManyShops(unittest.TestCase):
     A, B = "shop-a.ivendnext.com", "shop-b.ivendnext.com"

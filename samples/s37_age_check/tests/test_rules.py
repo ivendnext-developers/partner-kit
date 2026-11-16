@@ -52,6 +52,12 @@ def context(lines=None, checked=None, stage="sale", prefix="PP AGE"):
             "offered_tenders": ["Cash"], "pos_opening": "POS-OPE-1", "pos_terminal": "T1"}
 
 
+def lacks(reason: str, *facts) -> list:
+    """The facts a refusal must name, never its sentence (``on_check``'s words are the partner's to change): each text
+    (the item's name or code) in it, and each number (the line, an age) standing on its own."""
+    return [f for f in facts if not (re.search(rf"(?<!\d){f}(?!\d)", reason) if isinstance(f, int) else f in reason)]
+
+
 def scan(code="WHISKY", group="Spirits", sale_ref="sale-1"):
     return {"v": 1, "point": "capture", "event": "scan", "sale_ref": sale_ref, "store": "Stores - DXB", "pos_profile": "Main",
             "operator": "cashier@shop.example", "customer": None, "lang": "en",
@@ -155,10 +161,8 @@ class Check(unittest.TestCase):
         out = agecheck.on_check(ctx, ages(ctx), agecheck.checked_age(ctx, "PP AGE"))
         self.assertEqual(out["verdict"], "refuse")
         reason = out["reason"]
-        self.assertIn("Glen Moray 12 Year", reason); self.assertRegex(reason, r"\b2\b.*\b18\b")  # the name
+        self.assertEqual(lacks(reason, "Glen Moray 12 Year", 2, 18), [])   # the name, its line, the age to check
         self.assertNotIn("WHISKY", reason)                                                                    # not the code
-        self.assertIn("enter 18 in Sale details", reason)
-        self.assertTrue(reason.endswith("or take it off."), reason)
 
     def test_a_recorded_check_at_the_age_or_above_allows(self):
         for checked in ("18 or over", "18", " 21 ", "25 or over"):
@@ -169,9 +173,8 @@ class Check(unittest.TestCase):
         ctx = context([line("LAGER", "Beer", n=1), line("WHISKY", "Spirits", n=2), line("VAPE", "Vapes", n=3)], checked="16 or over")
         reason = agecheck.on_check(ctx, ages(ctx), agecheck.checked_age(ctx, "PP AGE"),
                                    agecheck.checked_as_read(ctx, "PP AGE"))["reason"]
-        self.assertIn("VAPE", reason); self.assertRegex(reason, r"\b3\b.*\b21\b")
-        self.assertIn("the sale's ID check says 16.", reason)
-        self.assertTrue(reason.endswith("enter 21 in Sale details."), reason)   # a band was confirmed, not an age read
+        self.assertEqual(lacks(reason, "VAPE", 3, 21, 16), [])           # the line, the age it needs, the check recorded
+        self.assertFalse(agecheck.checked_as_read(ctx, "PP AGE"))        # a band was confirmed, not an age read
 
     def test_an_age_typed_alone_under_the_lines_age_says_take_it_off_first(self):
         ctx = context([line("EHW-RW-001", "Spirits", n=1, name="Cabernet Sauvignon 750ml")], checked="19")
@@ -179,9 +182,7 @@ class Check(unittest.TestCase):
         out = agecheck.on_check(ctx, [21], agecheck.checked_age(ctx, "PP AGE"), agecheck.checked_as_read(ctx, "PP AGE"))
         reason = out["reason"]
         self.assertEqual(out["verdict"], "refuse")
-        self.assertIn("Cabernet Sauvignon 750ml", reason); self.assertRegex(reason, r"\b1\b.*\b21\b")   # the whole name
-        self.assertIn("says 19: under 21, take it off;", reason)                    # the under-age way first
-        self.assertTrue(reason.endswith("if their ID shows 21 or over, enter 21."), reason)   # a threshold typed earlier
+        self.assertEqual(lacks(reason, "Cabernet Sauvignon 750ml", 1, 21, 19), [])   # the whole name, the age typed
         self.assertNotIn("EHW-RW-001", reason)
 
     def test_only_an_age_typed_alone_is_an_age_read_on_the_id(self):
@@ -213,11 +214,13 @@ class Check(unittest.TestCase):
         self.assertFalse(agecheck.sells(ctx))
         self.assertEqual(agecheck.on_check(ctx, ages(ctx), 0), {"verdict": "allow"})
         ctx = context([line("WHISKY", "Spirits", -1, n=1), line("VAPE", "Vapes", 1, n=2)], stage="return")
-        self.assertIn("Line 2: VAPE", agecheck.on_check(ctx, ages(ctx), 0)["reason"])
+        reason = agecheck.on_check(ctx, ages(ctx), 0)["reason"]
+        self.assertEqual(lacks(reason, "VAPE", 2), [])
+        self.assertNotIn("WHISKY", reason)
 
     def test_a_line_with_no_number_is_named_by_its_place(self):
         ctx = context([dict(line("BREAD", "Food"), line_no=None), dict(line("WHISKY", "Spirits"), line_no=None)])
-        self.assertTrue(agecheck.on_check(ctx, ages(ctx), 0)["reason"].startswith("Line 2: WHISKY"))
+        self.assertEqual(lacks(agecheck.on_check(ctx, ages(ctx), 0)["reason"], "WHISKY", 2), [])
 
     def test_every_refusal_is_plain_and_at_most_140(self):
         long = "W" * 200
@@ -225,9 +228,10 @@ class Check(unittest.TestCase):
             ctx = context([line(long, "Vapes", n=123)])
             reason = agecheck.on_check(ctx, [120 if checked == 119 else 21], checked, as_read)["reason"]
             self.assertLessEqual(len(reason), 140)
-            self.assertTrue(reason.endswith(("in Sale details.", "take it off.", "or over, enter 21.", "or over, enter 120.")),
-                            reason)                                                   # the name is cut, never what to do
-            self.assertIn("Line 123: W", reason)
+            short = agecheck.on_check(context([line("QQ", "Vapes", n=123)]), [120 if checked == 119 else 21], checked, as_read)["reason"]
+            before, after = short.split("QQ", 1)            # the same words around a short name, whatever they say
+            self.assertTrue(reason.startswith(before + "W") and reason.endswith(after), reason)   # the name is cut, never what to do
+            self.assertEqual(lacks(reason, 123), [])
 
 
 class Asked(unittest.TestCase):

@@ -18,6 +18,7 @@ What a partner usually changes:
 - **The settings:** the fields of `PP GCS Settings` in `manifest.json` (`threshold`, `card_value`, `card_item`, `max_cards_per_sale`, `hold_hours`, `walk_in_customers`, `excluded_customer_groups`).
 - **How the customer learns the number:** nothing sends it yet; add the message in `service/worker.py`.
 - **The app's id:** `IVN_LIBRARY_APP` in `app.json`.
+- **Your own address:** `allowed_urls` in `manifest.json` names `https://gcs.partner.example`, where the site connects your service after install; write your own. When CitiXsys hosts the app, My apps writes the hosted address for you.
 
 More: the [recipe](../../recipes/gift_card_on_spend.md).
 
@@ -32,7 +33,17 @@ ivn check
 ivn try
 ```
 
+## Try it at the till
+
+- In Desk, open *Gift card on spend settings*, make the record `Default`, tick *Enabled (sales earn cards)*, and set the currency, *Spend that earns a card*, *Value of each card* and *Gift card item*.
+- Ring a sale over that spend for a named customer, not the walk-in. Within about a minute the card shows under the sale's *Gift cards* in Desk.
+- Close the till day when you are done.
+
 ## Versions
+
+### 1.2.4
+
+- *Try it at the till* says what to fill in *Gift card on spend settings* before the first sale earns a card, and where the card shows; *What to change* says `allowed_urls` names the sample's address, for your own. Words only; no service or manifest changes.
 
 ### 1.2.3
 

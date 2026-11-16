@@ -30,9 +30,13 @@ ivn check
 ivn try
 ```
 
-Once, for what exists: `PGX_KEY=… PGX_SECRET=… python3 expander.py reconcile --base https://shop.example`.
+Then run it from your own computer or scheduler (Try does not run it), from `service/pgx/` in the app you made, with the key of a user of your own that holds *PP PGX Integration* (*Generate Keys* on that user): `PGX_KEY=… PGX_SECRET=… python3 expander.py run --base https://shop.example --state state/pgx.sqlite --watch 15`. Once, for what exists: `PGX_KEY=… PGX_SECRET=… python3 expander.py reconcile --base https://shop.example --state state/pgx.sqlite`.
 
 ## Versions
+
+### 0.2.1
+
+- *Run it* gives the command that keeps the groups written out, and says Try does not run it. Words only; no service or rule changes.
 
 ### 0.2.0
 

@@ -33,6 +33,10 @@ ivn try
 
 ## Versions
 
+### 0.1.2
+
+- The service turns the prefix it is given into the field's form (`PP POC`, `pp_poc` and `ACME DISTRIBUTION POC` each give `<prefix>_erp_number`), so an app made from S34 and another sample fills the ERP number. The manifest is unchanged.
+
 ### 0.1.1
 
 - When the service is down an order goes on and is flagged, unless the customer chooses to refuse it.

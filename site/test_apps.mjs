@@ -153,7 +153,8 @@ check("J1-03: the search's label and the three tabs", G.search === "Search by sa
 check("J1-05: the App library's twelve industries", a.INDUSTRIES.length === 12 && a.INDUSTRIES.includes("Distribution and warehousing"));
 check("J1-06: the doors' plain words, as the row's examples", a.doorWords("Check before payment") === "A check when the cashier presses Pay" &&
   a.doorWords("Till key") === "A key the cashier taps" && a.doorWords("Manifest") === "Your own lists and forms in Desk" &&
-  a.doorWords("Desk action") === "A button in Desk" && a.doorWords("Event feed") === "Something that happens after each sale");
+  a.doorWords("Desk action") === "A button in Desk" && a.doorWords("Event feed") === "Something that happens after each sale" &&
+  a.doorWords("Document check") === "A check before a back-office document is submitted");   // never a till sale (guide chapter 9)
 const doors = [...new Set(index.samples.filter((s) => a.tickable(s) && s.door).map((s) => s.door))];
 check("J1-06: every door a sample has is said in plain words", doors.every((d) => a.DOOR_WORDS[d]), doors.filter((d) => !a.DOOR_WORDS[d]).join(", "));
 
@@ -220,7 +221,7 @@ check("Start blank goes to Name your app with no sample ticked, and Make sends t
 check("J2-07: Making, and the next step", a.making("ACME MEMBER TILL", 2) === "Making ACME MEMBER TILL from 2 samples…" && G.nextSettings === "Next: its settings");
 check("J2-09: the settings' words", G.settingsLede === "Your app's own values, the same for every site. A customer's own account (their wallet) goes in the app's settings in their Desk." &&
   G.addresses === "Outside addresses" && G.secrets === "Secrets your own service needs" &&
-  a.settingNote({ required: true, together: ["X"] }) === "Required: publishing waits until it is set. Set both, or neither" &&
+  a.settingNote({ required: true, together: ["X"] }) === "Required: Try and publishing wait until it is set. Set both, or neither" &&
   a.settingNote({ required: false, together: [] }) === "Optional: the feature behind it stays off until you set it" &&
   a.isAddress({ name: "HKD_WALLET_URL" }) && !a.isAddress({ name: "HKD_WALLET_SECRET", purpose: "the key your wallet provider gave you" }));
 check("J2-10: the app's four buttons and Not yet on any site", a.tryLabel("demo-1.sandbox.ivend.co") === "Try on demo-1.sandbox.ivend.co" &&
