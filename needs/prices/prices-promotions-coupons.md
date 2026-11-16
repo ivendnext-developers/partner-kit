@@ -8,7 +8,7 @@ status: ready-with-limits
 door: configure
 blocked-by: -
 recipe: recipes/configure_no_code.md
-sample: samples/s31_parent_groups
+sample: none
 request: -
 verified: carried 2026-10-15 · not re-run
 ---

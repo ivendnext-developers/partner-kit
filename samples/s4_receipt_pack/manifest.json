@@ -3,7 +3,7 @@
  "app": "pp_rcp",
  "prefix": "PP RCP",
  "title": "UAE tax invoice receipt",
- "version": "0.1.3",
+ "version": "0.1.4",
  "publisher": "Partner Programme sample",
  "description": "A till receipt laid out as a UAE tax invoice: the company's tax registration number and address, an inline logo, one line per item with its VAT rate, the taxable value at each rate, and Arabic beside English. It adds one field to the till sale that copies the Company's tax ID when the sale is saved. Set it on a POS Profile by configuration (recipe).",
  "custom_fields": [

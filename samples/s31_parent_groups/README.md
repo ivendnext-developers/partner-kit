@@ -2,6 +2,8 @@
 
 A retailer sets up a coupon for *Supplements* and expects it to cover every supplement, but the till's coupon and promotion engines match an item's own item group exactly. This sample's service, outside the retailer's iVendNext, writes the parent out as its child groups and keeps it that way: when the coupon or promotion is saved, and when a new group is added under the parent. The rows appear a few seconds after the save, not in the same save. A promotion's buy and get rows are reported, never written out.
 
+**What is in it:** a service that writes a parent item group in a coupon or a promotion out as its child groups.
+
 **Industries:** Beauty and cosmetics
 
 ## Start from it
@@ -30,9 +32,18 @@ ivn check
 ivn try
 ```
 
-Then run it from your own computer or scheduler (Try does not run it), from `service/pgx/` in the app you made, with the key of a user of your own that holds *PP PGX Integration* (*Generate Keys* on that user): `PGX_KEY=… PGX_SECRET=… python3 expander.py run --base https://shop.example --state state/pgx.sqlite --watch 15`. Once, for what exists: `PGX_KEY=… PGX_SECRET=… python3 expander.py reconcile --base https://shop.example --state state/pgx.sqlite`.
+Then run it from your own computer or scheduler (Try does not run it), from `service/pgx/` in the app you made, with the key of a user of your own that holds your app's role ending *Integration* (your prefix, then Integration) (*Generate Keys* on that user): `PGX_KEY=… PGX_SECRET=… python3 expander.py run --base https://shop.example --state state/pgx.sqlite --watch 15`. Once, for what exists: `PGX_KEY=… PGX_SECRET=… python3 expander.py reconcile --base https://shop.example --state state/pgx.sqlite`.
+
+## Try it at the till
+
+- Try installs the app but does not run its service. On the tried site, make a user of your own, give it your app's role ending *Integration* (your prefix, then Integration) and press *Generate Keys* on it; then run the service as [Run it](#run-it) says, with `--base https://<the tried site>`.
+- In Desk, save a coupon whose get row names a parent item group with child groups (or a promotion that excludes one): within seconds it carries a row for each child group.
 
 ## Versions
+
+### 0.2.2
+
+- A *What is in it* line, so *Made* says what the app holds. *Try it at the till* says Try does not run this service, how to run it against the tried site, and what you then see; its card on *New app* says it is your own service outside iVendNext, as S26's and S27's do, not settings in Desk (its needs card's door is *Outside app*, and the configuration card *Prices, promotions and coupons* no longer names S31 as its sample). Words only.
 
 ### 0.2.1
 

@@ -1,32 +1,53 @@
-"""Build manifest.json from receipt.html and logo.png (the logo is inlined as a data address, so the receipt has
-no outside fetch).   python3 build.py        # rewrites manifest.json; then validate it:
-                     python3 ../../tools/manifest/validate.py manifest.json
-To use your own logo: replace logo.png (a small PNG, under 20 kB) and run this again."""
+"""Put receipt.html and logo.png into the manifest's receipt (the logo is inlined as a data address, so the receipt has
+no outside fetch). Edit receipt.html, or replace logo.png (a small PNG, under 20 kB), then run, from this folder:
+
+    python3 build.py
+
+It changes the receipt's layout and nothing else in the manifest. Here in the kit it writes this sample's manifest.json;
+in an app made from this sample (this file at service/<tag>/build.py) it writes the app's own manifest.json, the one the
+site installs, and the copy this sample's own tests read (tests/<tag>/_manifest.json). Then run `ivn check`."""
 import base64
 import json
 import os
+import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-html = open(os.path.join(HERE, "receipt.html"), encoding="utf-8").read()
-logo = base64.b64encode(open(os.path.join(HERE, "logo.png"), "rb").read()).decode()
-manifest = {
-    "manifest_version": 1, "app": "pp_rcp", "prefix": "PP RCP", "title": "UAE tax invoice receipt",
-    "version": "0.1.2", "publisher": "Partner Programme sample",
-    "description": "A till receipt laid out as a UAE tax invoice: the company's tax registration number and address, "
-                   "an inline logo, one line per item with its VAT rate, the taxable value at each rate, and Arabic "
-                   "beside English. It adds one field to the till sale that copies the Company's tax ID when the sale "
-                   "is saved. Set it on a POS Profile by configuration (recipe).",
-    "custom_fields": [{
-        "dt": "POS Invoice", "fieldname": "pp_rcp_company_tax_id", "fieldtype": "Data", "label": "Company tax ID (receipt)",
-        "read_only": 1, "fetch_from": "company.tax_id", "insert_after": "company_address",
-        "description": "Copied from the Company's tax ID when the sale is saved; the receipt prints it. A sale saved "
-                       "before this package was installed has none.",
-    }],
-    "print_formats": [{
-        "name": "PP RCP UAE Tax Invoice", "doc_type": "POS Invoice", "print_format_type": "Jinja",
-        "html": html.replace("@@LOGO@@", logo),
-    }],
-}
-with open(os.path.join(HERE, "manifest.json"), "w", encoding="utf-8") as f:
-    json.dump(manifest, f, ensure_ascii=False, indent=1)
-print("manifest.json written,", len(manifest["print_formats"][0]["html"]), "characters of template")
+NAME = "PP RCP UAE Tax Invoice"     # the receipt's print format (in an app made from this sample, its name there)
+
+
+def targets() -> list:
+    """The manifests that carry the receipt: the app's own and its tests' copy in a made app, else this folder's."""
+    app = os.path.dirname(os.path.dirname(HERE))
+    if os.path.isfile(os.path.join(app, "service", "dispatch.json")):         # an app New app made
+        found = [os.path.join(app, "manifest.json"), os.path.join(app, "tests", os.path.basename(HERE), "_manifest.json")]
+    else:
+        found = [os.path.join(HERE, "manifest.json")]
+    return [p for p in found if os.path.isfile(p)]
+
+
+def main() -> int:
+    html = open(os.path.join(HERE, "receipt.html"), encoding="utf-8").read()
+    logo = base64.b64encode(open(os.path.join(HERE, "logo.png"), "rb").read()).decode()
+    layout = html.replace("@@LOGO@@", logo)
+    paths = targets()
+    if not paths:
+        print("no manifest.json found to write the receipt into", file=sys.stderr)
+        return 1
+    for path in paths:
+        with open(path, encoding="utf-8") as f:
+            manifest = json.load(f)
+        formats = [p for p in manifest.get("print_formats") or [] if p.get("name") == NAME]
+        if len(formats) != 1:
+            print(f"{os.path.relpath(path)} has no print format named {NAME}: put that name back, or write its new name "
+                  "in NAME at the top of build.py", file=sys.stderr)
+            return 1
+        formats[0]["html"] = layout
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(manifest, f, ensure_ascii=False, indent=1)
+            f.write("\n")
+        print(f"{os.path.relpath(path)} written, {len(layout)} characters of template")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

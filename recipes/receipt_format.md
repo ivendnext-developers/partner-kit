@@ -24,7 +24,7 @@ A receipt prints money; it never decides money. If you need the tax authority's 
    - **The logo is inline.** `build.py` writes the small PNG into the page as a data address, so printing needs no outside fetch.
    - A template may not contain script, frames or event attributes. The checker refuses them.
 
-3. **Build and check, before anyone installs it:**
+3. **Build and check, before anyone installs it** (in an app you made from S4, run `python3 build.py` in `service/rcp/` instead: it writes the app's own `manifest.json`, then `ivn check`):
 
    ```bash
    python3 samples/s4_receipt_pack/build.py
@@ -33,7 +33,7 @@ A receipt prints money; it never decides money. If you need the tax authority's 
 
 4. **Try it** on your sandbox with `ivn try`; a customer's administrator installs it from **App library**.
 
-5. **Set the format on the till's POS Profile.** This is configuration: iVendNext Desk → **POS Profile** → open the profile → the **Print Format** field → pick your format → **Save**. ⚠ A manifest cannot do this step yet. It may not change a POS Profile: the manifest key for a register's format has not shipped. The till reads the profile's format each time it prints, so the change is live on the next receipt, with no restart.
+5. **Set the format on the till's POS Profile.** This is configuration: iVendNext Desk → **POS Profile** → open the profile → the **Print Format** field → pick your format → **Save**. ⚠ A manifest cannot do this step yet. It may not change a POS Profile: the manifest key for a register's format has not shipped. The till reads the profile's format each time it prints, so the change is live on the next receipt, with no restart. **Before the app is removed** (*Export and uninstall*), set the profile's **Print Format** back to what it was (or empty it): otherwise the profile names a format that is gone, and the till prints the sale's plain form.
 
 6. **Look at a real sale.** Book a sale on the till. Here, one item at 15% VAT and one zero-rated:
 
