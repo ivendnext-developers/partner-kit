@@ -17,6 +17,8 @@ names yet, their lines, the dishes' engine recipes (BOMs, and the recipes inside
 issue per store and day. Each issue is written FIRST, naming its sales (so a sale is never issued twice) and holding
 the parts its dishes used; then the shop's own Material Issue of those parts is made and submitted in one call. When
 the shop refuses it for want of stock, the service reads the store's stock and names every short part on the issue.
+With the time left, an issue written before 1.2.3 (its covers, turns and tips 0, its checks holding them) is given its
+day's figures from its own checks, newest day first, a few a press, so *Covers, turns and tips* reads the old days too.
 One press at a time per company: the press stamps the settings record with the shop's own ``modified`` check, and a
 second press while one runs is told so. A press starts no new set of store-days (those sharing a sale) after ``BUDGET_S`` and says what is left.
 
@@ -72,6 +74,7 @@ MOST_SALES = 400        # sales taken up by one press, oldest first; the rest wa
 CHUNK = 100             # names per read of the sales' lines (the address stays short)
 MOST_DAYS = 92          # the longest food cost period one press works out
 RETRIES = 5             # issues left Short or Refused tried again per press, after the new sales
+MOST_FILLS = 60         # issues written before 1.2.3 given their day's covers, turns and tips per press, newest day first
 APP_NAME = "Restaurant back office"
 NOT_SET_UP = (f"{APP_NAME} is not set up yet: no key from this shop has reached it. Ask your manager to check that the "
               "app's user has its key and, if the site could not reach the app, or a key was lost or changed, to press Connect again on the app.")
@@ -154,11 +157,13 @@ class Tenant:
     def doc(self, doctype: str, name: str) -> dict:
         return self._data("GET", f"{doctype}/{name}")
 
-    def rows(self, doctype: str, fields: list, filters: list, parent: str | None = None) -> list:
+    def rows(self, doctype: str, fields: list, filters: list, parent: str | None = None, or_filters: list = ()) -> list:
         """A list read; a table's rows are read through their record type (``parent``), with its read check."""
         q = {"fields": fields, "filters": filters, "limit_page_length": 0}
         if parent:
             q["parent"] = parent
+        if or_filters:
+            q["or_filters"] = list(or_filters)
         return [r for r in self._data("GET", doctype, query=q, kind=list) if isinstance(r, dict)]
 
     def rows_in(self, doctype: str, fields: list, field: str, names, filters: list = (), parent: str | None = None) -> list:
@@ -458,7 +463,39 @@ class Service:
                 break
             out[self._retry(door, company, s, old["name"], items, boms)] += 1
         out["waiting"] = max(0, len(stuck) - RETRIES)
+        if self.clock() - t0 <= BUDGET_S:
+            out["filled"] = self._fill(door, company, t0)
         return self._answer(out, left)
+
+    def _fill(self, door, company: str, t0: float) -> int:
+        """The day's covers, turns and tips on issues written before 1.2.3, which read 0 there though their checks hold
+        them, from the issue's own check rows. The list asks only for such issues with a check row holding a figure, so
+        a counter-only day (no checks) is never read again, and a filled one leaves the list. Best effort: a site whose
+        issue has no such fields yet (before the 1.2.3 update) or a read that fails books nothing and is left alone."""
+        issue, sale, filled = bo.dt("Issue"), bo.dt("Issue Sale"), 0
+        try:
+            old = door.rows(issue, ["name", "posting_date"],
+                            [["company", "=", company], ["covers", "=", 0], ["turns", "=", 0], ["tips", "=", 0]],
+                            or_filters=[[sale, f, ">", 0] for f in ("covers", "turn", "tip")])
+            day = {r["name"]: str(r.get("posting_date")) for r in old if r.get("name")}   # a row per matching check
+            names = sorted(day, key=lambda n: (day[n], n), reverse=True)[:MOST_FILLS]
+            if not names:
+                return filled
+            sums: dict = {}
+            for r in door.rows_in(sale, ["parent", "covers", "turn", "tip"], "parent", names, parent=issue):
+                c, t, tip = sums.get(r.get("parent"), (0, 0, 0.0))
+                sums[r.get("parent")] = (c + int(bo.num(r.get("covers"))), t + int(bo.num(r.get("turn"))),
+                                         tip + bo.num(r.get("tip")))
+            for name in names:
+                if self.clock() - t0 > BUDGET_S:
+                    break
+                c, t, tip = sums.get(name, (0, 0, 0.0))
+                if c or t or tip:
+                    door.update(issue, name, {"covers": c, "turns": t, "tips": round(tip, 2)})
+                    filled += 1
+        except TenantError:
+            pass
+        return filled
 
     @staticmethod
     def _answer(out: dict, left: bool = False) -> dict:
@@ -478,6 +515,9 @@ class Service:
         if out.get("waiting"):
             parts.append(f"{bo.n(out['waiting'], 'more issue waits', 'more issues wait')} to be tried again: fix them, or "
                          "mark them Left out.")
+        if out.get("filled"):
+            parts.append(f"{bo.n(out['filled'], 'earlier issue now shows its', 'earlier issues now show their')} covers, "
+                         "turns and tips.")
         if left:
             parts.append("More is waiting: press Issue ingredients again.")
         warn = left or out["short"] or out["refused"] or out.get("waiting")

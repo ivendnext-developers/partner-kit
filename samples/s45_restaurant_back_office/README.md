@@ -42,6 +42,12 @@ ivn try
 
 ## Versions
 
+### 1.2.4
+
+Manifest 0.3.3 (unchanged: the service only).
+
+- An issue written before 1.2.3 read 0 covers, 0 turns and 0.00 tips on *Covers, turns and tips*, though its checks hold them. Each press of **Issue ingredients** now gives such issues their day's covers, turns and tips from their own checks, newest day first, up to 60 issues a press with the time it has left, and says *N earlier issues now show their covers, turns and tips.* The next presses fill older days. An issue with no checks (counter sales only) keeps its 0.
+
 ### 1.2.3
 
 Manifest 0.3.3.
@@ -49,7 +55,7 @@ Manifest 0.3.3.
 - *Covers, turns and tips* shows one row per issue (a store's day, or the part of it a later press took up): its number of sales, covers, table turns, tips and sales net of tax, with a *Totals* row. Desk adds up only the rows it has loaded (20 at first), and a row per check made a day of 62 covers read 21; with a row per issue the totals are the day's. A chain with more than 20 stores picks 100 or 500 at the foot of the report first. Each check's table, server, covers and tip (the tips by server) stay on its issue, under *Checks, covers and tips*.
 - The day's sales by store are on *Covers, turns and tips*; *Sales by item* lists each line sold and has no *Totals* row.
 - The issue's count of sales reads *Number of sales*, where it read *Sales* beside *Sales (net of tax)*.
-- An issue written before 1.2.3 shows 0 covers, turns and tips; its checks keep their figures.
+- An issue written before 1.2.3 shows 0 covers, turns and tips; its checks keep their figures. 1.2.4 fills them over the next presses, newest day first.
 
 ### 1.2.2
 
