@@ -1,6 +1,6 @@
 # S59 — Kitchen screen (station screens, an expo and a Now serving board)
 
-The kitchen runs from screens instead of paper. When a till presses *Send*, each station's ticket shows on that station's screen, oldest first, with how long it has waited. A cook taps it **Start**, then **Ready**, then **Bump**. At the pass, an expo screen shows every station's tickets of one order together and adds up what is still to make. A *Now serving* board shows the call numbers that are ready. A cook can mark any dish **sold out**, found by name before anyone orders it, and the tills stop selling it at once. A ticket shows the sale's service mode (*To go*). The app never voids, comps, changes a line or touches money.
+The kitchen runs from screens instead of paper. When a till presses *Send*, each station's ticket shows on that station's screen, oldest first, with how long it has waited. A cook taps it **Start**, then **Ready**, then **Bump**. At the pass, an expo screen shows every station's tickets of one order together and adds up what is still to make. A *Now serving* board shows the call numbers that are ready. A cook can mark any dish **sold out**, found by name before anyone orders it, and the tills stop selling it within about a minute. A ticket shows the sale's service mode (*To go*). The app never voids, comps, changes a line or touches money.
 
 ![A station screen on a tablet: the grill's tickets, oldest first, each with its timer](screenshots/01_station.png)
 
@@ -40,6 +40,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.3.6
+
+- A dish marked sold out stops the tills within about a minute, not at once. Words only; the service and the manifest are unchanged (manifest 0.3.4).
 
 ### 1.3.5
 
