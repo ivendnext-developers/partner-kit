@@ -84,6 +84,11 @@ def _load(tag: str):
         part_shops.ALIASES.update(m.get("aliases") or {})
         path, _, attr = m["handler"].rpartition(".")
         file = os.path.join(HERE, *path.split("/")) + ".py"
+        # the part's own modules win over a name the app already holds: a host imports this file as ``service.app``, so
+        # ``service`` is the app's folder, and S3's ``import service`` (its own service.py) would find that folder instead
+        for name in os.listdir(os.path.dirname(file)):
+            if name.endswith(".py"):
+                sys.modules.pop(name[:-3], None)
         sys.path.insert(0, os.path.dirname(file))
         spec = importlib.util.spec_from_file_location(f"ivn_part_{tag}", file)
         module = importlib.util.module_from_spec(spec)
@@ -253,7 +258,9 @@ def lambda_handler(event, context=None):
         tag, name = (DISPATCH.get("schedules") or {}).get(str(event["ivn_schedule"])) or [None, None]
         if str(event["ivn_schedule"]) == FEED.get("schedule") or (tag in READERS and name == READERS[tag].get("pass")):
             out = feed_pass(context)
-            print(json.dumps({"schedule": event["ivn_schedule"], "feed": out.get("feed")}, default=str), flush=True)
+            failed = {t: o["error"] for t, o in out.items() if t != "feed" and isinstance(o, dict) and o.get("error")}
+            print(json.dumps({"schedule": event["ivn_schedule"], "feed": out.get("feed"), **({"failed": failed} if failed else {})},
+                             default=str), flush=True)      # a part that failed to load or run is named in Logs
             return {"schedule": event["ivn_schedule"], **out}
         if tag not in MOUNTS or not MOUNTS[tag].get("handler"):
             return {"schedule": event["ivn_schedule"], "error": "no part has this schedule"}
