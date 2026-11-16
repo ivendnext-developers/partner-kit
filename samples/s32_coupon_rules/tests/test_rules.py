@@ -48,6 +48,22 @@ class Counter:
         return self.sales.get(customer, 0)
 
 
+WORDS = ("IN_GROUP", "ADD_CUSTOMER", "NEW_CUSTOMER", "ADD_TO_SALE", "ON_REFUND", "ON_REFUND_MANY")   # coupons.py's next steps
+
+
+def cut_short(reason, step):
+    """``None``, or, when the till's 140 characters cut a refusal before its next step ends, which word to shorten and
+    how many characters that refusal leaves it (the README's *The words the cashier reads*)."""
+    if reason.endswith(step) or not reason.endswith("…"):
+        return None
+    cut = reason[:-1].rstrip()
+    start = next((i for i in range(len(cut)) if step.startswith(cut[i:])), len(cut) + 1)
+    word = next((k for k in WORDS if getattr(coupons, k) == step), "its next step")
+    return (f"The till shows {coupons.TEXT_MAX} characters at most and cut this refusal short: {word} in coupons.py is "
+            f"{len(step)} characters, and this refusal leaves it {coupons.TEXT_MAX - start}. Shorten {word}. "
+            f"The refusal: {reason}")
+
+
 def refused(case, out, step, *facts, absent=(), amounts=()):
     """The refusal's facts, never its sentence, so a partner may reword what the cashier reads (README, *What to change*)
     and these tests stay green: the answer refuses; the reason ends with ``step``, the next step named once in
@@ -56,6 +72,9 @@ def refused(case, out, step, *facts, absent=(), amounts=()):
     plain text the till accepts, 1 to 140 characters, whole (never cut short with an ellipsis)."""
     case.assertEqual(out["verdict"], "refuse", out)
     reason = out["reason"]
+    too_long = cut_short(reason, step)
+    if too_long:
+        case.fail(too_long)
     case.assertTrue(reason.endswith(step), (step, reason))
     for amount in amounts:
         case.assertIn(amount, reason)
@@ -63,7 +82,12 @@ def refused(case, out, step, *facts, absent=(), amounts=()):
         case.assertLess(reason.index(amounts[0]), reason.index(amounts[1]), reason)
     case.assertTrue(1 <= len(reason) <= coupons.TEXT_MAX and not reason.endswith("…"), reason)
     case.assertFalse(set("<>") & set(reason), reason)
+    word = next((k for k in WORDS if getattr(coupons, k) == step), "its next step")
     for fact in facts:
+        if fact not in reason and reason.startswith(("This coupon ", "These ")):
+            case.fail(f"{fact} is not in the refusal: to keep the amounts and {word} whole in the till's "
+                      f"{coupons.TEXT_MAX} characters, the refusal left the coupon's name out. Shorten {word} in "
+                      f"coupons.py ({len(step)} characters) so the name fits. The refusal: {reason}")
         case.assertIn(fact, reason)
     for fact in absent:
         case.assertNotIn(fact, reason)

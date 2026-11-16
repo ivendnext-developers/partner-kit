@@ -18,7 +18,7 @@ What a partner usually changes:
 
 - **The rules:** `on_check` in `coupons.py`, and `rules_of`, which reads the retailer's rule records.
 - **The rule's fields:** the record type `PP CPN Rule` in `manifest.json`, one per coupon, named by it. Desk shows it as *Coupon rule* through the manifest's `translations` block.
-- **The words the cashier reads:** the messages in `coupons.py`; what the cashier does next ends each one and is named once at the top (`IN_GROUP`, `ADD_CUSTOMER`, `NEW_CUSTOMER`, `ADD_TO_SALE`, `ON_REFUND`, `ON_REFUND_MANY`). The tests check each refusal's facts (its next step, the coupon, the group, the amounts in order, and that it fits the till's 140 characters whole), not its sentence, so a new wording keeps them green.
+- **The words the cashier reads:** the messages in `coupons.py`; what the cashier does next ends each one and is named once at the top (`IN_GROUP`, `ADD_CUSTOMER`, `NEW_CUSTOMER`, `ADD_TO_SALE`, `ON_REFUND`, `ON_REFUND_MANY`). The tests check each refusal's facts (its next step, the coupon, the group, the amounts in order, and that it fits the till's 140 characters whole), not its sentence, so a new wording keeps them green. The till shows 140 characters at most and the coupon, the group and the amounts take the rest, so keep each next step to about 40 characters, as they are now (35 to 43). A wording too long turns the tests red with a message that names the word to shorten and how many characters its refusal leaves it.
 - **The app's id:** `IVN_LIBRARY_APP` in `app.json`.
 
 More: the [recipe](../../recipes/coupon_rules.md).
@@ -41,6 +41,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.2.4
+
+- The README says how long the cashier's next steps may be: the till shows 140 characters at most, so keep each to about 40, as they are now. A wording too long turns the tests red with a message that names the word to shorten in `coupons.py` and how many characters its refusal leaves it, or says the coupon's name was left out to fit. No service, rule or manifest change (manifest 0.3.3).
 
 ### 1.2.3
 
