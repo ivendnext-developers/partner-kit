@@ -404,7 +404,7 @@ class T(unittest.TestCase):
         self.assertFalse([f for f in fields.values() if (f.get("fetch_from") or "").startswith("store.")])
 
     def test_its_roles_read_apart_from_s11s_on_a_site_running_both(self):
-        # S11's copy in the App library (price change approvals) names its roles Price requester, Price applier and Price
+        # the App library's Price change approvals (ivendnext_apr) names its roles Price requester, Price applier and Price
         # approver; on a site running both, the same words made two of each side by side in Desk's Roles list
         m = json.loads((HERE.parent / "manifest.json").read_text())
         (en,) = [t["words"] for t in m["translations"] if t["language"] == "en"]

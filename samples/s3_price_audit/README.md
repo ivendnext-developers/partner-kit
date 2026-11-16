@@ -40,6 +40,10 @@ ivn try
 
 ## Versions
 
+### 1.1.4
+
+- An app made from S3 runs its audit when hosted: a host loads the app's service as `service.app`, so the app's `service` folder hid S3's own `service.py` and the part never loaded (*module 'service' has no attribute 'DEFAULT_THRESHOLD'*). New app now loads each part with its own modules first. S3 itself is unchanged. An app made before this: press *Add a sample* with S3 again, or make it again, to take the service that runs the audit hosted.
+
 ### 1.1.3
 
 - Desk shows plain names (Price deviation, Price deviations this month) through the manifest's `translations` block, so a search for *price deviation* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.3.2.

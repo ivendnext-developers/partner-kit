@@ -258,7 +258,9 @@ def lambda_handler(event, context=None):
         tag, name = (DISPATCH.get("schedules") or {}).get(str(event["ivn_schedule"])) or [None, None]
         if str(event["ivn_schedule"]) == FEED.get("schedule") or (tag in READERS and name == READERS[tag].get("pass")):
             out = feed_pass(context)
-            print(json.dumps({"schedule": event["ivn_schedule"], "feed": out.get("feed")}, default=str), flush=True)
+            failed = {t: o["error"] for t, o in out.items() if t != "feed" and isinstance(o, dict) and o.get("error")}
+            print(json.dumps({"schedule": event["ivn_schedule"], "feed": out.get("feed"), **({"failed": failed} if failed else {})},
+                             default=str), flush=True)      # a part that failed to load or run is named in Logs
             return {"schedule": event["ivn_schedule"], **out}
         if tag not in MOUNTS or not MOUNTS[tag].get("handler"):
             return {"schedule": event["ivn_schedule"], "error": "no part has this schedule"}

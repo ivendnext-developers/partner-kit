@@ -971,7 +971,13 @@ class ReadersUnderTheirNames(Base):
     LAMBDA = ("import importlib, json, os, sys\n"           # as a function host does: service.app from the app's folder
               "sys.path.insert(0, os.getcwd())\n"
               "m = importlib.import_module('service.app')\n"
-              "print(json.dumps(m.lambda_handler({'ivn_schedule': 'feed'}), default=str))\n")
+              "feed = m.lambda_handler({'ivn_schedule': 'feed'})\n"
+              "try:\n"                                          # the site's connect, which loads a part too
+              "    c = m.lambda_handler(dict(httpMethod='POST', path='/ivendnext/connect', headers={}, body='{}',\n"
+              "                              isBase64Encoded=False))['statusCode']\n"
+              "except Exception as e:\n"
+              "    c = type(e).__name__\n"
+              "print(json.dumps({'feed': feed, 'connect': c}, default=str))\n")
 
     def test_s3s_part_loads_as_a_host_loads_the_app(self):  # F-TH-19: S3's own service.py, not the app's service/ folder
         for samples in (["s3_price_audit"], ["s3_price_audit", "s14_approvals_stores"]):
@@ -982,7 +988,22 @@ class ReadersUnderTheirNames(Base):
                 r = subprocess.run([sys.executable, "-I", "-c", self.LAMBDA], cwd=folder, env=env, capture_output=True,
                                    text=True, timeout=120)
                 out = json.loads(r.stdout.strip().splitlines()[-1])
-                self.assertEqual(out["pdo"], {"schedule": "pass", "shops": 0}, r.stderr[-1500:])   # it was {"error": "AttributeError"}
+                self.assertEqual(out["feed"]["pdo"], {"schedule": "pass", "shops": 0}, r.stderr[-1500:])   # was {"error": "AttributeError"}
+                self.assertIsInstance(out["connect"], int, out)                 # it raised before: the part never loaded
+                self.assertLess(out["connect"], 500, out)                        # an unsigned connect is refused, not a fault
+                logged = [json.loads(l) for l in r.stdout.splitlines() if l.startswith('{"schedule": "feed"')]
+                self.assertEqual([("failed" in l) for l in logged], [False])      # the feed's log line names no failed part
+
+    def test_the_feeds_log_line_names_a_part_that_failed_to_load(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = combine.combine(["s3_price_audit"], "ACME ONE", pathlib.Path(tmp))
+            (folder / "service" / "pdo" / "outside" / "service.py").write_text("raise ImportError('broken on purpose')\n")
+            env = {"PATH": os.environ.get("PATH", ""), "IVN_LIBRARY_APP": "acme_one", "PP_STATE": tmp,
+                   "IVN_SHOPS_FILE": str(pathlib.Path(tmp) / "s.json"), "PDO_PREFIX": "ACME ONE"}
+            r = subprocess.run([sys.executable, "-I", "-c", self.LAMBDA], cwd=folder, env=env, capture_output=True,
+                               text=True, timeout=120)
+            logged = [json.loads(l) for l in r.stdout.splitlines() if l.startswith('{"schedule": "feed"')]
+            self.assertEqual([l.get("failed") for l in logged], [{"pdo": "ImportError"}], r.stdout[-1500:])
 
 
 class ThreeSamples(Base):

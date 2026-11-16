@@ -44,7 +44,7 @@ BASE=https://shop.example AP_KEY=… AP_SECRET=… LIMIT_PCT=10 python3 approval
 
 ### 0.3.6
 
-- Desk names the requester and applier roles *Store price requester* and *Store price applier* (the `translations` block; the stored names are unchanged), as the approver already reads *Store price approver*: on a site that also runs S11's *Price change approvals*, two *Price requester* and two *Price applier* roles sat side by side. Manifest 0.3.6.
+- Desk names the requester and applier roles *Store price requester* and *Store price applier* (the `translations` block; the stored names are unchanged), as the approver already reads *Store price approver*: on a site that also runs the App library's *Price change approvals* (`ivendnext_apr`), two *Price requester* and two *Price applier* roles sat side by side. The library's *Price change approvals across stores* gets the same words in its own 1.0.8. Manifest 0.3.6.
 
 ### 0.3.5
 
