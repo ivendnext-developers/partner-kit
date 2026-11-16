@@ -391,6 +391,28 @@ class T(unittest.TestCase):
         m = json.loads((HERE.parent / "manifest.json").read_text())
         self.assertIn({"doctype": "Price List", "role": "PP APS Requester", "rights": ["read", "select"]}, m["role_rights"])
 
+    def test_a_requester_can_pick_the_store_and_head_office_can_filter_by_it(self):
+        # a requester who holds no till role met *No permission for POS Profile* on the Store box: select lists the stores
+        # (the requester's own, under its User Permission); the list's Store filter asks the same for head office, who sees
+        # every store. The store manager is fenced to one store and needs none. Nothing on the form reads a POS Profile's fields
+        m = json.loads((HERE.parent / "manifest.json").read_text())
+        rows = [r for r in m["role_rights"] if r["doctype"] == "POS Profile"]
+        self.assertEqual(rows, [{"doctype": "POS Profile", "role": "PP APS Requester", "rights": ["select"]},
+                                {"doctype": "POS Profile", "role": "PP APS Head Office", "rights": ["select"]}])
+        fields = {f["fieldname"]: f for d in m["doctypes"] for f in d["fields"]}
+        self.assertEqual(fields["store"]["options"], "POS Profile")
+        self.assertFalse([f for f in fields.values() if (f.get("fetch_from") or "").startswith("store.")])
+
+    def test_the_appliers_step_says_it_only_records_a_price_set_elsewhere(self):
+        # *Apply* read as if it set the price: the request said *Applied* while the price list kept the old price
+        m = json.loads((HERE.parent / "manifest.json").read_text())
+        (en,) = [t["words"] for t in m["translations"] if t["language"] == "en"]
+        self.assertEqual((en["PP APS Apply"], en["PP APS Applied"]), ("Mark price set", "Price set"))
+        new_rate = next(f for d in m["doctypes"] for f in d["fields"] if f["fieldname"] == "new_rate")
+        self.assertIn("never changes a price by itself", new_rate["description"])
+        self.assertIn("Mark price set", new_rate["description"])
+        self.assertIn("PP APS Applied", [s["state"] for w in m["workflows"] for s in w["states"]])   # the stored name stays
+
     def test_the_english_words_cover_every_name_the_store_sees(self):   # Desk shows people's words, never the code
         with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "manifest.json"), encoding="utf-8") as f:
             m = json.load(f)
