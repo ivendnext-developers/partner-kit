@@ -77,7 +77,7 @@ class FakeTenant:
             return copy.deepcopy(self.foodcosts[name])
         raise app.TenantError("404", 404)
 
-    def rows(self, doctype, fields, filters, parent=None):
+    def rows(self, doctype, fields, filters, parent=None, or_filters=()):
         self._gate(f"LIST {doctype}")
         if doctype == "POS Invoice":
             out = [s for s in self.sales if s["company"] == CO]
@@ -110,8 +110,15 @@ class FakeTenant:
             assert parent == "BOM", "a table is read through its record type"
             names = next(v for f, op, v in filters if f == "parent")
             return [dict(r, parent=n) for n, b in self.boms.items() if n in names for r in b["items"]]
+        if doctype.endswith(" Issue Sale"):
+            assert parent and parent.endswith(" Issue"), "a table is read through its record type"
+            names = next(v for f, op, v in filters if f == "parent")
+            return [{k: dict(c, parent=n).get(k) for k in fields} for n, i in self.issues.items() if n in names
+                    for c in i.get("checks") or []]
         if doctype.endswith(" Issue"):
             out = list(self.issues.values())
+            if or_filters:          # [table, field, ">", 0]: an issue with a check row holding one
+                out = [i for i in out if any(c.get(f) > v for _t, f, _op, v in or_filters for c in i.get("checks") or [])]
             for f, op, v in filters:
                 out = [i for i in out if (i.get(f) in v if op == "in" else i.get(f) >= v if op == ">=" else
                                           (v[0] <= i.get(f) <= v[1]) if op == "between" else

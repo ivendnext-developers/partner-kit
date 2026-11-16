@@ -222,6 +222,10 @@ CANARIES = [
      '        if path in SUBS:\n            return self.press(path, headers, raw)\n',
      '        if testcall.is_test(headers):\n            return testcall.answer("x")\n        if path in SUBS:\n            return self.press(path, headers, raw)\n',
      "test_service.TestCall.test_a_signed_test_call_to_a_route_the_service_does_not_have_is_404"),
+    # an issue written before 1.2.3 is given its day's figures from its checks
+    ("an old issue is filled from its checks", S,
+     '                    door.update(issue, name, {"covers": c, "turns": t, "tips": round(tip, 2)})',
+     "                    pass", T + "test_i20c_issues_written_before_1_2_3_get_their_days_figures_from_their_checks"),
 ]
 
 

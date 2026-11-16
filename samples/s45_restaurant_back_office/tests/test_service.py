@@ -131,6 +131,57 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual((iss["covers"], iss["turns"], iss["tips"]), (4, 1, 13.5))    # the day's figures the report reads
         self.assertEqual({ln["sale"]: ln["server"] for ln in iss["lines"]}, {"S1": "sam@x", "S2": "ben@x"})
 
+    def test_i20c_issues_written_before_1_2_3_get_their_days_figures_from_their_checks(self):
+        shop = fs.FakeTenant(sales=[])
+        old = {"company": fs.CO, "status": "Issued", "covers": 0, "turns": 0, "tips": 0, "sales": ""}
+        shop.issues = {
+            "RBO-ISS-00001": dict(old, name="RBO-ISS-00001", posting_date="2026-10-20",
+                                  checks=[{"sale": "A", "covers": 4, "turn": 1, "tip": 12.5},
+                                          {"sale": "B", "covers": 0, "turn": 0, "tip": 1.0}]),
+            "RBO-ISS-00002": dict(old, name="RBO-ISS-00002", posting_date="2026-10-21",
+                                  checks=[{"sale": "C", "covers": 0, "turn": 0, "tip": 2.25}]),   # a check's later sale
+            "RBO-ISS-00003": dict(old, name="RBO-ISS-00003", posting_date="2026-10-21", checks=[]),   # counter sales only
+            "RBO-ISS-00004": dict(old, name="RBO-ISS-00004", posting_date="2026-10-21", covers=3, turns=1, tips=5.0,
+                                  checks=[{"sale": "D", "covers": 3, "turn": 1, "tip": 5.0}])}    # written by 1.2.3
+        code, out = self.issue(shop)
+        self.assertEqual(code, 200, out)
+        got = {n: (i["covers"], i["turns"], i["tips"]) for n, i in shop.issues.items()}
+        self.assertEqual(got, {"RBO-ISS-00001": (4, 1, 13.5), "RBO-ISS-00002": (0, 0, 2.25),
+                               "RBO-ISS-00003": (0, 0, 0), "RBO-ISS-00004": (3, 1, 5.0)})
+        self.assertIn("2 earlier issues now show their covers, turns and tips.", out["message"]["body"])
+        shop.calls.clear()
+        code, out = self.issue(shop)                                     # filled once: the next press writes none
+        self.assertNotIn("PUT PP RBO Issue", shop.calls)
+        self.assertEqual(out["message"]["body"], "Nothing new to issue.")
+
+    def test_i20e_the_fill_takes_the_newest_day_first_and_stops_at_the_budget(self):
+        def old_issues():
+            return {n: {"name": n, "company": fs.CO, "status": "Issued", "sales": "", "posting_date": d,
+                        "covers": 0, "turns": 0, "tips": 0, "checks": [{"sale": n, "covers": 2, "turn": 1, "tip": 1.0}]}
+                    for n, d in (("RBO-ISS-00001", "2026-10-19"), ("RBO-ISS-00002", "2026-10-21"))}
+        shop = fs.FakeTenant(sales=[])
+        shop.issues = old_issues()
+        most, app.MOST_FILLS = app.MOST_FILLS, 1
+        try:
+            self.issue(shop)
+        finally:
+            app.MOST_FILLS = most
+        self.assertEqual([i["covers"] for i in shop.issues.values()], [0, 2])          # the newer day first
+        shop = fs.FakeTenant(sales=[])
+        shop.issues = old_issues()
+        self.issue(shop, clock=Clock(step=3.0))                                           # no time left: nothing written
+        self.assertNotIn("PUT PP RBO Issue", shop.calls)
+
+    def test_i20d_a_fill_that_cannot_read_the_checks_leaves_the_press_as_it_was(self):
+        shop = fs.FakeTenant(refuse=("LIST PP RBO Issue Sale", 403))
+        shop.issues = {"RBO-ISS-00009": {"name": "RBO-ISS-00009", "company": fs.CO, "status": "Issued", "sales": "",
+                                         "posting_date": "2026-10-20", "covers": 0, "turns": 0, "tips": 0,
+                                         "checks": [{"sale": "A", "covers": 4, "turn": 1, "tip": 12.5}]}}
+        code, out = self.issue(shop)
+        self.assertEqual(code, 200, out)
+        self.assertIn("Issued the ingredients of 1 store-day", out["message"]["body"])
+        self.assertEqual(shop.issues["RBO-ISS-00009"]["covers"], 0)
+
     def test_i20b_a_site_that_has_not_given_the_check_reads_still_books_its_issue(self):
         shop = fs.FakeTenant(refuse=("LIST Retail Open Check", 403))   # 1.0.x's rights: no read on the till's checks yet
         shop.sales[0].update(custom_mpos_check="CHK1")
