@@ -37,11 +37,16 @@ ivn try
 
 ## Try it at the till
 
-- Sell a prescription lens to a customer with no valid prescription; the till stops it at Pay.
+- First, in iVendNext Desk, open the item group of your prescription lenses and set *Sold against a prescription* to *Spectacles*: until a group carries the mark, the till sells its lenses to anyone.
+- Sell a lens from that group to a customer with no valid prescription; the till stops it at Pay.
 - In Desk, enter the customer's prescription, then try again.
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.1.6
+
+- *Try it at the till* starts with marking the lens item group *Spectacles*: the first sale of a try went through, as no group carried the mark. Words only; the service and the manifest are unchanged (manifest 0.2.5).
 
 ### 1.1.5
 
