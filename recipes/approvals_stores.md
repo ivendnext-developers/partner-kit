@@ -17,7 +17,7 @@ This recipe is [Approvals by workflow](approvals.md) (S11) grown for a chain. A 
    - a workflow of five states: *Requested → Store Approved → Head Office Approved → Applied*, and *Rejected*. The store manager approves or rejects; head office approves (from *Requested* or *Store Approved*) or rejects (from any); the service applies from either approved state.
    Every row writes all nine rights out. The store manager, head office and service can read and write requests.
 
-3. **Fence each person to their store — in the retailer's iVendNext.** For every requester and store manager, one *User Permission* on *POS Profile* (their store). iVendNext then shows them, and lets them approve, their own store's requests only; a requester cannot raise a request for another store. Head office and the service have no store fence: they see all stores.
+3. **Fence each person to their store — in the retailer's iVendNext.** For every requester and store manager, one *User Permission* on *POS Profile* (their store). iVendNext then shows them, and lets them approve, their own store's requests only; a requester cannot raise a request for another store. Head office and the service have no store fence: they see all stores. The install gives the requester select on *POS Profile* (`role_rights`), so the *Store* box lists the stores their User Permission allows.
 
    What each person sees: the store manager ![store manager's list](../samples/s14_approvals_stores/screenshots/01_list_store_manager.png) and head office ![head office's list](../samples/s14_approvals_stores/screenshots/02_list_head_office.png).
 
@@ -25,7 +25,7 @@ This recipe is [Approvals by workflow](approvals.md) (S11) grown for a chain. A 
 
 5. **The service's key:** read and write on *Item Price*, fenced by a *User Permission* on the price lists it serves (*Applicable For* *Item Price* only), plus read and write on the request type (its workflow action saves the request). It cannot raise a request.
 
-6. **Run the outside service** (`approvals_stores.py apply`) as often as you like. For each request in *Store Approved* or *Head Office Approved*, oldest first, it checks, and only then writes the price and takes the *Apply* action — once, and a rerun after a kill finishes it without writing the price again. It refuses and says why:
+6. **Run the outside service** (`approvals_stores.py apply`) as often as you like. For each request in *Store Approved* or *Head Office Approved*, oldest first, it checks, and only then writes the price and takes the *Apply* action (Desk shows it as **Mark price set**) — once, and a rerun after a kill finishes it without writing the price again. It refuses and says why:
    - It refuses a request whose item, price list, price or **store** changed after it was raised; ten or more recorded changes; no recorded approval; no or two price rows;
    - **an approval given by the person who raised the request — at any step, not only the last**;
    - **a store approval whose price row changed after the approval** (an earlier request applied, another role's edit): the limit was judged against a price that is gone, so the manager rejects it and it is raised again. This stops two requests approved side by side adding up past the limit — two +10% requests would otherwise make +21%; requests approved one after another each still move the price by up to the limit (below). A head-office approval names the price it wants and is applied whatever the row holds;
@@ -33,6 +33,8 @@ This recipe is [Approvals by workflow](approvals.md) (S11) grown for a chain. A 
    - **a request rejected while the service was applying it**: the action fails, and the service puts the price back and says so — within one run. If a run was killed after writing the price and the request is rejected before the next run, no run looks at it again: check that price row by hand.
 
    A refusal is written only in the service's report: keep the report. The request's own history shows who approved at each step and the service's *Apply*.
+
+   Where the service does not run (Try does not run it), the *Price applier* sets the price on its price list (Item Price) first, then presses **Mark price set**: the button records the step and writes no price.
 
    What it looks like: the manager's action ![the manager approves](../samples/s14_approvals_stores/screenshots/03_store_manager_approves.png), a change within the limit applied ![applied](../samples/s14_approvals_stores/screenshots/04_applied_within_limit.png), a change above the limit waiting ![waiting for head office](../samples/s14_approvals_stores/screenshots/05_over_limit_waits_for_head_office.png), then head office's yes and the service's apply ![applied after head office](../samples/s14_approvals_stores/screenshots/06_applied_after_head_office.png), and the price row ![the price row](../samples/s14_approvals_stores/screenshots/07_the_price_row.png).
 

@@ -3,7 +3,7 @@
  "app": "pp_aps",
  "prefix": "PP APS",
  "title": "Price change approvals across stores",
- "version": "0.3.4",
+ "version": "0.3.5",
  "publisher": "Partner Programme sample",
  "description": "A request to change a selling price names its STORE and moves Requested -> Store Approved -> Head Office Approved -> Applied by a native workflow. A store manager sees and approves only their own store's requests (a User Permission on the store, one per person); head office sees all. An outside service applies an approved change through the record API: within the store's limit (a percentage it reads from its own setting), or whatever head office approved.",
  "doctypes": [
@@ -50,6 +50,7 @@
      "fieldname": "new_rate",
      "fieldtype": "Currency",
      "label": "New price",
+     "description": "The request never changes a price by itself. Once it is approved, the app's service writes this price on its price list (Item Price); where the service does not run, the Price applier sets it there first, then presses Mark price set.",
      "options": "currency",
      "reqd": 1,
      "in_list_view": 1,
@@ -245,7 +246,8 @@
   }
  ],
  "role_rights": [
-  {"doctype": "Price List", "role": "PP APS Requester", "rights": ["read", "select"]}
+  {"doctype": "Price List", "role": "PP APS Requester", "rights": ["read", "select"]},
+  {"doctype": "POS Profile", "role": "PP APS Requester", "rights": ["select"]}
  ],
  "translations": [
   {
@@ -257,12 +259,12 @@
     "PP APS Store Approved": "Store approved",
     "PP APS Head Office Approved": "Head office approved",
     "PP APS Rejected": "Rejected",
-    "PP APS Applied": "Applied",
+    "PP APS Applied": "Price set",
     "PP APS Store Approve": "Approve for the store",
     "PP APS Head Office Approve": "Approve for head office",
     "PP APS Reject": "Reject",
     "PP APS Head Office Reject": "Reject for head office",
-    "PP APS Apply": "Apply",
+    "PP APS Apply": "Mark price set",
     "PP APS Requester": "Price requester",
     "PP APS Applier": "Price applier",
     "PP APS Head Office": "Head office price approver",
