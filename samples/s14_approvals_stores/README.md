@@ -25,7 +25,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/approvals_stores.md).
 
-**The customer sets:** who holds each role, each store manager's and requester's store (a User Permission), and the limit. Where no service runs, give *Price applier* to someone who already edits prices (it brings no right of its own on Item Price), and mark a request over the limit only after head office approved it.
+**The customer sets:** who holds each role, each store manager's and requester's store (a User Permission), and the limit. Where no service runs, give *Store price applier* to someone who already edits prices (it brings no right of its own on Item Price), and mark a request over the limit only after head office approved it.
 
 ## Run it
 
@@ -34,13 +34,17 @@ ivn check
 ivn try
 ```
 
-To apply approved requests, run this from `service/aps/` in the app you made (Try does not run it). Where it does not run, the *Price applier* sets the price on its price list (Item Price) first, then presses **Mark price set**: the button only records it.
+To apply approved requests, run this from `service/aps/` in the app you made (Try does not run it). Where it does not run, the *Store price applier* sets the price on its price list (Item Price) first, then presses **Mark price set**: the button only records it.
 
 ```bash
 BASE=https://shop.example AP_KEY=… AP_SECRET=… LIMIT_PCT=10 python3 approvals_stores.py apply
 ```
 
 ## Versions
+
+### 0.3.6
+
+- Desk names the requester and applier roles *Store price requester* and *Store price applier* (the `translations` block; the stored names are unchanged), as the approver already reads *Store price approver*: on a site that also runs S11's *Price change approvals*, two *Price requester* and two *Price applier* roles sat side by side. Manifest 0.3.6.
 
 ### 0.3.5
 

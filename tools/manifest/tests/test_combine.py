@@ -968,6 +968,22 @@ class ReadersUnderTheirNames(Base):
         log = OneReader.drive(self, "unreachable", folder)["log"]       # each part opens the shop and reaches its feed
         self.assertEqual(sorted(line["error"].split()[0] for line in log if "site" in line), ["unreachable:", "unreachable:"])
 
+    LAMBDA = ("import importlib, json, os, sys\n"           # as a function host does: service.app from the app's folder
+              "sys.path.insert(0, os.getcwd())\n"
+              "m = importlib.import_module('service.app')\n"
+              "print(json.dumps(m.lambda_handler({'ivn_schedule': 'feed'}), default=str))\n")
+
+    def test_s3s_part_loads_as_a_host_loads_the_app(self):  # F-TH-19: S3's own service.py, not the app's service/ folder
+        for samples in (["s3_price_audit"], ["s3_price_audit", "s14_approvals_stores"]):
+            with self.subTest(samples), tempfile.TemporaryDirectory() as tmp:
+                folder = combine.combine(samples, "ACME ONE", pathlib.Path(tmp))
+                env = {"PATH": os.environ.get("PATH", ""), "IVN_LIBRARY_APP": "acme_one", "PP_STATE": tmp,
+                       "IVN_SHOPS_FILE": str(pathlib.Path(tmp) / "s.json"), "PDO_PREFIX": "ACME ONE"}
+                r = subprocess.run([sys.executable, "-I", "-c", self.LAMBDA], cwd=folder, env=env, capture_output=True,
+                                   text=True, timeout=120)
+                out = json.loads(r.stdout.strip().splitlines()[-1])
+                self.assertEqual(out["pdo"], {"schedule": "pass", "shops": 0}, r.stderr[-1500:])   # it was {"error": "AttributeError"}
+
 
 class ThreeSamples(Base):
     def test_three_samples_with_a_manifest_only_one(self):

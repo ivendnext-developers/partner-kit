@@ -34,7 +34,7 @@ This recipe is [Approvals by workflow](approvals.md) (S11) grown for a chain. A 
 
    A refusal is written only in the service's report: keep the report. The request's own history shows who approved at each step and the service's *Apply*.
 
-   Where the service does not run (Try does not run it), the *Price applier* sets the price on its price list (Item Price) first, then presses **Mark price set**: the button records the step and writes no price. Give *Price applier* to someone who already edits prices (the role brings no right on Item Price), and mark a request over the limit only after head office approved it: by hand, no service checks the limit.
+   Where the service does not run (Try does not run it), the *Store price applier* sets the price on its price list (Item Price) first, then presses **Mark price set**: the button records the step and writes no price. Give *Store price applier* to someone who already edits prices (the role brings no right on Item Price), and mark a request over the limit only after head office approved it: by hand, no service checks the limit.
 
    What it looks like: the manager's action ![the manager approves](../samples/s14_approvals_stores/screenshots/03_store_manager_approves.png), a change within the limit applied ![applied](../samples/s14_approvals_stores/screenshots/04_applied_within_limit.png), a change above the limit waiting ![waiting for head office](../samples/s14_approvals_stores/screenshots/05_over_limit_waits_for_head_office.png), then head office's yes and the service's apply ![applied after head office](../samples/s14_approvals_stores/screenshots/06_applied_after_head_office.png), and the price row ![the price row](../samples/s14_approvals_stores/screenshots/07_the_price_row.png).
 

@@ -84,6 +84,11 @@ def _load(tag: str):
         part_shops.ALIASES.update(m.get("aliases") or {})
         path, _, attr = m["handler"].rpartition(".")
         file = os.path.join(HERE, *path.split("/")) + ".py"
+        # the part's own modules win over a name the app already holds: a host imports this file as ``service.app``, so
+        # ``service`` is the app's folder, and S3's ``import service`` (its own service.py) would find that folder instead
+        for name in os.listdir(os.path.dirname(file)):
+            if name.endswith(".py"):
+                sys.modules.pop(name[:-3], None)
         sys.path.insert(0, os.path.dirname(file))
         spec = importlib.util.spec_from_file_location(f"ivn_part_{tag}", file)
         module = importlib.util.module_from_spec(spec)

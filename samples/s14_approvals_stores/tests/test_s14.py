@@ -403,6 +403,16 @@ class T(unittest.TestCase):
         self.assertEqual(fields["store"]["options"], "POS Profile")
         self.assertFalse([f for f in fields.values() if (f.get("fetch_from") or "").startswith("store.")])
 
+    def test_its_roles_read_apart_from_s11s_on_a_site_running_both(self):
+        # S11's copy in the App library (price change approvals) names its roles Price requester, Price applier and Price
+        # approver; on a site running both, the same words made two of each side by side in Desk's Roles list
+        m = json.loads((HERE.parent / "manifest.json").read_text())
+        (en,) = [t["words"] for t in m["translations"] if t["language"] == "en"]
+        self.assertEqual((en["PP APS Requester"], en["PP APS Applier"], en["PP APS Store Manager"]),
+                         ("Store price requester", "Store price applier", "Store price approver"))
+        roles = {en[r] for d in m["doctypes"] for r in {p["role"] for p in d["permissions"]} if r in en}
+        self.assertFalse(roles & {"Price requester", "Price applier", "Price approver"})
+
     def test_the_appliers_step_says_it_only_records_a_price_set_elsewhere(self):
         # *Apply* read as if it set the price: the request said *Applied* while the price list kept the old price
         m = json.loads((HERE.parent / "manifest.json").read_text())
