@@ -14,10 +14,10 @@ This recipe is [Approvals by workflow](approvals.md) (S11) grown for a chain. A 
 
 2. **Install the app** (`samples/s14_approvals_stores/manifest.json`). It holds one record type and one workflow:
    - the **price change request**: item, price list, **store** (fixed once raised), new price, reason, change tracking on;
-   - a workflow of five states: *Requested → Store Approved → Head Office Approved → Applied*, and *Rejected*. The store manager approves or rejects; head office approves (from *Requested* or *Store Approved*) or rejects (from any); the service applies from either approved state.
+   - a workflow of five states: *Requested → Store Approved → Head Office Approved → Price set* (stored as *Applied*), and *Rejected*. The store manager approves or rejects; head office approves (from *Requested* or *Store Approved*) or rejects (from any); the service applies from either approved state.
    Every row writes all nine rights out. The store manager, head office and service can read and write requests.
 
-3. **Fence each person to their store — in the retailer's iVendNext.** For every requester and store manager, one *User Permission* on *POS Profile* (their store). iVendNext then shows them, and lets them approve, their own store's requests only; a requester cannot raise a request for another store. Head office and the service have no store fence: they see all stores. The install gives the requester select on *POS Profile* (`role_rights`), so the *Store* box lists the stores their User Permission allows.
+3. **Fence each person to their store — in the retailer's iVendNext.** For every requester and store manager, one *User Permission* on *POS Profile* (their store). iVendNext then shows them, and lets them approve, their own store's requests only; a requester cannot raise a request for another store. Head office and the service have no store fence: they see all stores. The install gives the requester select on *POS Profile* (`role_rights`), so the *Store* box lists the stores their User Permission allows, and head office the same, for the list's *Store* filter.
 
    What each person sees: the store manager ![store manager's list](../samples/s14_approvals_stores/screenshots/01_list_store_manager.png) and head office ![head office's list](../samples/s14_approvals_stores/screenshots/02_list_head_office.png).
 
@@ -34,7 +34,7 @@ This recipe is [Approvals by workflow](approvals.md) (S11) grown for a chain. A 
 
    A refusal is written only in the service's report: keep the report. The request's own history shows who approved at each step and the service's *Apply*.
 
-   Where the service does not run (Try does not run it), the *Price applier* sets the price on its price list (Item Price) first, then presses **Mark price set**: the button records the step and writes no price.
+   Where the service does not run (Try does not run it), the *Price applier* sets the price on its price list (Item Price) first, then presses **Mark price set**: the button records the step and writes no price. Give *Price applier* to someone who already edits prices (the role brings no right on Item Price), and mark a request over the limit only after head office approved it: by hand, no service checks the limit.
 
    What it looks like: the manager's action ![the manager approves](../samples/s14_approvals_stores/screenshots/03_store_manager_approves.png), a change within the limit applied ![applied](../samples/s14_approvals_stores/screenshots/04_applied_within_limit.png), a change above the limit waiting ![waiting for head office](../samples/s14_approvals_stores/screenshots/05_over_limit_waits_for_head_office.png), then head office's yes and the service's apply ![applied after head office](../samples/s14_approvals_stores/screenshots/06_applied_after_head_office.png), and the price row ![the price row](../samples/s14_approvals_stores/screenshots/07_the_price_row.png).
 

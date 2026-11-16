@@ -391,11 +391,14 @@ class T(unittest.TestCase):
         m = json.loads((HERE.parent / "manifest.json").read_text())
         self.assertIn({"doctype": "Price List", "role": "PP APS Requester", "rights": ["read", "select"]}, m["role_rights"])
 
-    def test_a_requester_can_pick_the_store(self):
+    def test_a_requester_can_pick_the_store_and_head_office_can_filter_by_it(self):
         # a requester who holds no till role met *No permission for POS Profile* on the Store box: select lists the stores
-        # (the requester's own, under its User Permission); nothing on the form reads a POS Profile's fields
+        # (the requester's own, under its User Permission); the list's Store filter asks the same for head office, who sees
+        # every store. The store manager is fenced to one store and needs none. Nothing on the form reads a POS Profile's fields
         m = json.loads((HERE.parent / "manifest.json").read_text())
-        self.assertIn({"doctype": "POS Profile", "role": "PP APS Requester", "rights": ["select"]}, m["role_rights"])
+        rows = [r for r in m["role_rights"] if r["doctype"] == "POS Profile"]
+        self.assertEqual(rows, [{"doctype": "POS Profile", "role": "PP APS Requester", "rights": ["select"]},
+                                {"doctype": "POS Profile", "role": "PP APS Head Office", "rights": ["select"]}])
         fields = {f["fieldname"]: f for d in m["doctypes"] for f in d["fields"]}
         self.assertEqual(fields["store"]["options"], "POS Profile")
         self.assertFalse([f for f in fields.values() if (f.get("fetch_from") or "").startswith("store.")])
