@@ -20,7 +20,7 @@ Access means a sandbox site, and the kit's GitHub organisation for the feedback 
 
 ## Another sandbox
 
-Your company's sandbox is free. For a customer's work, add your customer's own test site on **My sites**: you test on their data and settings, and it costs you nothing. For another sandbox, press **Ask for another sandbox** on **My sites**: it opens the sandbox request form.
+Your company's sandbox is free. For a customer's work, add your customer's own test site on **My sites**: you test on their data and settings, and it costs you nothing. For another sandbox, press **Ask for another sandbox** on **My sites**, with a line on what it is for if you like. Our partner management team approves it, and it appears on your **My sites** with its logins, shown once, and becomes your default. Until then **My sites** says the day you asked. A company that has no partner account with us yet asks by the sandbox request form instead, and the button opens it.
 
 ## Sixty days with no sign-in
 
