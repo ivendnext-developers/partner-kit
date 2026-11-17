@@ -262,20 +262,29 @@
     how: { ours: "Try installs in one press, with our key", own: "Try installs in one press, with your key",
            shelf: "its administrator installs from the shelf key", live: "a customer's live site: Publish goes there, Try does not" },   // W227 F-OP-10: true for every company
     getSandbox: "Get a sandbox", logins: "Show its logins", loginsNote: "Shown once: keep them now.",
-    // one free sandbox per partner company, more by the request form; our own developers take their own
+    // one free sandbox per partner company; another is asked for here and approved by partner management (W225-SBX);
+    // our own developers take their own
     askSandbox: "Ask for another sandbox", requestSandbox: "Request a sandbox",
+    askFor: "What it is for (if you like)", askForHint: "Such as: a second store's tills, or a customer's demo",
     liveTick: "Your customers' live sites", installNow: "Install now", installOn: "Install now on {site}",
     removed: "{site} is off your list, with the key you added for it.",
     stays: "{site} stays on your list: it is one of our sandboxes, given to you or your company. The key you added for it is deleted."
   };
   // what My sites offers for a sandbox, as the hosting says (`sandbox`): Get a sandbox for one of our developers with
-  // none of their own; Ask for another sandbox, with the hosting's words, for a partner company that holds its free one;
-  // Request a sandbox for a newcomer with sites of its own (with none, the empty list's words already link the page)
+  // none of their own; Ask for another sandbox, with the hosting's words, for a partner company that holds its free one
+  // (`ask_here`: one press records the request, and partner management approves it on the partner portal, W225-SBX; a
+  // company the portal did not make keeps the request form); while it waits, the day it was asked (`asked`); Request a
+  // sandbox for a newcomer with sites of its own (with none, the empty list's words already link the page)
   var FORM = "https://www.ivendnext.com/developers/sandbox/";   // the sandbox request form, as it is (K184)
-  function sandboxOffer(sites, get) {
+  function sandboxOffer(sites, get, ask) {
     var out = el("div", {});
     if (sites.sandbox === "get") out.appendChild(el("p", {}, button(S.getSandbox, get)));
-    if (sites.sandbox === "ask") {
+    if (sites.sandbox === "asked") out.appendChild(p(sites.sandbox_words || ""));
+    if (sites.sandbox === "ask" && sites.ask_here) {
+      out.appendChild(p(sites.sandbox_words || ""));
+      var why = el("input", { type: "text", maxlength: "120", spellcheck: "false", placeholder: S.askForHint, "aria-label": S.askFor });
+      out.appendChild(el("p", {}, why, " ", button(S.askSandbox, function (ev) { ask(ev, why.value.trim()); })));
+    } else if (sites.sandbox === "ask") {
       out.appendChild(p((sites.sandbox_words || "").replace(/\s*https:\S+$/, "")));
       out.appendChild(el("p", {}, el("a", { href: FORM, target: "_blank", rel: "noopener", "class": "site-btn", text: S.askSandbox })));
     }
@@ -2096,6 +2105,9 @@
       ev.target.disabled = true;   // one press, one sandbox
       call("POST", "/sandbox/get", {}).then(function (r) { if (r.logins) data.shownLogins = r; done(r); },
                                          function (e) { ev.target.disabled = false; fail(e); });
+    }, function (ev, why) {
+      ev.target.disabled = true;   // one press, one request: the page then shows the day it was asked
+      call("POST", "/sandbox/ask", why ? { "for": why } : {}).then(done, function (e) { ev.target.disabled = false; fail(e); });
     });
     if (sites.sandbox === "get") box.appendChild(offer);   // J6 F15: one of our developers sees it first, above the demo boxes
     (sites.company || []).forEach(function (x) {

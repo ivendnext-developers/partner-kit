@@ -462,9 +462,9 @@ check("MYSITES: a refused Install now brings its button back, and a refused Add 
 check("W227 F-OP-22: a refused read of the words waits for a press of Install now, never asks again by itself",
   a.installState({ refused: true }) === "again" && a.installState({ refused: true }, true) === "done" &&
   src.includes('state === "again"') && src.includes("button(S.installNow, function () { delete data.inst[k]; render(); })"));
-check("SANDBOXPOLICY: Get a sandbox for one of our developers with none; Ask for another sandbox opens the request form with the hosting's words; a newcomer is offered the form",
+check("SANDBOXPOLICY: Get a sandbox for one of our developers with none; Ask for another sandbox opens the request form with the hosting's words for a company the partner portal did not make; a newcomer is offered the form",
   src.includes('if (sites.sandbox === "get") out.appendChild(el("p", {}, button(S.getSandbox, get)));') &&
-  src.includes('if (sites.sandbox === "ask") {') && src.includes('el("a", { href: FORM, target: "_blank", rel: "noopener", "class": "site-btn", text: S.askSandbox })') &&
+  src.includes('} else if (sites.sandbox === "ask") {') && src.includes('el("a", { href: FORM, target: "_blank", rel: "noopener", "class": "site-btn", text: S.askSandbox })') &&
   src.includes('var FORM = "https://www.ivendnext.com/developers/sandbox/";') && src.includes("var offer = sandboxOffer(sites, function (ev) {") && src.includes('if (sites.sandbox === "get") box.appendChild(offer);') &&
   src.indexOf('if (sites.sandbox === "get") box.appendChild(offer);') < src.indexOf("(sites.company || []).forEach(function (x) {", src.indexOf("var offer")) &&
   a.S.askSandbox === "Ask for another sandbox" && src.includes('sites.sandbox === "request" && (sites.company || []).length && !sites.words') &&
@@ -487,6 +487,10 @@ check("J3: Capture from a site reads, lists by record type with every item ticke
   src.includes('call("POST", "/capture/take", { app: app, site: c.site, skip: ticksOff(c) })') &&
   a.captureGroups([{ id: "a", type: "Workflow", name: "w" }, { id: "b", type: "Custom Field", name: "f" }, { id: "c", type: "Workflow", name: "v" }])
     .map((x) => x.type + ":" + x.items.length).join() === "Workflow:2,Custom Field:1");
+check("W225-SBX: Ask for another sandbox records a request in one press, with an optional line on what it is for; while it waits the page says the day it was asked",
+  src.includes('if (sites.sandbox === "ask" && sites.ask_here) {') && src.includes('call("POST", "/sandbox/ask", why ? { "for": why } : {}).then(done') &&
+  src.includes('if (sites.sandbox === "asked") out.appendChild(p(sites.sandbox_words || ""));') &&
+  src.includes("ev.target.disabled = true;   // one press, one request") && a.S.askFor === "What it is for (if you like)");
 check("SANDBOXPOLICY: each pool sandbox says the date it goes back to the pool, in the hosting's words", src.includes("if (x.back_words) row.appendChild(p(x.back_words));"));
 check("MYSITES: Add a site takes a label, so a customer's live site is labelled live as it is added",
   src.includes('label: lab.value.trim() })') && src.includes("add.appendChild(field(S.label, lab, S.labelHint))"));
