@@ -24,6 +24,18 @@ Short films for partners and developers on the iVendNext channel: what a partner
 - [Paid apps: a key for each customer](https://youtu.be/0Km2DQ4ZBOQ) · page: [Publish your app](publish.md)
 - [Keep it going: updates, rollback, logs and hand-over](https://youtu.be/WK4OrLWM_Og) · page: [Publish your app](publish.md)
 - [Certifying a payment connector](https://youtu.be/c_B3pB93S5c)
+- [A fashion app from two samples: a gift card on spend and sell-through by size](https://youtu.be/-eeXGx-UVz8) · page: [Build your first app](first_app.md)
+- [A pharmacy app from two samples, at the chain's counter](https://youtu.be/YeuY7SlQOTM) · page: [Build your first app](first_app.md)
+- [A distribution app from two samples, checked by the chain's ERP](https://youtu.be/qnX8Av4PTcM) · page: [Build your first app](first_app.md)
+- [A beauty app from two samples, at the chain's till](https://youtu.be/zE_qemhMScI) · page: [Build your first app](first_app.md)
+- [A thrift app from two samples, at the chain's till](https://youtu.be/LPAIG61BEfM) · page: [Build your first app](first_app.md)
+- [A grocery app from two samples, at the till and the stock office](https://youtu.be/Ti4Iz4BeogA) · page: [Build your first app](first_app.md)
+- [A hardware app from two samples, at the till and in the aisle](https://youtu.be/-ERyWxxmny4) · page: [Build your first app](first_app.md)
+- [An optical app from two samples, at the chain's counter](https://youtu.be/gg7VUJZsgrw) · page: [Build your first app](first_app.md)
+- [A travel retail app from two samples, at the till and the gate](https://youtu.be/AUCluL3Pnzk) · page: [Build your first app](first_app.md)
+- [A restaurant app from two samples, at the till and in the kitchen](https://youtu.be/s0XdeMFoXdA) · page: [Build your first app](first_app.md)
+- [A liquor app from two samples, at the till and the stock office](https://youtu.be/kTLwVgE-3_g) · page: [Build your first app](first_app.md)
+- [An electronics app from two samples, at the chain's till](https://youtu.be/695ySk5mfys) · page: [Build your first app](first_app.md)
 
 ## Industries
 
