@@ -54,7 +54,7 @@ HOTEL_SIM_URL=http://127.0.0.1:8161 python3 service/app.py
 
 ### 0.1.4
 
-- The *Room charges* report has no *Totals* row: it added up only the 20 rows Desk had loaded. For the day's clearing entry, filter *Status* Posted, then *Group By* *Posted on* with *Sum* of *Clearing*: the database adds every row. The workspace says the same.
+- The *Room charges* report has no *Totals* row: it added up only the rows Desk had loaded (20 on builds before 2.1.0.714, up to 2500 after). For the day's clearing entry, filter *Status* Posted, then *Group By* *Posted on* with *Sum* of *Clearing*: the database adds every row. The workspace says the same.
 - Desk shows plain names (*Room charges*, *Room charge*, *Posted*, *Waiting*, *Refused*, *Night auditor*) through the manifest's `translations` block: the workspace, its report, its three counts and each charge. The stored names are unchanged: an installed site keeps its records.
 
 ### 0.1.3

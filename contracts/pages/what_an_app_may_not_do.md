@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/what_an_app_may_not_do.md @ b13203dcf85e, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/what_an_app_may_not_do.md @ 9dc717ba13fe, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # What an app may not do
 
 An app may do anything the shop's administrator can do in Desk: a workflow that approves and
@@ -43,7 +43,7 @@ refusal added anywhere else fails the build.
 | manifest_check | `_workspaces` | 4 | C | A custom block, a shortcut's stats filter, a label with markup and an icon that is not an icon name all run or write markup in the viewer's browser. |
 | manifest_check | `_sale_attributes` | 1 | T | A required sale detail stops every sale on every till that does not fill it. |
 | manifest_check | `_webhooks` | 3 | B T | A webhook calls an address the consent shows, and sends the thin body, because a body of its own is a template that can read any record without rights and send it there (B); a condition on the till's own records runs inside its save (T). |
-| manifest_check | `_reports` | 3 | B C | A query report runs SQL over the whole database and a script report runs Python (B, C); the sort order is written into the report's query (C). |
+| manifest_check | `_reports` | 4 | B C S | A query report runs SQL over the whole database and a script report runs Python (B, C); the sort order is written into the report's query (C); a page size Desk's report screen cannot page by (20, 100, 500 or 2500 rows) is a partner's typo (S). |
 | manifest_check | `_roles` | 1 | B | Guest and All open the app's records to people outside the shop's staff. |
 | manifest_check | `_workflows` | 2 | A T | A workflow on the till's own records holds the sale for an approval nobody at the counter gives (T); a state writes only the app's own field, because it writes and then submits, so a warehouse, tax or discount field would post a figure nobody chose (A). |
 | manifest_check | `_naming_rules` | 1 | A | The sale's own records are numbered by the shop's series, which its books and tax authority read. |
@@ -67,7 +67,9 @@ refusal added anywhere else fails the build.
 | manifest_install | `_free_level` | 1 | S | A field limited to roles needs a free permission level on its record type, and all nine are in use. |
 | manifest_install | `_make_user` | 1 | S | The site's licence has no room for the app's own user. |
 | manifest_install | `_one_role` | 1 | C | The app's integration user would reach more than its one role, through rights this site gave it. |
-| extension_package | `check` | 2 | B S | A manifest that cannot be read (S); a consent never carries over to other content under the same version (B). |
+| extension_package | `check` | 1 | S | A manifest that cannot be read. |
+| extension_package | `preview` | 1 | S | A manifest that cannot be read (the same words as `check`, keeping nothing). |
+| extension_package | `_other_content` | 1 | B | A consent never carries over to other content under the same version (`check` and `preview`). |
 | extension_package | `install` | 6 | B S | The package's state, and a consent to exactly this file and to what the update now changes (B, S). |
 | extension_package | `run_job` | 2 | B S | The package left the shelf, or the site changed since its check (B, S). |
 | extension_package | `uninstall` | 1 | S | Only the installed version is uninstalled. |

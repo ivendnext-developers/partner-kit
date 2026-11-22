@@ -17,9 +17,9 @@ An age on each restricted item group (or item), and a service that answers two e
 
 ## Limits
 - No date of birth or ID number is captured: the sale records the age band the cashier confirmed.
-- A sale whose first item is restricted is asked twice (the first scan has no sale reference to remember).
+- On a till older than build 2.1.0.698 a sale whose first item is restricted is asked twice (its first scan has no sale reference to remember); from that build the first scan carries one.
 - A later, lower ask can replace a higher one on the sale (one value per sale detail); Pay then names the higher age to enter.
-- Offline, or with the service down, the item goes on and the sale is paid, flagged; a retailer can make the scan refuse a scanned restricted item, but an item picked from a list still goes on, flagged.
+- Offline, or with the service down, the item goes on and the sale is paid, flagged; a retailer can make the scan refuse a scanned restricted item, but an item picked at the sell screen while the till is offline goes on unasked; at Pay the check judges it if the till is online, and otherwise its own down answer applies (flagged).
 - More than one app may answer the scan on one POS Profile: each whose items include this one is asked in turn, and the first that does not allow the item answers (6 seconds at most for all). 10 seconds at most for one pass of a POS Profile's checks.
 - One time zone and one age per item group for the whole site.
 - No manager's override, no restricted selling hours, no counter ID scanner (the till's camera reads a licence's age: the card *id-scanner-reader-at-the-counter*).

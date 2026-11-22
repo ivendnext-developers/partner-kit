@@ -1,0 +1,23 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A report that opens at 50 rows: Desk's report screen pages by 20, 100, 500 or 2500.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_rpl",
+    "prefix": "PP RPL",
+    "version": "0.1.0",
+    "reports": [
+      {
+        "name": "PP RPL Count Lines",
+        "ref_doctype": "Stock Reconciliation",
+        "columns": [
+          "posting_date"
+        ],
+        "page_length": 50
+      }
+    ]
+  },
+  "expect_refusal": "page_length is 20, 100, 500 or 2500 rows",
+  "beyond_schema": true
+}

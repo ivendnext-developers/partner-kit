@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/station_ticket.md @ b13203dcf85e, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/station_ticket.md @ 9dc717ba13fe, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Station ticket — the kitchen's tickets on a kitchen screen (`station_ticket/1`)
 
 **Who this is for:** a partner building a kitchen display (a screen per station, an expo screen, a
@@ -195,8 +195,9 @@ it again and has caught up. Poll the board every few seconds whenever the live c
 
 ⚠ The live connection is the site's own realtime socket, namespace `/<site name>` (for example
 `/shop.example.com`), on the site's address. A hosted site's name can differ from its address: if the socket
-answers *Invalid namespace*, read the name once from `/app`, signed in with a Desk user's key, whose page source
-names it as `"sitename"`. Connect from your server, not from a page on another address, and send three headers: `Authorization: token <key>:<secret>` (your user's API key), `Origin` = the site's own
+answers *Invalid namespace*, read the name once from the site's Desk page, signed in with a Desk user's key: its
+page source names it as `"sitename"`. Ask `/app`. If it answers with a redirect (a release that serves Desk at
+`/desk` does), never follow it with the key: ask `/desk` yourself. Connect from your server, not from a page on another address, and send three headers: `Authorization: token <key>:<secret>` (your user's API key), `Origin` = the site's own
 address, and a `Cookie` header with any value that carries no `sid` (the socket refuses a connection with no
 cookie, and a `sid` would sign in as that session instead of your key). Then listen for `mpos_station_ticket`.
 

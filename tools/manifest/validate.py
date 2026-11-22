@@ -1,5 +1,5 @@
 # COPY — source: repo ivendnext/iVendNext_PWA, path apps/ivendnext_mpos/ivendnext_mpos/business_logic/manifest_check.py,
-# at development b13203dcf85e43e4cbdc9a8300ce94514b6bc56e. The shop's own checker (the install screen runs it) is the source;
+# at development 9dc717ba13fe1399bee7e0a13d3089ffb997c6d4. The shop's own checker (the install screen runs it) is the source;
 # this copy lets you check a manifest before you send it, and refuses the same manifests in the same words. Everything
 # below this header equals the source. A defect here is a defect there: report it with the Kit defect form (feedback/README.md).
 """The companion manifest — the VALIDATOR. Pure Python: no framework import, no network.
@@ -475,7 +475,10 @@ _PRINT_TYPED_READ_RE = re.compile(
 # migrated to the 2.1.0 release. ⚠ Pinned by test_template_readers: every name here is
 # served (no read without a replacement is refused), and every type THIS app ships that ivn_rows serves is
 # here (a pack that adds one regenerates the list in the same change). A type the engine adds later is
-# only warned until the list is regenerated from the site.
+# only warned until the list is regenerated from the site. ⚠ Served on both releases:
+# Lead Source, Closing Stock Balance and Homepage Section (gone on v16), Print Heading and SMS Log (the
+# framework's on v16) and Bank Account (a password field on v16) are left out, so on v15 a read of them
+# is warned, not refused.
 PRINT_SERVED_TYPES = frozenset(
     "|".join(
         (
@@ -485,12 +488,12 @@ PRINT_SERVED_TYPES = frozenset(
             "Asset Category|Asset Depreciation Schedule|Asset Maintenance|Asset Maintenance Log",
             "Asset Maintenance Team|Asset Movement|Asset Repair|Asset Shift Allocation",
             "Asset Shift Factor|Asset Value Adjustment|Authorization Rule|BOM|BOM Creator",
-            "BOM Update Log|Balance Stock|Bank|Bank Account|Bank Account Subtype",
+            "BOM Update Log|Balance Stock|Bank|Bank Account Subtype",
             "Bank Account Type|Bank Guarantee|Bank Statement Import|Bank Transaction|Barcode Mask",
             "Batch|Bin|Bisect Nodes|Blanket Order|Branch|Brand|Budget|Bulk Transaction Log Detail",
             "Button Group Panel|Button Panel Control|Call Log|Campaign|Card View Control",
             "Card View Group Control|Cash Drawer Log|Cashier Closing|Cheque Print Template",
-            "Closing Stock Balance|Code List|Common Code|Communication Medium|Company|Competitor",
+            "Code List|Common Code|Communication Medium|Company|Competitor",
             "Contract|Contract Template|Control Panel Settings|Cost Center|Cost Center Allocation",
             "Coupon|Coupon Code|Coupon Ledger|Currency Exchange|Custom Display Control|Customer",
             "Customer Feedback Question|Customer Group|Customs Tariff Number|Data Grid Control",
@@ -498,13 +501,13 @@ PRINT_SERVED_TYPES = frozenset(
             "Dunning Type|Email Campaign|Email Digest|Employee|Employee Group",
             "Exchange Rate Revaluation|Feedback Submission|Finance Book|Fiscal Year",
             "Form Number Card|Fulfillment Plan|GL Entry|Gift Card|Gift Card Balance",
-            "Gift Card Master|Holiday List|Homepage Section|Import Supplier Invoice",
+            "Gift Card Master|Holiday List|Import Supplier Invoice",
             "Incoming Call Settings|Incoterm|Industry Type|Information Control|Input Control",
             "Installation Note|Integration Sync Log|Interface Profile|Inventory Dimension",
             "Invoice Discounting|Issue|Issue Priority|Issue Type|Item|Item Alternative",
             "Item Attribute|Item Group|Item Label Printing|Item Manufacturer|Item Price",
             "Item Tax Template|Ivend Font|Job Card|Journal Entry|Journal Entry Template",
-            "Landed Cost Voucher|Lead|Lead Source|Ledger Health|Ledger Merge|Location",
+            "Landed Cost Voucher|Lead|Ledger Health|Ledger Merge|Location",
             "Look Up Control|Lower Deduction Certificate|Loyalty Point Entry|Loyalty Program",
             "Maintenance Schedule|Maintenance Visit|Manager Override Log|Manufacturer",
             "Market Segment|Material Request|Media Control|Mode of Payment|Monthly Distribution",
@@ -514,7 +517,7 @@ PRINT_SERVED_TYPES = frozenset(
             "POS Transaction Mode|Packing Slip|Page Config|Party Link|Party Specific Item",
             "Party Type|Payment Entry|Payment Gateway Account|Payment Ledger Entry|Payment Order",
             "Payment Request|Payment Template|Payment Term|Payment Terms Template",
-            "Period Closing Voucher|Pick List|Plant Floor|Price List|Pricing Rule|Print Heading",
+            "Period Closing Voucher|Pick List|Plant Floor|Price List|Pricing Rule",
             "Process Deferred Accounting|Process Payment Reconciliation",
             "Process Payment Reconciliation Log|Process Statement Of Accounts",
             "Process Subscription|Product Bundle|Production Plan|Project|Project Template",
@@ -540,7 +543,7 @@ PRINT_SERVED_TYPES = frozenset(
             "Retail Register Period|Retail Register Sequence|Retail Register State",
             "Retail Save Rule",
             "Retail Save Rule Count|Retail Scan Source|Retail Time Clock Entry|Retail UX Metric",
-            "Routing|SMS Log",
+            "Routing",
             "Sale Attribute|Sales Invoice|Sales Order|Sales Partner|Sales Partner Type",
             "Sales Person|Sales Stage|Sales Taxes and Charges Template|Serial No",
             "Serial and Batch Bundle|Service Level Agreement|Session Lock|Share Transfer",
@@ -1079,7 +1082,13 @@ def _reports(v: _V):
                 "order_by is one field name, optionally followed by asc or desc: it is written into "
                 "the report's database query",
             )
+        # one of the page sizes Desk's report screen offers (without one the installer saves 2500)
+        if r.get("page_length") is not None and r.get("page_length") not in PAGE_LENGTHS:
+            v.refuse(w, name, "page_length is 20, 100, 500 or 2500 rows")
         _roles(v, w, name, r.get("roles"))
+
+
+PAGE_LENGTHS = (20, 100, 500, 2500)
 
 
 def _roles(v: _V, w, name, roles):

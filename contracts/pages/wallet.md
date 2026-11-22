@@ -1,15 +1,17 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/wallet.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/wallet.md @ 9dc717ba13fe, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Wallet extension point
 
-> **Needs the Payments remote-wallet app.** Until the payments core ships it, no site holds a *Wallet* tender
-> and nothing on this page runs: a *Wallet* Mode of Payment made by hand is drawn as a dead tile
-> (*"Wallet isn't installed on this site."*) and is never booked as a plain row.
+> **Needs iVendNext Payments Core 2.1.0 or later and a wallet connection in iVendNext Pay — Remote Connector.**
+> The *Wallet* tender appears when that connection goes live. On an older Payments Core, a *Wallet* Mode of
+> Payment made by hand is drawn as a dead tile (*"Wallet isn't installed on this site."*) and is never booked as
+> a plain row. On a current core with no live wallet connection, asking for a balance stops with *"This wallet
+> isn't set up at this store. Choose another tender."*
 
 **Contract:** [`wallet.v1.schema.json`](../extension_contracts/wallet.v1.schema.json)
 · samples: [`samples/wallet/`](../extension_contracts/samples/wallet/)
 (the spec's wire scenarios S1–S5 and S7, accepted and refused; S6 and S8 are till behaviour, pinned in the tests) · code: the till's half in `business_logic/wallet_tender.py`
 (`preview`, `wallet_push_amount`, `booking_rows`, `refund_to_wallet`) and `business_logic/card_terminal.py`
-(`begin_wallet_push`); the core's half is the Payments board's (`remotewallet`).
+(`begin_wallet_push`); the core's half is iVendNext Payments Core, and the call to your server is made by the Remote Connector's wallet profile.
 
 ## 1. What it is
 

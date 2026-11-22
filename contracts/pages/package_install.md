@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/package_install.md @ b13203dcf85e, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/package_install.md @ 9dc717ba13fe, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Installing a manifest (self-service install)
 
 **Contract:** [`package_manifest.v1.schema.json`](../extension_contracts/package_manifest.v1.schema.json)
@@ -94,7 +94,11 @@ Version 1 of the package. The manifest itself names `manifest_version` 1 or 2 an
    was agreed under older words. Ask the partner for a newer version; it appears on the app's card."*: publish a
    higher version. An app the store removed offers **Install** again on its record (never *Update*: nothing of it is
    on the site), and a version whose words have not changed installs at the first press. A label is the
-   partner's words: the plain sentence shows it, whole and in quotes, only because the exact line holds it. The install runs as a background job; the status moves Queued → Installing → Installed.
+   partner's words: the plain sentence shows it, whole and in quotes, as the exact line holds it. The app's own record
+   types read by the words its `translations` give them (the reader's language, else English), as Desk will name them
+   once the app is in, and so do its Desk page and its own roles; its print layouts and event feeds read by the app's
+   words too (Desk itself shows those two by their stored names); a role with no words reads by its name, as Desk shows
+   it. *Show details* keeps the exact names. The install runs as a background job; the status moves Queued → Installing → Installed.
 5. **Secrets** (a webhook's or a service's) are shown once, to the user who installed, when the job ends. Each can be
    read again on its own record, with *Copy secret* (§12). Hand them to the partner as you would an integration user's
    key. An app hosted by CitiXsys receives them from the site itself when it connects (§10).
@@ -329,7 +333,8 @@ window.open(url, "_blank", "noopener")`.
 A workspace is your app's page, opened from the App library. It is never added to the menu. The install writes it out
 of the Desk's menu (`custom_hide_from_menu`), limited to the roles your manifest names plus System Manager, and after
 every page the site has. The shop's administrator opens it with the App library's **Open**; a user holding one of your
-roles, or the site's Workspace Manager, finds it with the search bar or its route, `/app/<page name>`; nobody else sees
+roles, or the site's Workspace Manager, finds it with the search bar or its route, `/app/<page name>` (`/desk/<page name>`
+on a release that serves Desk at `/desk`); nobody else sees
 it. Showing it in the menu is the shop's own choice: a Workspace Manager clears *Hide from Menu* on the page's Workspace
 record (the theme's menu editor does not list a page that belongs to no module, and a Workspace Manager does not see it
 in their own menu: the app's role holders do). An update keeps that choice and the
@@ -376,9 +381,10 @@ rows.
   overwrites the other: give the report one of them.
 - Desk opens the report sorted by the record type's own default (or the user's last sort), not by `order_by`; the
   user picks the sort on the screen. `order_by` is what the server's reader uses.
-- The totals row adds the lines on screen (Desk's page of lines), not every line in the database, and only number
-  fields (Int, Float, Currency, Percent, Duration): a read-only column such as a count line's quantity difference
-  stays blank in it.
+- **Rows to a page.** `page_length` (20, 100, 500 or 2500) sets how many rows the report opens with; without it the
+  report opens at 2500 rows, Desk's largest page, so its totals row adds every row up to 2500; a longer result
+  shows *2500 of N* and the total adds the 2500 loaded. Only number fields (Int, Float, Currency, Percent, Duration)
+  are added: a read-only column such as a count line's quantity difference stays blank in it.
 
 **Who sees what.** The shop's rights are the framework's own; the notes above keep a package's report
 honest, they fence nothing (any user may add the same row columns in Desk's own column picker, and a level the shop
@@ -630,6 +636,9 @@ elements, and every new outside address), consent, update. An update:
   the update's own consent (*"consented with this update and kept on"*), at its old address or a new one, which the
   update's difference names before the shop consents; one the shop switched off or withdrew its consent from stays
   so; a till key the update adds arrives consented, and on the tills and tablets of every store with a till theme;
+- keeps a Desk button the same button while its record type and its service stay: new words change it in place,
+  kept on or off as the shop had it, and the update's line reads *its words change from* the old words (the second of two buttons on one record type
+  and one service is told apart by its words, so new words on it replace it);
 - creates any role the new version names that the site does not have (a role it no longer names stays until
   uninstall);
 - adds a detail slot to a register book it keeps, through the book's own save, and writes an event feed's new
@@ -696,6 +705,8 @@ reads, the rows under `role_rights`); a row the shop made is never touched. A de
 it is unchanged and nothing points at it; otherwise it is kept and named in the result. A till key's ticks in POS Studio > Apps go with it (and a newly installed key
 never inherits a tick an earlier uninstall left), so an app installed again needs a store to tick its keys again. An app hosted by CitiXsys is told it was removed (§10).
 
+The Print Format field of a POS Profile (and its gift receipt, park slip, shift and X-report layout fields) that names a print format of the app is emptied: the store prints its standard receipt again, and its shift and X-report papers wait until the store picks a layout. An app installed again needs the store to set these again; the install record's log names each store.
+
 **A version consented before 2.0.0.646** (when a till key's line said *"installed switched off; it needs its own consent"*)
 cannot be installed again at the same version: the summary changed, and a consent never carries over to other
 content. Bring a higher version. A job queued across that release is refused at the job. Keys installed before the
@@ -739,6 +750,7 @@ The same methods, the same checks, all `POST`:
 | Method | Arguments | Answer |
 |---|---|---|
 | `ivendnext_mpos.api.extension_package.check` | `manifest` (the JSON) | `{ok, name, refusals, summary, summary_sha256, summary_parts, changes, mode, carries_consent, warnings, holders}` |
+| `ivendnext_mpos.api.extension_package.preview` | `manifest` (the JSON) | the same answer as `check`, keeping no package record: the words to show before **Install now**. Its `name` is not a record yet: call `check`, then `install` |
 | `ivendnext_mpos.api.extension_package.install` | `name` | `{ok, name, status: "Queued", action}`, or `{ok: 0, refusals}` |
 | `ivendnext_mpos.api.extension_package.uninstall` | `name` | `{ok, status: "Queued", action: "uninstall"}` |
 | `ivendnext_mpos.api.extension_package.finish` | `name` | `{ok, action: "finish"}` |
@@ -775,9 +787,9 @@ opens under *What it does and what you set up first*. The page reads in the orde
 to be allowed, below, and a package whose file is checked and not yet consented, with **Review and install**), **Your
 apps** (every app the library lists that the site has, and every package on the site, an app installed from its file
 included; updates, installs under way and failures first) and **Add apps**: the shelf's apps not yet installed (**Made for you**, below), then category and industry
-buttons and a search box. A button or the search lists **Ready to add** (library apps this site can install) and **Part
-of iVendNext** (apps that run inside the site and are not installed here). *Choose from the library* on Extension
-Packages opens on *Add apps* with every card drawn. The page names **This site's key address** with a copy button; a partner asks the shop for that line.
+buttons and a search box. *Add apps* opens with **Show all** pressed, listing **Ready to add** (library apps this site
+can install) and **Part of iVendNext** (apps that run inside the site and are not installed here); a button or the
+search narrows the list. *Choose from the library* on Extension Packages opens on *Add apps* the same way. The page names **This site's key address** with a copy button; a partner asks the shop for that line.
 
 **The buttons** (`business_logic/app_library.py` `_card`). An app that runs inside
 the site (every door but the library's) reads *Installed · version x* when the site has it — the card's
@@ -790,7 +802,12 @@ installed version still runs — and *Installed · version x* with **Open** (the
 installed manifest; none when it adds no page) and **Details**; otherwise its key state, below. A first install that
 failed stays in *Your apps*, where its line can be seen. An app installed from its file reads the same lines; a checked
 new version of it reads *Version y is ready* with **Review and install**, which opens the package record, where its own
-consent button does the rest.
+consent button does the rest. **Version notes:** below a library card's buttons, while *Version y is ready* shows, the
+card lists the `changelog` rows the library card carries for the versions after the installed one, up to y, newest
+first, in the user's language (else English); once installed, a library app lists the installed version's own row. An
+app installed from its file, and an app that runs inside the site once it is current, show none. Write in a version's row what the store must do after the update (press a button
+again, restart the tills), and repeat there what still applies from an earlier version a store may have skipped: after
+the **Update** press only the installed version's row shows.
 
 **The key.** A free app has **Install** and needs no key: the site asks the library for its free key afterwards, as a note it never waits on. Any other app has **Enter your key**: a key iVendNext or a partner issued
 for this site's key address. The site checks the key itself, in this order: its form, a signing key this release
