@@ -35,7 +35,7 @@ ivn try
 
 ### 1.1.5
 
-- The kiosk asks the site's price check (`ivendnext_mpos.api.v1.price_check`) in one call, so a scale's price-and-weight label is read as the till reads it and shows the item's price for one unit; a site where that call answers 404 gets the two calls as before. Manifest 0.2.4: the app's own role, `PP PRC Integration`, reads the Kiosk records (the role the install gives the app's user; it was `PP Integration`, which that user does not hold), and the description no longer asks the site to make a role first.
+- The kiosk asks the site's price check (`ivendnext_mpos.api.v1.price_check`) in one call (it wraps the barcode lookup and the line pricer the service called before), so a scale's price-and-weight label is read as the till reads it and shows the item's price for one unit. Manifest 0.2.4: the app's own role, `PP PRC Integration`, reads the Kiosk records (the role the install gives the app's user; it was `PP Integration`, which that user does not hold), and the description no longer asks the site to make a role first.
 
 ### 1.1.4
 
