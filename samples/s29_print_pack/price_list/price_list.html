@@ -2,7 +2,7 @@
     prices through ivn_rows and each item's photo through ivn_value, with the rights of the person printing: a person who
     may not read a price or an item sees fewer rows, and a print sent from the e-mail queue shows none. General prices only
     (no customer's or batch's own price). Up to 1,000 prices, read 200 at a time, in item code order. -#}
-<div dir="auto" style="font-family: Arial, sans-serif; font-size: 11px; color:#222;">
+<div style="font-family: Arial, sans-serif; font-size: 11px; color:#222;">
   <div style="font-size:16px; font-weight:bold; color:#1F3864;">{{ doc.price_list_name }}</div>
   <div>{{ doc.currency }}{% if doc.selling %} &middot; selling{% endif %}{% if doc.buying %} &middot; buying{% endif %}</div>
   <table style="width:100%; border-collapse:collapse; margin-top:8px;">

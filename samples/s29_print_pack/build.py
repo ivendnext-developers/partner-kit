@@ -75,20 +75,20 @@ def _manifest(description, formats, version):
 def build_branch():
     return _manifest("One sales-invoice print format that picks the layout from the customer on the invoice, and prints a "
                      "plain layout for any other customer. Make it the invoice's default in Desk (a manifest cannot).",
-                     [("PP PRT Branch Invoice", branch_html())], "0.1.4")
+                     [("PP PRT Branch Invoice", branch_html())], "0.1.3")
 
 
 def build_each():
     names = {"layout_a": "PP PRT Invoice A", "layout_b": "PP PRT Invoice B", "layout_c": "PP PRT Invoice C",
              "layout_plain": "PP PRT Invoice Plain"}
     return _manifest("One sales-invoice print format for each layout. The person printing or e-mailing an invoice picks "
-                     "the format; nothing picks it by customer.", [(n, _layout(k)) for k, n in names.items()], "0.1.5")
+                     "the format; nothing picks it by customer.", [(n, _layout(k)) for k, n in names.items()], "0.1.4")
 
 
 def build_price_list():
     return {
         "manifest_version": 1, "app": "pp_plr", "prefix": "PP PLR", "title": "A price list with photos",
-        "version": "0.1.2", "publisher": "Partner Programme sample",
+        "version": "0.1.1", "publisher": "Partner Programme sample",
         "description": "One print format on the Price List: each general price of the list with the item's photo, read "
                        "through ivn_rows and ivn_value with the rights of the person printing (POS build 2.0.0.654 on). A "
                        "print sent from the e-mail queue shows no rows.",

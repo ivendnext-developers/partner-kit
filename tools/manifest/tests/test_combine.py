@@ -471,7 +471,8 @@ class Refusals(Base):
         for sample, words in (("s3_price_audit", "runs on its own server and keeps one list (deviation)"),
                               ("s1_warranty", "a till key, a warranty registered on each booked sale and one list (warranty term)"),
                               ("s2_bins", "a till key and five lists (bin movement, location, aisle and 2 more)"),
-                              ("s28_merge_and_history", "a button in Desk and a page")):
+                              ("s28_merge_and_history", "a button in Desk and a page"),
+                              ("s21_field_rules", "field rules for the till")):   # data only: never "its lists and settings"
             with self.subTest(sample):
                 part = combine.make_part(sample, "ACME ONE", "acme_one", False, KIT / "samples")
                 self.assertEqual(combine.does(part), words)

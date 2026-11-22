@@ -345,6 +345,11 @@ class TheManifest(unittest.TestCase):
         dt = {d["name"]: d for d in m["doctypes"]}
         for name in ("PP BLN Location", "PP BLN Item In Bin"):        # what the press reads, besides Item
             self.assertTrue(any(p["role"] == "PP BLN Integration" and p.get("read") for p in dt[name]["permissions"]), name)
+        # the app's own user writes only what its service writes: a bin's contents; the rest it reads
+        rights = {n: {k for k, v in next(p for p in dt[n]["permissions"] if p["role"] == "PP BLN Integration").items() if v == 1}
+                  for n in ("PP BLN Location", "PP BLN Aisle", "PP BLN Bin", "PP BLN Item In Bin")}
+        self.assertEqual(rights, {"PP BLN Location": {"read"}, "PP BLN Aisle": {"read"}, "PP BLN Bin": {"read"},
+                                  "PP BLN Item In Bin": {"read", "write", "create"}})
 
 
 class ShopApi(unittest.TestCase):
