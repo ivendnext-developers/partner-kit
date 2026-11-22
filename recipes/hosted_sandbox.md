@@ -1,13 +1,13 @@
 # The hosted sandbox site — what you receive, your first hour, and its limits — the recipe
 
-A sandbox site is your company's iVendNext site, hosted by us and full of made-up demo data, where you build and test before you touch a customer's site. This recipe is for anyone who builds for an iVendNext customer and gets a sandbox site from us, partner or not. Every one of them receives the same site, made the same way.
+A sandbox site is your company's iVendNext site, hosted by us and full of made-up demo data, where you build and test before you touch a customer's site. This recipe is for any company in the iVendNext partner programme, and anyone whose partner application we approve. Every one of them receives the same site, made the same way.
 
 **When to use it.** From step 2 of the path: right after you register, before you quote or build anything. It is where you try every rung of the ladder and run your tests.
 
 ## What you receive
 
-- **An address** — your company's site: every developer of your company sees it on **My sites**. We tell you the address when the site is ready.
-- **An administrator login** for that site, with a one-time password, shown once on **My sites** to the person named in the request. You choose your own password the first time you sign in.
+- **An address** — your company's site: every developer of your company sees it on **My sites**, and its owners see it on the partner portal home.
+- **An administrator login** for that site, with a one-time password. Your company's first sandbox shows its logins on the partner portal home, to your company's owners (a referral partner's owner accepts the iVendNext Developer Terms there first); a sandbox handed to a developer shows them once on that developer's **My sites**. You choose your own password the first time you sign in.
 - **Logins for the retailer's people:** a store manager and two cashiers, each with a till sign-in ID, a password and a six-digit PIN.
 
 Nothing else. You never receive the software, a server, a container or a connection to the database. Your own code runs on your own machine or server and talks to your site over HTTPS, exactly as it will talk to a customer's site.
