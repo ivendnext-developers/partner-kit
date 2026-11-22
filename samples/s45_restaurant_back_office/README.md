@@ -42,6 +42,10 @@ ivn try
 
 ## Versions
 
+### 1.2.5
+
+- *Sales by item* has its *Totals* row again: a report now opens with up to 2500 rows (POS build `2.1.0.717`), so the total is the day's, not the 20 rows once on screen. Manifest 0.3.4. The service is unchanged.
+
 ### 1.2.4
 
 Manifest 0.3.3 (unchanged: the service only).
@@ -53,7 +57,7 @@ Manifest 0.3.3 (unchanged: the service only).
 Manifest 0.3.3.
 
 - *Covers, turns and tips* shows one row per issue (a store's day, or the part of it a later press took up): its number of sales, covers, table turns, tips and sales net of tax, with a *Totals* row. Desk adds up only the rows it has loaded (20 at first), and a row per check made a day of 62 covers read 21; with a row per issue the totals are the day's. A chain with more than 20 stores picks 100 or 500 at the foot of the report first. Each check's table, server, covers and tip (the tips by server) stay on its issue, under *Checks, covers and tips*.
-- The day's sales by store are on *Covers, turns and tips*; *Sales by item* lists each line sold and has no *Totals* row.
+- The day's sales by store are on *Covers, turns and tips*; *Sales by item* lists each line sold, with a *Totals* row of the quantities and amounts (it adds every line up to 2500, the rows the report opens with).
 - The issue's count of sales reads *Number of sales*, where it read *Sales* beside *Sales (net of tax)*.
 - An issue written before 1.2.3 shows 0 covers, turns and tips; its checks keep their figures. 1.2.4 fills them over the next presses, newest day first.
 

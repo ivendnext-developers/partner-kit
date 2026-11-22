@@ -25,8 +25,8 @@ A retailer rarely wants one rule at the till. It wants a handful: a manager for 
 
    | Rule | Answer |
    |---|---|
-   | a line priced above 0 and at or below the retailer's placeholder price | `{"verdict": "refuse", "reason": "Line 2: PEN-01 is priced 0.01 AED. Correct its price before the sale is paid."}` |
-   | a line holding more than the retailer's most (line by line: a promotion may split one item across lines) | `{"verdict": "refuse", "reason": "Line 1: 60 of WATER-24. The most on one line is 50."}` |
+   | a line priced above 0 and at or below the retailer's placeholder price | `{"verdict": "refuse", "reason": "Line 2: Blue pen is priced 0.01 AED. Correct its price before the sale is paid."}` |
+   | a line holding more than the retailer's most (line by line: a promotion may split one item across lines) | `{"verdict": "refuse", "reason": "Line 1: 60 of Water, 24 pack. The most on one line is 50: take 10 off."}` |
    | more lines sold than the retailer's most lines on one sale | `{"verdict": "refuse", "reason": "This sale has 41 lines. The most on one sale is 40. Ring the rest as a second sale."}` |
    | a line priced above 0 and below its lowest price, in the retailer's price list of lowest prices (the line's own unit; `approve` chosen) | `{"verdict": "approve", "reason": "Line 2: CEMENT-50 is 18.00 SAR, below its lowest price of 20.00 SAR. It needs a manager's approval."}` |
    | a sale at or above the approval amount (the retailer's default, `ask`) | `{"verdict": "ask", "question": "This sale is 5,000.00 AED or more. Has a manager agreed to it?"}` |

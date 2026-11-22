@@ -1,7 +1,7 @@
 {#- Layout A — the compact one. Header: logo and company on the left, number and dates on the right. Columns: Item, Qty, Rate,
     Amount. Footer: the three totals and the amount in words. Every figure is the invoice's own, printed with the document's
     own formatting (get_formatted); nothing is worked out here and nothing is read from anywhere but the invoice. -#}
-<div style="font-family: Arial, sans-serif; font-size: 12px; color:#222;">
+<div dir="auto" style="font-family: Arial, sans-serif; font-size: 12px; color:#222;">
   <table style="width:100%; border-bottom:2px solid #1F3864; margin-bottom:8px;"><tr>
     <td style="width:60px;"><img src="data:image/png;base64,@@LOGO@@" alt="" width="48" height="48"></td>
     <td><div style="font-size:16px; font-weight:bold; color:#1F3864;">{{ doc.company }}</div>

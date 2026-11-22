@@ -573,7 +573,7 @@ class CheckAndPush(Base):
         self.assertEqual(self.stub.apps["acme_own"]["versions"][0]["what"], "upload")
         self.assertIn("/v1/new", self.stub.calls)
 
-    def test_a_folder_behind_a_colleagues_version_is_kept_with_m09s_note(self):  # J8-09 as a note (KK 2026-11-04)
+    def test_a_folder_behind_a_colleagues_version_is_kept_with_m09s_note(self):  # a note, never a stop
         folder, _ = self.made()
         self.in_app(folder)
         self.stub.add({"app": "acme_member_till", "sample": "s11"})  # Priya adds a sample on the page
@@ -586,7 +586,7 @@ class CheckAndPush(Base):
         self.assertEqual(self.stub.row("acme_member_till")["latest"], "1.1.1")
         self.assertIn("s11", json.dumps(ivn.read_json(folder / "app.json").get("samples")))
 
-    def test_a_folder_behind_your_own_version_is_kept_with_no_note(self):  # KK 2026-11-04 (Healthkart2)
+    def test_a_folder_behind_your_own_version_is_kept_with_no_note(self):
         folder, _ = self.made()
         self.in_app(folder)
         self.stub.add({"app": "acme_member_till", "sample": "s11"})  # the same developer's own 1.1.0

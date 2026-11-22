@@ -37,6 +37,7 @@ class Api:
         self.items = {"4006381333931": {"barcode": "4006381333931", "item_code": "PEN-01", "uom": "Nos"}}
         self.prices = {"PEN-01": details(image="/files/pen.jpg")}
         self.calls, self.down, self.refuse = [], False, set()
+        self.checks = None        # a site with no price check (a build before it); a dict of label → item code: it has one
 
     def kiosk(self, url, key, prefix, code):
         self.calls.append(("kiosk", url, key, prefix, code))
@@ -49,6 +50,17 @@ class Api:
         if self.down:
             raise app.ShopUnreadable("down")
         return dict(self.items.get(text) or {})
+
+    def check(self, url, key, text, args):
+        if self.checks is None:
+            return None
+        self.calls.append(("check", url, key, text, args))
+        if self.down:
+            raise app.ShopUnreadable("down")
+        hit = dict(self.items.get(text) or ({"item_code": self.checks[text]} if text in self.checks else {}))
+        if hit.get("item_code") in self.refuse:
+            raise app.NotPriced("417")
+        return {"scan": hit, "price": dict(self.prices[hit["item_code"]]) if hit else None}
 
     def price(self, url, key, args):
         self.calls.append(("price", url, key, args))
@@ -86,6 +98,20 @@ class OneShop(unittest.TestCase):
         args = api.calls[2][3]
         self.assertEqual((args["selling_price_list"], args["customer"], args["transaction_date"], args["uom"]),
                          ("Standard Selling", "Walk-in", "2026-10-15", "Nos"))
+
+    def test_on_a_site_with_the_price_check_one_call_prices_a_scale_label(self):
+        api = Api()
+        api.checks = {"2011010067113": "PEN-01"}        # a price-and-weight label the site decodes as the till does
+        code, out = one(api).price(body(scan="2011010067113"))
+        self.assertEqual((code, out["status"], out["item"], out["price"]), (200, "found", "Blue pen", 10.0))
+        self.assertEqual([c[0] for c in api.calls], ["kiosk", "check"])
+        args = api.calls[1][4]
+        self.assertNotIn("item_code", args)
+        self.assertNotIn("rate", args)
+        self.assertEqual((args["selling_price_list"], args["customer"], args["qty"]), ("Standard Selling", "Walk-in", 1))
+        self.assertEqual(one(api).price(body(scan="NO-SUCH"))[1]["status"], "not_found")
+        api.refuse.add("PEN-01")
+        self.assertEqual(one(api).price(body(scan="2011010067113"))[1]["status"], "not_on_sale")
 
     def test_the_prefix_names_the_record_type(self):
         api = Api()
@@ -332,6 +358,21 @@ class ShopApi(unittest.TestCase):
         (m1, p1, a1, b1), (m2, p2, a2, b2) = FakeShop.seen
         self.assertEqual((m1, p1, a1, json.loads(b1)), ("POST", app.SCAN_BARCODE, "token k:s", {"search_value": "4006381333931"}))
         self.assertEqual((m2, p2, json.loads(b2)), ("POST", app.PRICER, {"args": {"item_code": "PEN-01"}}))
+
+    def test_the_price_check_is_one_whitelisted_call_and_a_site_without_it_answers_none(self):
+        FakeShop.script = {app.PRICE_CHECK: (200, {"message": {"scan": {"item_code": "PEN-01"}, "price": details()}})}
+        both = self.api.check(self.url, "k:s", "2011010067113", {"qty": 1})
+        self.assertEqual((both["scan"]["item_code"], both["price"]["price_list_rate"]), ("PEN-01", 10.0))
+        m, p, a, b = FakeShop.seen[0]
+        self.assertEqual((m, p, a, json.loads(b)), ("POST", app.PRICE_CHECK, "token k:s",
+                                                    {"search_value": "2011010067113", "args": {"qty": 1}}))
+        FakeShop.script = {}                                     # a build with no price check: 404
+        self.assertIsNone(self.api.check(self.url, "k:s", "4006381333931", {"qty": 1}))
+        FakeShop.script = {app.PRICE_CHECK: (417, {"exc_type": "ValidationError"})}
+        with self.assertRaises(app.NotPriced):
+            self.api.check(self.url, "k:s", "4006381333931", {"qty": 1})
+        with self.assertRaises(ValueError):
+            self.api.check(self.url, "k:s", "x", {"rate": 1})
 
     def test_the_shops_refusals(self):
         FakeShop.script = {app.SCAN_BARCODE: (417, {"exc_type": "ValidationError"}), app.PRICER: (417, {"exc_type": "ValidationError"})}

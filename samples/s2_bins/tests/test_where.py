@@ -344,7 +344,7 @@ class TheManifest(unittest.TestCase):
         self.assertEqual([r["events"] for r in m["registered_applications"]], [["PP BLN Location"]])   # seldom changes: no queue
         dt = {d["name"]: d for d in m["doctypes"]}
         for name in ("PP BLN Location", "PP BLN Item In Bin"):        # what the press reads, besides Item
-            self.assertTrue(any(p["role"] == "PP Integration" and p.get("read") for p in dt[name]["permissions"]), name)
+            self.assertTrue(any(p["role"] == "PP BLN Integration" and p.get("read") for p in dt[name]["permissions"]), name)
 
 
 class ShopApi(unittest.TestCase):

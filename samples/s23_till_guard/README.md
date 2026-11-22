@@ -43,6 +43,10 @@ ivn try
 
 ## Versions
 
+### 1.4.2
+
+- A refusal names the item by its name, as the cashier knows it (*6 of USB-C Cable (1 m)*), where it gave the item code; the check's lines carry the name since POS build `2.1.0.697`, and the code stands in where a line has none. The most-on-one-line refusal says how many to take off. The manifest is unchanged.
+
 ### 1.4.1
 
 - Desk shows plain names (Till guard settings) through the manifest's `translations` block, so a search for *till guard* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.5.1.

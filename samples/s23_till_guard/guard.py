@@ -175,13 +175,14 @@ def refusal(ctx: dict, rules: dict) -> dict | None:
     most = round(rules["max_qty"] * 1000) if rules["max_qty"] else 0
     sold = sold_lines(ctx)
     for line in sold:
-        item, n = plain(line.get("item_code") or "", 40), line.get("line_no") or ""
+        item, n = plain(line.get("item_name") or line.get("item_code") or "", 40), line.get("line_no") or ""
         if floor and 0 < line["rate_minor"] <= floor:
             return {"verdict": "refuse", "reason": plain(
                 f"Line {n}: {item} is priced {money(line['rate_minor'], exp, cur)}. Correct its price before the sale is paid.")}
         if most and line["qty_milli"] > most:
             return {"verdict": "refuse", "reason": plain(
-                f"Line {n}: {_qty(line['qty_milli'])} of {item}. The most on one line is {_qty(most)}.")}
+                f"Line {n}: {_qty(line['qty_milli'])} of {item}. The most on one line is {_qty(most)}: "
+                f"take {_qty(line['qty_milli'] - most)} off.")}
     if rules["max_lines"] and len(sold) > rules["max_lines"]:
         return {"verdict": "refuse", "reason": plain(
             f"This sale has {len(sold)} lines. The most on one sale is {rules['max_lines']}. Ring the rest as a second sale.")}
@@ -213,7 +214,7 @@ def on_check(ctx: dict, rules: dict, lowest: dict | None = None, unchecked: bool
     if below:
         line, paid, low = below[0]
         more = len(below) - 1
-        item = plain(line.get("item_code") or "", 40)
+        item = plain(line.get("item_name") or line.get("item_code") or "", 40)
         if low is None:
             head = f"Line {line.get('line_no') or ''}: {item} is sold in {plain(line.get('uom') or '', 20)}, which has no lowest price."
         else:
@@ -237,7 +238,7 @@ def on_check(ctx: dict, rules: dict, lowest: dict | None = None, unchecked: bool
 
 def on_scan(ctx: dict, rules: dict) -> dict:
     """A flagged item (the product filtered by the item's own tick): a beep and the shop's question."""
-    item = plain(ctx["line"].get("item_code") or "", 40)
+    item = plain(ctx["line"].get("item_name") or ctx["line"].get("item_code") or "", 40)
     return {"verdict": "confirm", "question": plain(f"{item}: {rules['question']}")}
 
 
@@ -249,7 +250,7 @@ def on_scan_shelf(ctx: dict, dated: list) -> dict:
     if not dated:
         return {"verdict": "allow"}
     expiry, first = min(dated)
-    item, scanned = plain(ctx["line"].get("item_code") or "", 40), ctx["line"].get("batch_no") or ""
+    item, scanned = plain(ctx["line"].get("item_name") or ctx["line"].get("item_code") or "", 40), ctx["line"].get("batch_no") or ""
     if scanned:
         mine = dict((b, e) for e, b in dated).get(scanned)
         if not mine or expiry >= mine:

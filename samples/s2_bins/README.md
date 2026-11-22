@@ -41,6 +41,10 @@ ivn try
 
 ## Versions
 
+### 1.1.5
+
+- Manifest 0.1.7: the rights on the four bin record types are the app's own role's, `PP BLN Integration`, the role the install gives the app's user; they named `PP Integration`, which that user does not hold, so a site had to give them by hand. The bin label prints in the reader's direction (`dir="auto"`). The service is unchanged.
+
 ### 1.1.4
 
 - The install makes the app's own user: the manifest registers *PP BLN Bins feed*, which follows the locations (they seldom change, so no queue builds up), and its description says so; a site then hands the hosted *Where is it?* that user's key, and an app made from S2 alone, or with S27, no longer answers *Bin locations is not set up yet* on every press. Manifest 0.1.6.

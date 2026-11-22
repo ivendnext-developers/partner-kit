@@ -40,7 +40,7 @@ ivn try
 ## Try it at the till
 
 - In Desk, add a warranty term for an item. Start a sale with that item and press Warranty; the till names the item and its months.
-- Sell it and scan its serial number. Within a few minutes the warranty's comment is on the sale in Desk.
+- Sell it and scan its serial number: the item must be one sold by serial number, with a serial in stock, at a store whose till has a till theme. Within a few minutes the warranty's comment is on the sale in Desk.
 - Close the till day when you are done.
 
 ## Versions

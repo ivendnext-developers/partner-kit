@@ -20,14 +20,13 @@ A retailer wants a screen on its floor where a customer scans an item and reads 
 
 3. **Answer only for a retailer you know and a screen it has switched on.** Your service finds the retailer among those that connected (the [app template](../tools/app_template/README.md)'s handshake, keyed by site; or the one retailer it is set up for), reads the screen's record with **that retailer's** key, and answers only when it exists and is switched on. Keep the record a minute, so switching it off stops that address within a minute. Treat a 404 as *no such screen* only when iVendNext's answer names that record; any other 404 (a wrong record type) means iVendNext cannot be read.
 
-4. **Ask iVendNext for the price; never work it out yourself.** Two calls with your key, both whitelisted calls of iVendNext:
+4. **Ask iVendNext for the price; never work it out yourself.** One call with your key, a whitelisted call of iVendNext:
 
    ```text
-   POST /api/method/ivendnext_mpos.api.v1.scan_barcode                {"search_value": "<scanned text>"}
-   POST /api/method/ivendnext_mpos.api.v1.get_item_details {"args": {...one unit...}}
+   POST /api/method/ivendnext_mpos.api.v1.price_check   {"search_value": "<scanned text>", "args": {...one unit, no item...}}
    ```
 
-   The first finds the item from a barcode, a serial number or a batch, with the barcode's own unit. The second finds the price row for one unit on the store's price list, the walk-in customer's own row first, in that unit (a price in the stock unit is converted), on the kiosk's own date. Send `qty` 1, `doctype` `Sales Invoice`, the company, `selling_price_list`, `currency`, `conversion_rate` 1, `transaction_date`, the customer, and `ignore_pricing_rule` 1. ⛔ **Never send a `rate`**: given one, the pricer may write a price row when the retailer's *auto-insert price* setting is on. Show `price_list_rate`; a 0 or no row is *no price here*, never *free*. A 417 from the pricer means iVendNext will not price that item (disabled, past its end of life, a template).
+   It answers `{"scan": …, "price": …}`. It finds the item from a barcode, a serial number, a batch or a price-and-weight label (decoded as the till reads it), with the barcode's own unit, then prices it. It reads a label from POS build `2.1.0.698`. Where `price_check` answers 404 (no such call on that site), make the two calls it wraps, `scan_barcode` with `{"search_value": …}` and `get_item_details` with `{"args": {...one unit...}}`. The pricer finds the price row for one unit on the store's price list, the walk-in customer's own row first, in that unit (a price in the stock unit is converted), on the kiosk's own date. Send `qty` 1, `doctype` `Sales Invoice`, the company, `selling_price_list`, `currency`, `conversion_rate` 1, `transaction_date`, the customer, and `ignore_pricing_rule` 1. ⛔ **Never send a `rate`**: given one, the pricer may write a price row when the retailer's *auto-insert price* setting is on. Show `price_list_rate`; a 0 or no row is *no price here*, never *free*. A 417 from the pricer means iVendNext will not price that item (disabled, past its end of life, a template).
 
 5. **Say what the kiosk does not show.** On iVendNext a selling offer is a **promotion**, which the till works out on the whole sale (the engine refuses a selling price rule), so a one-unit check cannot ask for it. Under every price, say *Any offer is worked out at the till.* The price shown is the store's list price, which a promotion only lowers.
 

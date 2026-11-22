@@ -353,7 +353,7 @@ CANARIES = [
     ("an erase that reads another customer's records stops", SV,
      'if any(r.get("customer") != c for rs in got.values() for r in rs):', "if False:",
      S + "Erasure.test_a_shop_that_answers_for_another_customer_erases_nothing"),
-    # 0.1.5: the sale a pharmacist sent to a cash till (BUG-PH-001)
+    # 0.1.5: the sale a pharmacist sent to a cash till
     ("a sent sale is judged on the pharmacist who sent it", RX, 'if sent and covered and licensed(sent["pharmacist"], today):',
      'if False:', S + "SentSale.test_the_cashier_pays_it_in_one_press_and_the_dispensing_names_both"),
     ("the one who sent it must be a pharmacist today", RX, 'if sent and covered and licensed(sent["pharmacist"], today):',

@@ -140,7 +140,7 @@ class Receipt(unittest.TestCase):
         self.assertEqual(self.check(receipt([{"batch_no": "PARA-B"}], supplier_delivery_note="")), {"verdict": "allow"})
 
     def test_c14b_a_short_dated_lot_comes_before_the_missing_suppliers_number(self):
-        """The check's title is *Shelf life at receipt*: the reason shown is the shelf-life one, the note counted after."""
+        """The check's title is *Goods receipt check*: the reason shown is the shelf-life one, the note counted after."""
         out = self.check(receipt([{"batch_no": "PARA-A"}], supplier_delivery_note=""))
         self.assertTrue(out["reason"].startswith("Row 1: lot PARA-A has 30 days left"), out["reason"])
         self.assertTrue(out["reason"].endswith("(+1 more)"), out["reason"])
@@ -253,7 +253,7 @@ class Disposal(unittest.TestCase):
         self.assertEqual([r[1] for r in self.shop.reads[n:]], ["PP RCL Settings"])   # a Desk receipt: the settings only
 
     def test_d7b_a_recalled_lot_moved_to_a_selling_store_is_left_to_the_tills_own_refusal(self):
-        # PH-K5 (D3): the till refuses a recalled lot's move anywhere but a quarantine store, in words that say so; the
+        # the till refuses a recalled lot's move anywhere but a quarantine store, in words that say so; the
         # app adds no second sentence about a disposal. An issue of it is still a disposal (d7), an expired lot still is
         self.shop.lots["TRAM-A"]["disabled"] = 1
         for src in (DISP, QUAR):

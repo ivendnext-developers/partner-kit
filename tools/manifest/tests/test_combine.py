@@ -207,8 +207,9 @@ class Combine(Base):
             self.assertIn(f"`{e['name']}`: {e['purpose']}", server)
         self.assertIn("Give it a public https address and put that address on Where the service runs.", server)
         self.assertIn("Nothing to install: the samples use Python's standard library.", text)
-        self.assertIn("python3 -m unittest discover -s apps/acme_hk/tests", text)
-        self.assertIn("python3 apps/acme_hk/service/app.py --local", text)
+        # in the app's own folder, so the line works in the kit and in the unzipped download alike
+        self.assertIn("In the app's folder (`apps/acme_hk/` in the kit, or the folder you unzipped):", text)
+        self.assertIn("python3 -m unittest discover -s tests\npython3 service/app.py --local", text)
         self.assertIn("It reads test values from .env.local, which New app wrote for you; put your own outside keys there. "
                       "It answers on http://localhost:8000.", text)
         self.assertIn("Change it with your AI assistant: open your copy of the kit in it. It reads AGENTS.md, which knows "

@@ -46,7 +46,7 @@ class Manifest(unittest.TestCase):
 
     def test_the_apps_user_may_only_read_the_kiosks(self):
         perms = {p["role"]: p for p in KIOSK["permissions"]}
-        self.assertEqual({k for k, v in perms["PP Integration"].items() if v == 1}, {"read"})
+        self.assertEqual({k for k, v in perms["PP PRC Integration"].items() if v == 1}, {"read"})
 
     def test_the_record_type_carries_its_help_address(self):
         ps = [p for p in M["property_setters"] if p["doc_type"] == "PP PRC Kiosk" and p["property"] == "documentation"]
@@ -62,7 +62,7 @@ class Manifest(unittest.TestCase):
         self.assertEqual(M["registered_applications"][0]["events"], ["PP PRC Kiosk"])
 
     def test_the_setup_is_in_the_description(self):
-        for words in ("PP Integration before this is installed", "PP PRC Kiosk feed", "read on Item and Item Price", "writes nothing"):
+        for words in ("The install makes the role PP PRC Integration", "PP PRC Kiosk feed", "read on Item and Item Price", "writes nothing"):
             self.assertIn(words, M["description"])
         self.assertNotIn("<", json.dumps(M))
 

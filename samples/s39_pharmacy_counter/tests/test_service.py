@@ -142,7 +142,7 @@ class Dispensing(Base):
         self.assertEqual([d["status"] for d in self.shop.dispensings()], ["Dispensed", "Reserved"])
 
     def test_the_sweep_reads_a_booked_sale_dispensed_whoever_its_patient(self):
-        # PH-K5 (D6, 0.1.6): the day's prescriptions register reads the medicine sold to Ann as dispensed at the next sweep
+        # 0.1.6: the day's prescriptions register reads the medicine sold to Ann as dispensed at the next sweep
         # (each minute, on its own schedule), not only at Ann's next visit; a reservation older than the sweep's days waits
         # for its patient; an abandoned sale's fill, its day closed, is released
         k = RX.patient_key("Ann")
@@ -227,7 +227,7 @@ class Dispensing(Base):
 
 
 class SentSale(Base):
-    """0.1.5 (BUG-PH-001): the pharmacist rings a prescription, presses Pay (the check reserves the fill) and sends the sale
+    """0.1.5: the pharmacist rings a prescription, presses Pay (the check reserves the fill) and sends the sale
     to the dispensary's cash till; a counter assistant who is not a pharmacist rings it up there and takes the money."""
 
     def setUp(self):
@@ -546,7 +546,7 @@ class TillFill(Base):
         self.assertEqual(d["status"], RX.RESERVED)
 
     def test_the_0_1_6_address_fills_the_prescriber_and_the_licence_as_the_date(self):
-        # PH-K5 (D5): the HMO's claims file copies them from the sale (via the payer record): filled from the prescription
+        # the HMO's claims file copies them from the sale (via the payer record): filled from the prescription
         # at Pay, as the date is, never over what the pharmacist typed; 0.1.4's address, whose list names the date only,
         # is answered with the date only (a fill outside a subscription's list is refused whole)
         want = {f"{P} Rx Date": "2026-10-19", f"{P} Prescriber": "Dr Who", f"{P} Prescriber Licence": "MDCN/12345"}
@@ -886,7 +886,7 @@ if __name__ == "__main__":
 
 
 class Function(unittest.TestCase):
-    """0.1.6 (PH-K5, D6): on CitiXsys hosting the sweep is the schedule's own call (app.json), one claim a shop."""
+    """0.1.6: on CitiXsys hosting the sweep is the schedule's own call (app.json), one claim a shop."""
     def test_the_schedule_sweeps_every_shop_it_claims(self):
         import tempfile
         import shops

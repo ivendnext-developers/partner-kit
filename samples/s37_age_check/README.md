@@ -44,6 +44,10 @@ ivn try
 
 ## Versions
 
+### 1.1.8
+
+- Manifest 0.2.4: the description no longer says an item picked from a list has no recorded check (the till asks its age too). The service is unchanged.
+
 ### 1.1.7
 
 - *Try it at the till* names the screen for the scan's item groups (*Retail Extension Subscription*, the app's *Age check* row, *Settings for this extension point*) and the whole settings line it should read, and its last step types 19 in *ID checked* and presses *Checkout*, where the till refuses the sale and names the item (picking an item from the list asks the age too, so that step could not be done).

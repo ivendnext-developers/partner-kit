@@ -11,8 +11,9 @@
 A kiosk is a browser on a tablet: it holds no secret and signs nothing. Its call names its shop and its kiosk; the service
 answers only for a shop that connected (or the one shop it is set up for) and a Kiosk record of that code which the shop
 has switched on, read with the app's own integration key and kept one minute (``KIOSK_TTL``). Then it asks the shop:
-its barcode lookup (``ivendnext_mpos.api.v1.scan_barcode``) and its line pricer
-(``ivendnext_mpos.api.v1.get_item_details``), both whitelisted and read-only as called here (never a ``rate``).
+its price check (``ivendnext_mpos.api.v1.price_check``: the barcode lookup, a price-and-weight label decoded as the till
+reads it, then the line pricer for one unit), whitelisted and read-only as called here (never a ``rate``). Where the price
+check answers 404, the service makes the two calls it wraps (``scan_barcode``, ``get_item_details``).
 The service writes nothing to the shop and keeps nothing but the Kiosk records it read.
 
 ONE SHOP (env or an env file):
@@ -56,6 +57,7 @@ import shops  # noqa: E402
 KIOSK_TTL, READ_TIMEOUT = 60, 3.0
 SCAN_BARCODE = "/api/method/ivendnext_mpos.api.v1.scan_barcode"
 PRICER = "/api/method/ivendnext_mpos.api.v1.get_item_details"
+PRICE_CHECK = "/api/method/ivendnext_mpos.api.v1.price_check"
 STATIC = {"/": ("kiosk.html", "text/html; charset=utf-8"), "/kiosk.js": ("kiosk.js", "text/javascript; charset=utf-8"),
           "/kiosk.css": ("kiosk.css", "text/css; charset=utf-8")}
 
@@ -128,6 +130,19 @@ class ShopApi:
             if e.code == 417:       # the lookup's own refusal (a batch of an item that has serial numbers): no match
                 return {}
             raise ShopUnreadable(f"the shop answered {e.code}") from None
+
+    def check(self, url: str, key: str, text: str, args: dict) -> dict | None:
+        """The shop's price check, one call: ``{"scan": …, "price": … or None}``; ``args`` carry no item (the scan
+        supplies it). None when the price check answers otherwise (a 404: no such call there): the caller makes the two calls."""
+        if "rate" in args:
+            raise ValueError("never send a rate: the shop's pricer may then write a price row")
+        try:
+            return _call(url, key, PRICE_CHECK, {"search_value": text, "args": args}).get("message") or {}
+        except urllib.error.HTTPError as e:
+            e.close()
+            if e.code == 417:       # the pricer refused the item it found
+                raise NotPriced(str(e.code)) from None
+            return None             # no such call on this shop, or it failed: the two calls answer or say why
 
     def price(self, url: str, key: str, args: dict) -> dict:
         """The shop's line pricer for one unit."""
@@ -204,11 +219,19 @@ class Service:
             kiosk = self.kiosk(name, shop, code)
             if not kiosk:
                 return 403, price.refusal("not_set_up")
-            hit = self.api.scan(shop["url"], shop["key"], text)
+            date = price.kiosk_date(body.get("date"), self.today())
+            base = price.pricer_args(kiosk, {"item_code": ""}, date)
+            del base["item_code"]
+            both = self.api.check(shop["url"], shop["key"], text, base)
+            hit = (both or {}).get("scan") if both is not None else self.api.scan(shop["url"], shop["key"], text)
             if not isinstance(hit, dict) or not isinstance(hit.get("item_code"), str) or not hit["item_code"]:
                 return 200, price.refusal("not_found")
-            args = price.pricer_args(kiosk, hit, price.kiosk_date(body.get("date"), self.today()))
-            answer = price.answer_of(self.api.price(shop["url"], shop["key"], args), kiosk)
+            if both is not None:
+                if not isinstance(both.get("price"), dict):
+                    return 200, price.refusal("not_found")
+                answer = price.answer_of(both["price"], kiosk)
+            else:
+                answer = price.answer_of(self.api.price(shop["url"], shop["key"], price.pricer_args(kiosk, hit, date)), kiosk)
         except NotPriced:
             return 200, price.refusal("not_on_sale")
         except ShopUnreadable:

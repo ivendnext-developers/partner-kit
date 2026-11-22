@@ -811,6 +811,7 @@ def _does(part: Part) -> str:
     words += ["a till key"] * len(part.manifest.get("remote_keys") or [])
     words += ["a notice of each sale"] * len(part.manifest.get("webhooks") or [])
     words += ["a button in Desk"] if part.manifest.get("desk_actions") else []
+    words += ["field rules for the till"] if part.manifest.get("field_rules") else []
     words = list(dict.fromkeys(words))
     lists = [d.get("name", "")[len(part.prefix) + 1:] for d in part.manifest.get("doctypes") or []]
     lists = [l.lower() for l in lists if l and l != "Settings"]
@@ -894,9 +895,11 @@ Names already installed at a site; the samples record in `app.json`; `service/_k
 
 {install_line}
 
+In the app's folder (`apps/{app}/` in the kit, or the folder you unzipped):
+
 ```
-python3 -m unittest discover -s apps/{app}/tests
-python3 apps/{app}/service/app.py --local
+python3 -m unittest discover -s tests
+python3 service/app.py --local
 ```
 
 It reads test values from .env.local, which New app wrote for you; put your own outside keys there. It answers on http://localhost:8000.

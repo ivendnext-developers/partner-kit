@@ -202,7 +202,7 @@ class MySites(B.Base):
         self.assertEqual(rc, 1)
         self.assertIn(B.ivn.WORDS["capture_none"], out)
 
-    def test_capture_new_on_a_site_with_nothing_makes_no_app(self):  # the critic: never an empty app left behind
+    def test_capture_new_on_a_site_with_nothing_makes_no_app(self):  # never an empty app left behind
         self.stub.empty_site = True
         news = []
         real = type(self.stub).ROUTES["/v1/new"]

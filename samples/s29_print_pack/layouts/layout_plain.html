@@ -1,6 +1,6 @@
 {#- The plain layout — what an invoice for any customer the branch does not name prints. Keep it: without it, a customer the
     template does not name gets an empty page. -#}
-<div style="font-family: Arial, sans-serif; font-size: 12px; color:#222;">
+<div dir="auto" style="font-family: Arial, sans-serif; font-size: 12px; color:#222;">
   <div style="font-size:15px; font-weight:bold;">{{ doc.company }}</div>
   <div>{{ doc.company_address_display or "" }}</div>
   {%- if doc.company_tax_id %}<div>Tax no. {{ doc.company_tax_id }}</div>{% endif %}

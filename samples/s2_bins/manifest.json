@@ -3,7 +3,7 @@
  "app": "pp_bln",
  "prefix": "PP BLN",
  "title": "Bin locations",
- "version": "0.1.6",
+ "version": "0.1.7",
  "publisher": "Partner Programme sample",
  "description": "Where stock sits inside a store: locations (back room, shop floor), aisles, bins and what is in each bin. The retailer's own stock and valuation stay in iVendNext; these records only say where. The install makes the app's own user, with the role PP BLN Integration, and names it on the feed registration PP BLN Bins feed, which follows the locations (they seldom change); the site connects the app and hands the Where is it? service that user's key.",
  "allowed_urls": [
@@ -100,7 +100,7 @@
      "email": 1
     },
     {
-     "role": "PP Integration",
+     "role": "PP BLN Integration",
      "read": 1,
      "write": 1,
      "create": 1,
@@ -173,7 +173,7 @@
      "email": 1
     },
     {
-     "role": "PP Integration",
+     "role": "PP BLN Integration",
      "read": 1,
      "write": 1,
      "create": 1,
@@ -254,7 +254,7 @@
      "email": 1
     },
     {
-     "role": "PP Integration",
+     "role": "PP BLN Integration",
      "read": 1,
      "write": 1,
      "create": 1,
@@ -367,7 +367,7 @@
      "email": 1
     },
     {
-     "role": "PP Integration",
+     "role": "PP BLN Integration",
      "read": 1,
      "write": 1,
      "create": 1,
@@ -443,7 +443,7 @@
   {
    "name": "PP BLN Bin Label",
    "doc_type": "PP BLN Bin",
-   "html": "<div class=\"pp-bln-label\"><h2>{{ doc.bin_code }}</h2><p>{{ doc.aisle }} · {{ doc.location }}</p></div>",
+   "html": "<div class=\"pp-bln-label\" dir=\"auto\"><h2>{{ doc.bin_code }}</h2><p>{{ doc.aisle }} · {{ doc.location }}</p></div>",
    "css": ".pp-bln-label h2 { font-size: 28px; }"
   }
  ],

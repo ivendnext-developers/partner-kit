@@ -26,7 +26,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/click_and_collect.md).
 
-**The customer sets:** each store's warehouse in the pick list's filter, and the waiting list's filter (Status, Handed over No, POS Pickup Handed At not set, Set Source Warehouse, and Date on or after the day of install), saved once.
+**The customer sets:** each store's warehouse in the pick list's filter, and the waiting list's filter (Status, Handed over No, POS Pickup Handed At not set, Set Source Warehouse, and Date on or after the day of install), saved once for each store. Name each store's list store first (*New York · waiting for collection*): Desk's sidebar cuts a saved list's name at about 17 letters, so lists named *Waiting for collection - New York* all read *Waiting for col…*.
 
 ## Run it
 

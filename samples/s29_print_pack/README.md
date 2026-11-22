@@ -36,6 +36,10 @@ python3 -m unittest discover -s samples/s29_print_pack/tests -p 'test_*.py'
 
 ## Versions
 
+### 1.0.2
+
+- Every layout prints in the reader's direction (`dir="auto"`), so a customer's name or address in Arabic or Hebrew reads right to left. Each layout keeps the words written for its customer. Manifests 0.1.4 (branch), 0.1.5 (each), 0.1.2 (price list).
+
 ### 1.0.1
 
 - The catalogue file writes each value as it is.

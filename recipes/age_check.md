@@ -57,7 +57,7 @@ The retailer's record `Default` of `<PREFIX> Settings`: *Hours from UTC at your 
 
 ![The settings record Default on a demo site](../samples/s37_age_check/screenshots/02_settings.png)
 
-**What the cashier does.** The cashier scans a restricted item, reads the date of birth on the sheet, checks the customer's ID, and taps **Add with these details**, or **Don't add it** when the customer is too young or has no ID. At Pay, a refusal shows *"This sale can't be paid"* and the app's sentence: the cashier checks the ID and types the age in the basket's **🗒 Sale details**, or takes the item off, and presses Pay again.
+**What the cashier does.** The cashier scans a restricted item, reads the date of birth on the sheet, checks the customer's ID, and taps **Add with these details**, or **Don't add it** when the customer is too young or has no ID. At **Checkout**, a refusal shows *"This sale can't be paid"* and the app's sentence: the cashier checks the ID and types the age in the basket's **🗒 Sale details**, or takes the item off, and presses **Checkout** again.
 
 ## What iVendNext needs from you
 
@@ -79,7 +79,7 @@ The retailer's record `Default` of `<PREFIX> Settings`: *Hours from UTC at your 
 - **After an update of the app,** iVendNext checks that the scan service's settings still name its groups.
 - **Offline,** the till does not call you: each down answer applies. The scan's filter travels with the till's start of day.
 - **Where the check never runs:** a park to a till, a layaway deposit, an account collection (the check page, *Not in this version*), nor a sale rung in the Desk's own POS screen.
-- **Not in this version:** a manager's override of a refusal, restricted selling hours, an ID scanner, and a verified age kept on the customer. Each is a partner's version ([Make one of our apps your own](make_it_your_own.md)).
+- **Not in this version:** a manager's override of a refusal, restricted selling hours, and a verified age kept on the customer. A US or Canadian driving licence's barcode scanned into **Sale details** is read as its age by the till itself (POS build `2.1.0.695` or later), so the app needs no ID scanner of its own. Each is a partner's version ([Make one of our apps your own](make_it_your_own.md)).
 - **Hosting:** the service is the app template's shape, so it serves many retailers through the template's handshake; each retailer's site hands over the two secrets, and the key of the app's own user, when it connects after the install or an update (*Connect again* only if the site could not reach the app, or a key was lost or changed). It only answers presses, so on CitiXsys hosting it runs as a function, free once listed because it runs only when called (`app.json` `"runs": "function"`). Until a retailer's user key arrives the service answers 503, so your down answers apply.
 
 ### What was proven where
