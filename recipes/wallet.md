@@ -4,7 +4,7 @@ A **partner wallet** is a balance you keep for the retailer's customers (cash ba
 
 **Reference implementation:** `samples/s22_customer_loyalty/` — *Member cash*, the cash back of a customer's own loyalty programme spent at the till ([its README](../samples/s22_customer_loyalty/README.md)).
 
-**When to use it.** The customer wants a balance they already keep, or that you keep for them, to pay for a sale. If the retailer's own loyalty or gift cards do the job, configure them instead (chapter 4). On your sandbox, ask us to add the remote-wallet payments app first ([the payment connector recipe](payment_connector.md)).
+**When to use it.** The customer wants a balance they already keep, or that you keep for them, to pay for a sale. If the retailer's own loyalty or gift cards do the job, configure them instead (chapter 4). The *Wallet* tender needs iVendNext Payments Core 2.1.0 or later and a live wallet connection in its Remote Connector; with no live connection a balance request stops with *"This wallet isn't set up at this store. Choose another tender."*, and a suspended or abandoned connection answers that the tender is not able to take payments On your sandbox, ask us to add Payments Core first ([the payment connector recipe](payment_connector.md)).
 
 ## The till's four questions
 
@@ -21,7 +21,7 @@ The till checks a good deal before it asks you: a customer on the sale, an amoun
 
 ## Steps
 
-All of this is done on your own sandbox, on its screens, as the site's administrator. Ask CitiXsys to install the remote-wallet payments app on your sandbox site (a new sandbox site does not carry it) and to switch on its payments test mode, without which the sandbox refuses a sandbox certificate (step 3) and a *test* account cannot go live (step 7).
+All of this is done on your own sandbox, on its screens, as the site's administrator. Ask CitiXsys to install iVendNext Payments Core (2.1.0 or later) and its Remote Connector on your sandbox site (a new sandbox site does not carry them) and to switch on its payments test mode, without which the sandbox refuses a sandbox certificate (step 3) and a *test* account cannot go live (step 7).
 
 1. **Write your service.** Copy S22's `service/wallet.py` and its signed route in `service/app.py`, and point them at your own balance. Key every money write on the reference, so a repeated call is one charge; keep one customer's balance to one till at a time (S22 uses a file lock per member, which holds only while one host answers: two hosts behind a load balancer need a lock they share, such as your database's).
 2. **Sign your sandbox certificate** with [the sandbox certificate tool](../tools/sandbox_cert/README.md): your declaration (what your wallet does), your partner name and the connector's name, signed with the published sandbox key. The declaration's markets must include the two-letter country of each retailer company that will take it, or go-live refuses (the sandbox's site is a US company).

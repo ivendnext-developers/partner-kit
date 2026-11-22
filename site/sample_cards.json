@@ -1,0 +1,261 @@
+{
+ "_about": "The App library card of each sample that has one (a sample listed as an app). site/build.py puts a line with the card's link under the title of the sample's page and of each recipe that names the sample as its reference implementation. Add a line here when a card is listed from a sample; the card's address is library.ivendnext.app/apps/<app>. S11 has none: the library's *Price change approvals* was made from S11 before S11 became *Purchase Order approval*.",
+ "s1_warranty": [
+  {
+   "app": "ivendnext_wrc",
+   "title": "Warranty terms"
+  }
+ ],
+ "s2_bins": [
+  {
+   "app": "ivendnext_bln",
+   "title": "Bin locations"
+  }
+ ],
+ "s3_price_audit": [
+  {
+   "app": "ivendnext_pda",
+   "title": "Price-deviation audit"
+  }
+ ],
+ "s4_receipt_pack": [
+  {
+   "app": "ivendnext_rcp",
+   "title": "UAE tax invoice receipt"
+  }
+ ],
+ "s14_approvals_stores": [
+  {
+   "app": "ivendnext_aps",
+   "title": "Price change approvals across stores"
+  }
+ ],
+ "s16_pick_route": [
+  {
+   "app": "ivendnext_pck",
+   "title": "Pick route"
+  }
+ ],
+ "s18_rule_guard": [
+  {
+   "app": "ivendnext_rgd",
+   "title": "Members-only check before payment"
+  }
+ ],
+ "s19_unit_codes": [
+  {
+   "app": "ivendnext_unc",
+   "title": "Unit codes at the scan"
+  }
+ ],
+ "s21_field_rules": [
+  {
+   "app": "ivendnext_fld",
+   "title": "Till field rules"
+  }
+ ],
+ "s22_customer_loyalty": [
+  {
+   "app": "ivendnext_lyl",
+   "title": "Customer-owned loyalty"
+  }
+ ],
+ "s23_till_guard": [
+  {
+   "app": "ivendnext_tgr",
+   "title": "Till guard rules"
+  }
+ ],
+ "s24_price_checker": [
+  {
+   "app": "ivendnext_prc",
+   "title": "Price-checker kiosk"
+  }
+ ],
+ "s25_gift_on_spend": [
+  {
+   "app": "ivendnext_gcs",
+   "title": "Gift card on spend"
+  }
+ ],
+ "s32_coupon_rules": [
+  {
+   "app": "ivendnext_cpn",
+   "title": "Coupon rules"
+  }
+ ],
+ "s33_click_and_collect": [
+  {
+   "app": "ivendnext_ccb",
+   "title": "Click and collect"
+  }
+ ],
+ "s35_call_centre_orders": [
+  {
+   "app": "ivendnext_cco",
+   "title": "Call-centre orders by district"
+  }
+ ],
+ "s36_duty_free": [
+  {
+   "app": "ivendnext_dfa",
+   "title": "Duty-free allowance and boarding pass"
+  }
+ ],
+ "s37_age_check": [
+  {
+   "app": "ivendnext_age",
+   "title": "Age-restricted sale check"
+  }
+ ],
+ "s38_expiry_markdown": [
+  {
+   "app": "ivendnext_exm",
+   "title": "Expiry markdown"
+  }
+ ],
+ "s39_pharmacy_counter": [
+  {
+   "app": "ivendnext_rxc",
+   "title": "Pharmacy counter rules"
+  }
+ ],
+ "s40_expiry_recall": [
+  {
+   "app": "ivendnext_rcl",
+   "title": "Expiry and recall"
+  }
+ ],
+ "s41_regulated_register": [
+  {
+   "app": "ivendnext_rsr",
+   "title": "Regulated stock register"
+  }
+ ],
+ "s42_optical_prescriptions": [
+  {
+   "app": "ivendnext_opt",
+   "title": "Optical prescriptions and lab orders"
+  }
+ ],
+ "s43_third_party_payer": [
+  {
+   "app": "ivendnext_icp",
+   "title": "Third-party payer"
+  }
+ ],
+ "s44_lucky_draw": [
+  {
+   "app": "ivendnext_ldw",
+   "title": "Lucky draw"
+  }
+ ],
+ "s45_restaurant_back_office": [
+  {
+   "app": "ivendnext_rbo",
+   "title": "Restaurant back office"
+  }
+ ],
+ "s46_payment_method_rules": [
+  {
+   "app": "ivendnext_pmr",
+   "title": "Payment method rules"
+  }
+ ],
+ "s47_customers_by_store": [
+  {
+   "app": "ivendnext_cbs",
+   "title": "Customers by store"
+  }
+ ],
+ "s48_customer_code_check": [
+  {
+   "app": "ivendnext_ccc",
+   "title": "Customer code check"
+  }
+ ],
+ "s49_post_sale_feedback": [
+  {
+   "app": "ivendnext_psf",
+   "title": "Post-sale feedback"
+  }
+ ],
+ "s50_required_sale_details": [
+  {
+   "app": "ivendnext_rsd",
+   "title": "Required sale details"
+  }
+ ],
+ "s51_refund_rules": [
+  {
+   "app": "ivendnext_rfr",
+   "title": "Refund rules"
+  }
+ ],
+ "s53_alteration_tickets": [
+  {
+   "app": "ivendnext_alt",
+   "title": "Alterations and made-to-measure tickets"
+  }
+ ],
+ "s54_sell_through": [
+  {
+   "app": "ivendnext_sst",
+   "title": "Sell-through by size"
+  }
+ ],
+ "s55_front_of_house": [
+  {
+   "app": "ivendnext_foh",
+   "title": "Front of house"
+  }
+ ],
+ "s56_guest_ordering": [
+  {
+   "app": "ivendnext_gor",
+   "title": "Guest ordering"
+  }
+ ],
+ "s57_donation_intake": [
+  {
+   "app": "ivendnext_don",
+   "title": "Donation intake with a donor receipt"
+  }
+ ],
+ "s58_repairs_by_serial": [
+  {
+   "app": "ivendnext_rpr",
+   "title": "Repairs by serial number"
+  }
+ ],
+ "s59_kitchen_screen": [
+  {
+   "app": "ivendnext_ksc",
+   "title": "Kitchen screen"
+  }
+ ],
+ "s60_project_quotes": [
+  {
+   "app": "ivendnext_pqt",
+   "title": "Project quotes and deliveries by stage"
+  }
+ ],
+ "s61_consignment_payouts": [
+  {
+   "app": "ivendnext_csg",
+   "title": "Consignment payouts"
+  }
+ ],
+ "s62_liquor_excise_returns": [
+  {
+   "app": "ivendnext_exr",
+   "title": "Liquor excise returns"
+  }
+ ],
+ "s63_room_charge": [
+  {
+   "app": "ivendnext_rmc",
+   "title": "Room charge"
+  }
+ ]
+}

@@ -2,7 +2,7 @@
 
 Before you invest in an app, see what we give away free and what is yours to sell. This page lists what we build, what we give you a starter for, and what you build. Its lists come from our own work lists, and we refresh them as we close the work that changes them. It carries no dates: an item moves from *next* to *being built* to *listed* when it does.
 
-Why the split works for your business, and what stays yours: [Build your business on iVendNext's apps](business.md).
+What changed in the product for developers, release by release: [What's new for developers](whats_new.md). Why the split works for your business, and what stays yours: [Build your business on iVendNext's apps](business.md).
 
 ## The build test
 

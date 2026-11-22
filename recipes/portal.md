@@ -16,7 +16,7 @@ This recipe builds a **web app of your own, on your own server**, for people who
 
    The secret goes only to iVendNext, with the code exchange and the sign-out. iVendNext does not check it on this build (`recipes/sign_in.md` §4), but send it: a portal without it stops signing anyone in the day iVendNext starts checking.
 
-   Put it behind HTTPS and set `PORTAL_SECURE=1`, so the session cookie is never sent in the clear.
+   Put it behind HTTPS and set `PORTAL_SECURE=1`, so the session cookie is never sent in the clear. Over HTTPS the portal names its session cookie `__Host-…` (Secure, Path=/, no Domain), so a neighbouring `⟨app⟩.ivendnext.app` cannot set or overwrite it: S13 does this wherever it runs, hosted with us included.
 
    What a person sees: the portal's button ![the portal's sign-in page](../samples/s13_portal/screenshots/01_portal_sign_in.png) leads to the retailer's own sign-in and then its Allow page, which names your app ![the Allow page](../samples/s13_portal/screenshots/03_shop_allow_page.png). The portal never sees the password.
 

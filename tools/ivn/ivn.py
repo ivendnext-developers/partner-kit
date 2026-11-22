@@ -1873,7 +1873,7 @@ def parser() -> argparse.ArgumentParser:
     cmd("cancel", cmd_cancel, "stop its service at the month's end")
     p = cmd("handover", cmd_handover, "hand this app to another company")
     p.add_argument("word", help="their company's first word")
-    p = cmd("key", cmd_key, "a paid listed app's key for one retailer's site")
+    p = cmd("key", cmd_key, "a key for one retailer's site, for any app of your company")
     p.add_argument("site")
     p = cmd("token", cmd_token, "make a token for a build server", in_app=False)
     p.add_argument("action", choices=("new",))

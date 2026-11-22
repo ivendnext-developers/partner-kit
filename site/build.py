@@ -73,6 +73,7 @@ verdict and door.
 from __future__ import annotations
 
 import html
+import json
 import os
 import pathlib
 import posixpath
@@ -111,7 +112,7 @@ GROUPS = {"guide": "Guide", "recipes": "Recipes", "samples": "Samples", "feedbac
 # Which section a page is in: its header highlight and its breadcrumb step. A page's own address first, then its first folder;
 # everything else is Learn the kit. My apps lights its own pill and has no step above it.
 SECTIONS = {"needs": "needs", "plan.html": "needs", "samples": "samples", "publish.html": "publish", "first_app.html": "publish",
-            "business.html": "publish", "apps.html": "apps", "roadmap.html": "roadmap", "feedback.html": "roadmap", "feedback": "roadmap",
+            "business.html": "publish", "apps.html": "apps", "roadmap.html": "roadmap", "whats_new.html": "roadmap", "feedback.html": "roadmap", "feedback": "roadmap",
             "index.html": "", "search.html": "", "404.html": ""}
 SANDBOX_FORM = CORP + "/developers/sandbox/"               # the short form; sandbox.html is the one page that opens it
 
@@ -959,6 +960,8 @@ def catalogue_pages(cards: list, titles: dict) -> list[GenPage]:
               ("Not possible", lambda c: c.status == "not-possible")]
     for head, pred in groups:
         mine = [c for c in cards if pred(c)]
+        if not mine:          # a section with no card is left out, not drawn as an empty table
+            continue
         np += [f"## {head}", "", "| The customer asks | What to do |", "|---|---|"]
         np += [f"| {need_link(c, 'needs/not-possible.md')} | " + " ".join(l.replace("**", "") for l in c.limits)
                + (f" Ask for {', '.join(c.requests)}." if c.requests else "") + " |" for c in mine]
@@ -1393,6 +1396,27 @@ def start_button(html_text: str, folder: str, up: str) -> str:
     return re.sub(r'(</h1>)', r"\1" + button, html_text, count=1)   # the first thing under the title (EASYLOOK)
 
 
+LIBRARY_APPS = "https://library.ivendnext.app/apps/"
+
+
+def sample_cards(path: pathlib.Path | None = None) -> dict:
+    """site/sample_cards.json: the App library card of each sample that is listed as an app (SAMPLECARDLINK)."""
+    path = path or SITE / "sample_cards.json"
+    data = json.loads(path.read_text("utf-8")) if path.is_file() else {}
+    return {k: v for k, v in data.items() if not k.startswith("_")}
+
+
+def card_line(html_text: str, samples, cards: dict) -> str:
+    """A line under the title of a sample's page, and of a recipe that names the sample as its reference implementation:
+    *In the App library: <card>*. A page that links the card already keeps its own line."""
+    names = [samples] if isinstance(samples, str) else list(samples or [])
+    found = [c for n in names for c in cards.get(n, []) if LIBRARY_APPS + c["app"] not in html_text]
+    if not found:
+        return html_text
+    links = " · ".join(f'<a href="{LIBRARY_APPS}{html.escape(c["app"])}">{html.escape(c["title"])}</a>' for c in found)
+    return re.sub(r'(</h1>)', r'\1' + f'<p class="in-library">In the App library: {links}</p>', html_text, count=1)
+
+
 def next_list(path: pathlib.Path | None = None) -> list[str]:
     """The roadmap's *next* list (site/roadmap_lists.md, `## Next`): each item not yet listed or being built (one with no
     link), the names *Claim a need* may be shown for (spec J1-09)."""
@@ -1755,13 +1779,17 @@ def build(out_dir: pathlib.Path) -> int:
             srcs += sample_srcs
         return srcs
 
+    cards_of = sample_cards()
     for p in pages:
         ctx.src, ctx.out = p.src, p.out
         toc: list = []
         p.html = render(p.text, ctx, {}, toc)
         up = up_of(p.out)
         if p.group == "samples":
-            p.html = start_button(p.html, p.src.removesuffix("/README.md"), up)
+            p.html = card_line(p.html, p.src.split("/")[1], cards_of)
+            p.html = start_button(p.html, p.src.removesuffix("/README.md"), up)    # the start button stays the first thing under the title
+        elif p.group == "recipes":
+            p.html = card_line(p.html, (sample_of.get(p.out) or ("", ""))[1].split("/")[1:2], cards_of)    # the sample the recipe's own *Next* button names
         src_link = ("" if p.src.startswith("site/pages/")
                     else f'<p class="src"><a href="{REPO_URL}/blob/main/{p.src}">This page in the kit</a></p>')
         hero, body = hero_of(p.html) if p.out == "index.html" else ("", p.html)
