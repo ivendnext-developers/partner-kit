@@ -156,8 +156,8 @@ def points(src: str = MAP_SRC, root: pathlib.Path = ROOT, d: dict | None = None)
              "Each cell is the contract page's own words."),
             ("declared", "Declared, not called", DECLARED_COLS,
              "Nothing calls your service at run time. Some you declare as data in your manifest (save rules, field rules, "
-             "list marks, register books, a fiscal reader, a sandboxed price module); some are records or settings the "
-             "retailer makes in Desk (a scan source, a label layout, the receipt's lines); the print readers are what a print "
+             "list marks, register books, a fiscal reader, a scan source, a label layout, a sandboxed price module); some are records or settings the "
+             "retailer makes in Desk (the receipt's lines); the print readers are what a print "
              "format may call; and the event feed, the open check and the station ticket are calls your app makes (part a). Each contract page "
              "says which. Each cell is the contract page's own words.")):
         out += [f"### {head}", "", lede, "", "| Extension point | " + " | ".join(c[1] for c in cols) + " |",

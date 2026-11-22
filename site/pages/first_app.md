@@ -167,7 +167,7 @@ That is the whole install, one consent and one press. Everything the app adds is
 
 Then they give their staff the roles, on each person's **User** record. In S11 those are the roles a purchasing team holds already, so there may be nothing to do.
 
-Once you publish your next version, it shows on the same card within ten minutes, with **Update**, and asks for no key: they read what changes, tick **I agree** and press **Update**. To go back a version, see [Publish your app](publish.md).
+Once you publish your next version, it shows on the same card within ten minutes, with **Update**, and asks for no key: one press on **Update**, or, when the update asks for something new, they read what changes and tick **I agree** first. To go back a version, see [Publish your app](publish.md).
 
 If you list your app free for every retailer, there is no shelf and no key: they press **Install** on its card in the App library. Your next version reaches them the same way.
 
@@ -181,7 +181,7 @@ To list your app for every retailer: on My apps, **Publish**, then **To everyone
 - **One that runs only when called,** once it is listed in the App library: free, all its copies, sandbox included. The billing stops at its next renewal, and nothing already paid is refunded. Until it is listed, it pays its plan.
 - **An app on your own server:** nothing to us. Run the folder at any public https address.
 
-On its card an app is free or needs a key. For a paid app you make each customer's key with `ivn key <site>`, and what you charge them is between you.
+On its card an app is free or needs a key. `ivn key <site>` makes a key for any app of your company, free or paid; for a paid app you make each customer's key with it, and what you charge them is between you.
 
 ## What an app may not do
 
@@ -196,7 +196,7 @@ Everything else, iVendNext itself checks when the install saves it, in its own w
 
 ## Where next
 
-- [Samples](../../samples/): 61 working apps to start from.
+- [Samples](../../samples/): working apps to start from.
 - [What customers need](../../needs/README.md): a customer's need, and the sample or recipe that answers it.
 - [The extension points](map.md): everything an app can plug into, at the till and in Desk.
 - [Publish your app](publish.md): listing it, going back a version, a build server, handing the app over.

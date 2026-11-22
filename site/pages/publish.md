@@ -22,7 +22,7 @@ It makes one app from one sample or several.
 ivn publish --to retailer.ivendnext.com
 ```
 
-It puts the version on the customer's own shelf and prints the message to send their administrator, with the key in it. An app that CitiXsys hosts connects by itself when the customer installs it. Add a site later with the same command. `--to` takes a label too (`ivn publish --to "Acme live"`), and Publish on My apps lists your sites labelled *live* to tick. On a live site you added with its key on **My sites**, **Install now** (or `--install`) shows what installing it changes and installs it there in one press.
+It puts the version on the customer's own shelf and prints the message to send their administrator, with the key in it. An app that CitiXsys hosts connects by itself when the customer installs it. From the second version on, **To a customer** on My apps sends the version to every site the app is already on, so no address is typed; to add a site, name it with `--to`. `--to` takes a label too (`ivn publish --to "Acme live"`), and Publish on My apps lists your sites labelled *live* to tick. On a live site you added with its key on **My sites**, **Install now** (or `--install`) shows what installing it changes and installs it there in one press.
 
 **List it for every retailer.** On My apps, **Publish**, then **To everyone**, or:
 
@@ -52,7 +52,9 @@ The retailer's administrator presses **Install**, reads what it will change, tic
 
 - **Copy and sell one of our apps.** Most apps iVendNext lists in the App library start as working code in this kit, and each such app's page links that code: copy it, change it, put your company's name on it, and sell it. [Build your business on iVendNext's apps](business.md).
 - **Publish from a build server.** `ivn token new <name>` makes a token, shown once; on the server it goes in `IVN_TOKEN`. A token you lose is revoked on My apps > Tokens, in one press.
-- **Go back to an earlier version.** `ivn rollback <version>` publishes an earlier version's content as a new, higher version. It asks for the app's name first, and each customer's administrator presses **Update**.
+- **Send the next version.** `ivn push` checks the folder and uploads it as the next draft; `ivn status` says where the app stands: the version on our server, each site it runs on, and any newer sample version. Pressing **Try on** again for a version already tried on that site tests the site again and installs nothing twice.
+- **See where it runs.** The app's page on My apps lists **Where it runs** (each site and its version, with **Remove this site**) and **Versions**.
+- **Go back to an earlier version.** On My apps, **Go back to this version** on the version you want shows what going back does and which sites get it; **Go back** then publishes it and gives you the message for each administrator. In a terminal, `ivn rollback <version>` publishes an earlier version's content as a new, higher version. Each customer's administrator presses **Update**.
 - **Keep your copy up to date.** `ivn pull` brings in the server's latest draft and keeps your changes. `ivn take <sample>` takes a sample's newer version.
 - **Hand the app to another company.** `ivn handover <word>` asks for the app's name first; the other company accepts on their My apps, and their card pays from the next month.
 - **Everything else `ivn` does** is in [its README](../../tools/ivn/README.md).

@@ -1880,6 +1880,33 @@ The till cannot do this yet; it can stop the sale at Pay.
         self.assertEqual(gallery.readme_errors(kit), [])
 
 
+class SampleCardTests(unittest.TestCase):
+    """SAMPLECARDLINK: a sample listed as an App library app says so under its title, and so does a recipe that names it."""
+
+    def test_every_card_names_a_sample_of_the_kit_and_an_app_id(self):
+        cards = build.sample_cards()
+        self.assertTrue(cards)
+        for sample, apps in cards.items():
+            self.assertTrue((build.ROOT / "samples" / sample).is_dir(), sample)
+            for c in apps:
+                self.assertRegex(c["app"], r"^ivendnext_[a-z0-9_]+$")
+                self.assertTrue(c["title"].strip())
+                mf = build.ROOT / "samples" / sample / "manifest.json"
+                if mf.is_file():            # the card's code is the sample's own code under the library's prefix
+                    self.assertEqual(c["app"].split("_", 1)[1], json.loads(mf.read_text("utf-8"))["app"].split("_", 1)[1], sample)
+
+    def test_the_line_is_put_under_the_title_once_and_only_where_the_card_is_not_linked(self):
+        cards = {"s11_approvals": [{"app": "ivendnext_apr", "title": "Price change approvals"}]}
+        page = "<h1>Approvals</h1><p>text</p>"
+        out = build.card_line(page, "s11_approvals", cards)
+        self.assertIn('<h1>Approvals</h1><p class="in-library">In the App library: <a href="https://library.ivendnext.app/apps/ivendnext_apr">Price change approvals</a></p>', out)
+        self.assertEqual(build.card_line(out, "s11_approvals", cards), out)         # the card is linked now: no second line
+        self.assertEqual(build.card_line(page, "s2_bins", cards), page)             # a sample with no card: untouched
+        cards = {"s2_bins": [{"app": "ivendnext_bln", "title": "Bin locations"}]}
+        both = build.start_button(build.card_line("<h1>Bins</h1><p>lead</p>", "s2_bins", cards), "samples/s2_bins", "")
+        self.assertLess(both.index("start-app"), both.index("in-library"))          # the start button stays first under the title
+
+
 class MapTests(unittest.TestCase):
     """The developer's map (site/devmap.py) cannot drift from its sources: each source changed alone turns the build red."""
     import devmap                                                          # noqa: E402
