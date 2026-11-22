@@ -2,7 +2,7 @@
 sale's own, in the shop's own money text. A stand-in sale is rendered for each sale shape (standard-rated, zero-rated, a mix,
 a return, a charge row, a discount with rounding) and its printed text is compared with the recorded text in `golden/`, which
 is what the 0.1.1 template printed for the same stand-in sales (it was run once against stand-in readers, and the two matched
-line for line). The stand-in formats money the same way on both sides and holds the address as one line, so these texts prove
+line for line); the two charge goldens are the till's own figures at build 2.1.0.726 (0.1.5: a charge's own tax is VAT). The stand-in formats money the same way on both sides and holds the address as one line, so these texts prove
 the figures, the rows and their order, not the shop's own money or address text: that was checked on a sandbox (README, *0.1.2*).
 To change a golden on purpose, read the difference first, then write `text(render(sale(shape)))` into `golden/<shape>.txt`.
 Needs jinja2: skipped without it, and said (CI installs it and sets S4_REQUIRE_JINJA).
@@ -91,13 +91,17 @@ def sale(shape):
     elif shape == "return":
         d = dict(items=[line("CASE", -1, 50.0, 5, "Phone case")], taxes=[tax(-2.5)], net_total=-50.0,
                  total_taxes_and_charges=-2.5, grand_total=-52.5, is_return=1, payments=pay(-52.5))
-    elif shape == "item_charge":  # charge money from Item Surcharge rows rides total_taxes_and_charges but is not tax
-        d = dict(items=std, taxes=[tax(6.0)], net_total=120.0, total_taxes_and_charges=36.0, grand_total=156.0,
-                 custom_item_surcharges=[Row()], custom_tax_before_surcharge=6.0, payments=pay(156.0))
-    elif shape == "delivery_charge":  # the delivery charge is a tax row that is not tax
-        d = dict(items=std, taxes=[tax(6.0), Row(account_head="Fulfilment - X", rate=0, tax_amount=10.0, custom_surcharge=1,
-                                                 description="Fulfillment Charges")],
-                 net_total=120.0, total_taxes_and_charges=16.0, grand_total=136.0, payments=pay(136.0))
+    elif shape == "item_charge":  # an Item Surcharge row is charge money, not tax; its own Surcharge Tax row is tax (POS T56)
+        d = dict(items=std, taxes=[tax(6.0), Row(account_head="Surcharge - X", rate=0, tax_amount=30.0, custom_surcharge="Gift wrap",
+                                                 description="Surcharge"),
+                                   Row(account_head="VAT - X", rate=0, tax_amount=1.5, custom_surcharge="Gift wrap", description="Surcharge Tax")],
+                 net_total=120.0, total_taxes_and_charges=37.5, grand_total=157.5,
+                 custom_item_surcharges=[Row()], custom_tax_before_surcharge=6.0, payments=pay(157.5))
+    elif shape == "delivery_charge":  # the delivery charge is a tax row that is not tax; its Fulfillment Tax row is tax
+        d = dict(items=std, taxes=[tax(6.0), Row(account_head="Fulfilment - X", rate=0, tax_amount=10.0, custom_surcharge="Delivery",
+                                                 description="Fulfillment Charges"),
+                                   Row(account_head="VAT - X", rate=0, tax_amount=0.5, custom_surcharge="Delivery", description="Fulfillment Tax")],
+                 net_total=120.0, total_taxes_and_charges=16.5, grand_total=136.5, payments=pay(136.5))
     elif shape == "discount_rounding":
         d = dict(items=std, taxes=[tax(5.6)], net_total=112.0, total_taxes_and_charges=5.6, grand_total=117.6, rounded_total=118.0,
                  rounding_adjustment=0.4, discount_amount=8.0, payments=pay(118.0))
@@ -151,6 +155,23 @@ class Clean(unittest.TestCase):
         for shape in SHAPES:
             with self.subTest(shape=shape):
                 self.assertEqual(text(render(sale(shape))), (GOLDEN / f"{shape}.txt").read_text(encoding="utf-8"))
+
+    def test_a_taxed_charge_shows_its_taxable_value_so_the_vat_is_explained(self):   # 120 + 10 at 5% = 6.50
+        printed = text(render(sale("delivery_charge")))
+        self.assertEqual((row_value(printed, "Taxable value, charges"), row_value(printed, "VAT")), ("$ 10.00", "$ 6.50"))
+        self.assertNotIn("Taxable value, charges", text(render(sale("standard"))))
+        untaxed = sale("delivery_charge")                     # a delivery fee with no tax: VAT as before, no taxable row
+        untaxed.taxes, untaxed.total_taxes_and_charges, untaxed.grand_total = untaxed.taxes[:2], 16.0, 136.0
+        printed = text(render(untaxed))
+        self.assertNotIn("Taxable value, charges", printed)
+        self.assertEqual((row_value(printed, "VAT"), row_value(printed, "Charges")), ("$ 6.00", "$ 10.00"))
+        mixed = sale("delivery_charge")                       # a taxed delivery and an untaxed fee: only the taxed one's base
+        mixed.taxes = mixed.taxes + [Row(account_head="Surcharge - X", rate=0, tax_amount=5.0, custom_surcharge="Bag fee",
+                                         description="Surcharge")]
+        mixed.total_taxes_and_charges, mixed.grand_total = 21.5, 141.5
+        printed = text(render(mixed))
+        self.assertEqual([row_value(printed, k) for k in ("Taxable value, charges", "VAT", "Charges")],
+                         ["$ 10.00", "$ 6.50", "$ 15.00"])
 
     def test_the_product_tax_lines_print_when_its_helper_is_registered(self):
         calls = []
@@ -213,7 +234,7 @@ class Clean(unittest.TestCase):
 
 class Manifest(unittest.TestCase):
     def test_the_package_adds_one_field_that_copies_the_companys_tax_id(self):
-        self.assertEqual(MANIFEST["version"], "0.1.4")
+        self.assertEqual(MANIFEST["version"], "0.1.5")
         (f,) = MANIFEST["custom_fields"]
         self.assertEqual((f["dt"], f["fieldname"], f["fetch_from"]), ("POS Invoice", "pp_rcp_company_tax_id", "company.tax_id"))
         self.assertEqual(validate.validate(MANIFEST), [])
