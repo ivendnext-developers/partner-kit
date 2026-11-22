@@ -43,7 +43,7 @@ ivn try
 
 ### 1.1.5
 
-- Manifest 0.1.7: the rights on the four bin record types are the app's own role's, `PP BLN Integration`, the role the install gives the app's user (they named `PP Integration`, which that user does not hold): it reads them all and writes only a bin's contents (*Item In Bin*), the one its service writes. The bin label prints in the reader's direction (`dir="auto"`). The service is unchanged.
+- Manifest 0.1.7: the rights on the four bin record types are the app's own role's, `PP BLN Integration`, the role the install gives the app's user (they named `PP Integration`, which that user does not hold): it reads them all and writes a bin's contents (*Item In Bin*). A stock move the local service books (`/putaway`, `/pick`) needs rights on Stock Entry that the retailer gives that role. The bin label prints in the reader's direction (`dir="auto"`). The service is unchanged.
 
 ### 1.1.4
 
