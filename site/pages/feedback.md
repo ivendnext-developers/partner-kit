@@ -33,4 +33,8 @@ Each form opens on GitHub, in a private repository. Signed in to GitHub as an on
 
 {{include feedback/README.md#What a form is not}}
 
+## What happens after you send one
+
+{{include feedback/README.md#What happens after you send one}}
+
 The forms in full, with what we may ask you next, are in [the feedback pages](../../feedback/README.md).
