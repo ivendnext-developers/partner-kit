@@ -473,6 +473,23 @@ check("J6l: Remove this app sits under More for anyone of the company, reads wha
   src.includes('go("home"); say(r.words); render();') && src.includes("if (!d.open) { data.removeApp = null; return; }") &&
   src.includes("data.where = null; data.whereAsked = null; data.removeApp = null;") &&
   (src.match(/data\.removeApp = \{ app: app, words: e\.message \}/g) || []).length === 2);
+{   // J6j, drawn: a stand-in document, so the check reads what the screen gets, not the source's text (review)
+  const node = (tag) => ({ tag, kids: [], attrs: {}, textContent: "", setAttribute(k, v) { this.attrs[k] = v; },
+                           appendChild(c) { this.kids.push(c); return c; } });
+  const text = (n) => (n.textContent || "") + n.kids.map(text).join("");
+  const had = globalThis.document;
+  globalThis.document = { createElement: node, createTextNode: (t) => ({ tag: "#text", kids: [], textContent: t }) };
+  const box = node("div");
+  a.updateList(box, { changes: ["New list Bins", "Changed print format Receipt"], wording: "The exact wording." },
+               (t) => { const h = node("h4"); h.textContent = t; return h; });
+  const empty = node("div");
+  a.updateList(empty, { changes: [], wording: "" }, () => node("h4"));
+  globalThis.document = had;
+  check("J6j: the update's list is drawn under its heading, then the exact wording folded; nothing for an update with none",
+    box.kids.map((k) => k.tag).join() === "h4,ul,details" && text(box.kids[0]) === a.T.updates &&
+    box.kids[1].kids.map(text).join("|") === "New list Bins|Changed print format Receipt" &&
+    text(box.kids[2]) === a.T.wording + "The exact wording." && empty.kids.length === 0);
+}
 check("W227 F-OP-22: a refused read of the words waits for a press of Install now, never asks again by itself",
   a.installState({ refused: true }) === "again" && a.installState({ refused: true }, true) === "done" &&
   src.includes('state === "again"') && src.includes("button(S.installNow, function () { delete data.inst[k]; render(); })"));

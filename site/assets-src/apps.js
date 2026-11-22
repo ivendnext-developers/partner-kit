@@ -639,7 +639,7 @@
               canGoBack: canGoBack, defaultTitle: defaultTitle, versionsShown: versionsShown, logFile: logFile, payWords: payWords, payLabel: payLabel, pubPlan: pubPlan, pubOpensOn: pubOpensOn, pictureType: pictureType, b64: b64, cardBody: cardBody,
               S: S, siteHow: siteHow, trySites: trySites, tickLive: tickLive, instKey: instKey, installState: installState,
               storedSignIn: storedSignIn, storeSignIn: storeSignIn, LAST: LAST,
-              removedWords: removedWords, pointClass: pointClass, triedOn: triedOn };
+              removedWords: removedWords, pointClass: pointClass, triedOn: triedOn, updateList: updateList };
   if (typeof module === "object" && module.exports) {
     module.exports = api;
     return;
