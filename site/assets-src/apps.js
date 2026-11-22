@@ -745,6 +745,8 @@
   function vJoin() {
     var box = card(null);
     box.appendChild(p(who.no_company));
+    // SBXAUTO: a person whose company already works with us joins it by the form's reply, never by a second company
+    box.appendChild(el("p", { "class": "hint" }, el("a", { href: FORM, target: "_blank", rel: "noopener", text: "Open the sandbox request form" })));
     box.appendChild(button(WORDS.setUp, function () { go("company"); }));
     box.appendChild(button("Check again", function () {
       call("GET", "/whoami").then(function (w) { who = w; if (!(w.company && arrive())) go("home"); }, fail);
