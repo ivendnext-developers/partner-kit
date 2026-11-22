@@ -36,6 +36,10 @@ ivn try
 
 ## Versions
 
+### 0.1.5
+
+- The VAT line is every tax the sale books, a charge's own tax included (*Fulfillment Tax*, *Surcharge Tax*), and *Charges* is the charge money alone, as the till and its seeded receipt print them since POS build 2.1.0.726 (`receipt_tax.receipt_tax_figure`). Before, a delivery's or an item charge's own tax was printed inside *Charges*, so the VAT read low on such a sale.
+
 ### 0.1.4
 
 - `build.py` writes the layout into the manifest's receipt and changes nothing else; in an app made from S4 it writes the app's own `manifest.json` (and the copy its tests read), so *edit `receipt.html`, then run `build.py`* reaches the site. Before, it wrote a `manifest.json` beside itself that the app never read.

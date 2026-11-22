@@ -91,13 +91,17 @@ def sale(shape):
     elif shape == "return":
         d = dict(items=[line("CASE", -1, 50.0, 5, "Phone case")], taxes=[tax(-2.5)], net_total=-50.0,
                  total_taxes_and_charges=-2.5, grand_total=-52.5, is_return=1, payments=pay(-52.5))
-    elif shape == "item_charge":  # charge money from Item Surcharge rows rides total_taxes_and_charges but is not tax
-        d = dict(items=std, taxes=[tax(6.0)], net_total=120.0, total_taxes_and_charges=36.0, grand_total=156.0,
+    elif shape == "item_charge":  # an Item Surcharge row is charge money, not tax; its own Surcharge Tax row is tax (POS T56)
+        d = dict(items=std, taxes=[tax(6.0), Row(account_head="Surcharge - X", rate=0, tax_amount=28.5, custom_surcharge=1,
+                                                 description="Gift wrap"),
+                                   Row(account_head="VAT - X", rate=0, tax_amount=1.5, custom_surcharge=1, description="Surcharge Tax")],
+                 net_total=120.0, total_taxes_and_charges=36.0, grand_total=156.0,
                  custom_item_surcharges=[Row()], custom_tax_before_surcharge=6.0, payments=pay(156.0))
-    elif shape == "delivery_charge":  # the delivery charge is a tax row that is not tax
+    elif shape == "delivery_charge":  # the delivery charge is a tax row that is not tax; its Fulfillment Tax row is tax
         d = dict(items=std, taxes=[tax(6.0), Row(account_head="Fulfilment - X", rate=0, tax_amount=10.0, custom_surcharge=1,
-                                                 description="Fulfillment Charges")],
-                 net_total=120.0, total_taxes_and_charges=16.0, grand_total=136.0, payments=pay(136.0))
+                                                 description="Fulfillment Charges"),
+                                   Row(account_head="VAT - X", rate=0, tax_amount=0.5, custom_surcharge=1, description="Fulfillment Tax")],
+                 net_total=120.0, total_taxes_and_charges=16.5, grand_total=136.5, payments=pay(136.5))
     elif shape == "discount_rounding":
         d = dict(items=std, taxes=[tax(5.6)], net_total=112.0, total_taxes_and_charges=5.6, grand_total=117.6, rounded_total=118.0,
                  rounding_adjustment=0.4, discount_amount=8.0, payments=pay(118.0))

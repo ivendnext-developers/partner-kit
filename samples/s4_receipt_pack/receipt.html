@@ -1,6 +1,6 @@
-{#- A COPY owes a source: the VAT figure and the charge rows below are the seeded 'mPOS Receipt' (ivendnext/iVendNext_PWA ·
-    apps/ivendnext_mpos/ivendnext_mpos/install.py · RECEIPT_FORMAT_HTML @ 05bb4dab9). A defect here is a defect there:
-    report it with a Kit defect issue. -#}
+{#- A COPY owes a source: the VAT figure and the charge rows below are the till's own (ivendnext/iVendNext_PWA ·
+    apps/ivendnext_mpos/ivendnext_mpos/business_logic/receipt_tax.py · receipt_tax_figure @ 9dc717ba1, build 2.1.0.726,
+    as the seeded 'mPOS Receipt' prints it). A defect here is a defect there: report it with a Kit defect issue. -#}
 {#- The totals (0.1.1): the Discount row prints AFTER the Total, as "Discount included in the total", outside the sum.
     net_total already has the discount inside it, so as a step in the sum the printed lines did not add up; and no field
     holds the discount's untaxed share, so it cannot go before the subtotal either. A Rounding row prints the sale's own
@@ -49,12 +49,12 @@
   {%- if key not in ns.taxable -%}{%- set _ = ns.order.append(key) -%}{%- endif -%}
   {%- set _ = ns.taxable.update({key: (ns.taxable.get(key, 0) + (item.net_amount or 0))}) -%}
 {%- endfor -%}
-{#- The VAT figure, as the seeded receipt and the till screen print it: item-charge money (Item Surcharge rows) and the delivery
-    charge ride total_taxes_and_charges but are NOT tax, so they come off and print as their own "Charges" row. -#}
-{%- set charge_rows = doc.get("custom_item_surcharges") or [] -%}
-{%- set dlv = namespace(v=0.0) -%}
-{%- for t in doc.taxes or [] -%}{%- if t.get("custom_surcharge") and t.description in ("Fulfillment Charges", "Fulfillment Tax") -%}{%- set dlv.v = dlv.v + (t.tax_amount or 0) -%}{%- endif -%}{%- endfor -%}
-{%- set tax_figure = ((doc.custom_tax_before_surcharge or 0) if charge_rows else (doc.total_taxes_and_charges or 0)) - dlv.v -%}
+{#- The VAT figure, as the till screen and the seeded receipt print it: every tax the sale books, a charge's own tax included
+    (Fulfillment Tax, Surcharge Tax). A charge's own amount (an Item Surcharge row, the delivery charge) rides doc.taxes as a
+    row marked custom_surcharge and total_taxes_and_charges, but is NOT tax: it comes off and prints as its own "Charges" row. -#}
+{%- set chg = namespace(v=0.0) -%}
+{%- for t in doc.taxes or [] -%}{%- if t.get("custom_surcharge") and t.description not in ("Fulfillment Tax", "Surcharge Tax") -%}{%- set chg.v = chg.v + (t.tax_amount or 0) -%}{%- endif -%}{%- endfor -%}
+{%- set tax_figure = (doc.total_taxes_and_charges or 0) - chg.v -%}
 {%- set charges = (doc.total_taxes_and_charges or 0) - tax_figure -%}
 {%- set tx = receipt_tax_detail(doc, tax_figure) if receipt_tax_detail is defined else {"lines": []} -%}
 <div class="pp-rcp" style="font-family: Arial, sans-serif; font-size: 11px; width: 72mm; margin: 0 auto;">
