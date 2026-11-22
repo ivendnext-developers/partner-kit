@@ -224,7 +224,7 @@ class ContainerUnchanged(Base):
 
 
 class Functions(unittest.TestCase):
-    """A press-only app (app.json "runs": "function") is planned as a function paid per call: S18 is the kit's one."""
+    """A press-only app (app.json "runs": "function") is planned as a function run only when called: S18 is the kit's one."""
     KIT = HERE.parents[2]
     S18 = KIT / "samples" / "s18_rule_guard"
 

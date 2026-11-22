@@ -205,9 +205,11 @@
     change: "Change", yourName: "Its name in Desk", yourNameHint: "Your first word, then one or two words of your own. Installed names never change, so choose with care.",
     make: "Make the app", nextSettings: "Next: its settings",
     noApps: "You have no apps yet.", newApp: "New app",
-    blank: "Start blank", blankHint: "No sample matches the need? Start with an empty app: its README lists each kind you can add, " +
-      "with an example and its recipe. You can add a sample to it later.", blankTitle: "My app",
-    blankCovers: "A blank app: no sample in it yet. Its README.md lists what you can add.",
+    blank: "Start blank", blankHint: "No sample matches the need? Start with an empty app: its page links what you can add, " +
+      "each kind with an example and its recipe. You can add a sample to it later.", blankTitle: "My app",
+    // J6h F21: what to do on the page, never a file a browser-only developer cannot see
+    blankCovers: "A blank app: nothing in it yet. Set it up in Desk on your sandbox, then press Capture from a site, or add to it by hand: ",
+    canAdd: "what you can add", canAddUrl: "/recipes/manifest-steps.html",
     blankCarries: "Started blank. It carries: {kinds}.", backToApps: "Back to My apps",
     // J3 CAPTURE: what a person made in Desk on a site, into this app (the kit's capture.py on our side)
     capture: "Capture from a site", fromSite: "From a site",
@@ -333,7 +335,7 @@
     addSite: "+ Add another site", copy: "Copy", copied: " Copied.", whereRuns: "Where it runs", removeSite: "Remove this site",
     remove: "Remove", serviceRuns: "Where the service runs", itsAddress: "Its https address", save: "Save", logs: "Logs",
     search: "Search", downloadLogs: "Download", goBack: "Go back to this version", goBackBtn: "Go back",
-    cancel: "Cancel at month end", makeKey: "Make a key", keySite: "The retailer's site address",
+    cancel: "Cancel at month end", removeApp: "Remove this app", makeKey: "Make a key", keySite: "The retailer's site address",
     title: "Title", oneLine: "One line", whatItDoes: "What it does", industries: "Industries", price: "Price", free: "Free",
     withKey: "With a key: retailers ask you", setUp: "How to set it up", setUpHint: "The steps the retailer follows first, one per line.",
     guide: "Guide link", guideHint: "Any https page: your repository's README is enough.",
@@ -381,6 +383,17 @@
   // the consent's sections as the hosting drew them from the site's own check (J4-02), in its order, as given (§0b rule 8)
   function consentSections(r) {
     return ((r && r.sections) || []).filter(function (s) { return s && s.title && (s.lines || []).length; });
+  }
+  // J6i, J6j: an update's list in the install view's words, then the site's exact wording; Try and Install now draw it
+  // alike, each under its own heading style
+  function updateList(box, c, head) {
+    if ((c.changes || []).length) {
+      box.appendChild(head(T.updates));
+      var ul = el("ul", {});
+      c.changes.forEach(function (l) { ul.appendChild(el("li", { text: l })); });
+      box.appendChild(ul);
+    }
+    if (c.wording) box.appendChild(el("details", {}, el("summary", { text: T.wording }), el("pre", { text: c.wording })));
   }
   // a try still moving: the page asks again until it is done or stopped
   function tryRunning(s) { return !!(s && s.step && s.step !== "done" && s.step !== "stopped"); }
@@ -711,7 +724,7 @@
   }
 
   function openApp(app) {
-    data.where = null; data.whereAsked = null;   // where it runs is read afresh each time: a try or a publish changes it
+    data.where = null; data.whereAsked = null; data.removeApp = null;   // J6l: Remove asks afresh on each app   // where it runs is read afresh each time: a try or a publish changes it
     loadSites();
     return call("POST", "/app", { app: app }).then(function (r) { data.app = r; render(); return r; }, fail);
   }
@@ -1276,8 +1289,8 @@
     var fill = function () {
       var cv = covers(a, site.catalogue), made = day((vs[0] || {}).at);
       if (!cv.built.length && !cv.tobuild.length && !cv.desk.length && !cv.cannot.length) {
-        cb.appendChild(p((a.samples || []).length ? "Built in this app: " + a.samples.map(function (n) { var s = byName(n); return s ? sampleLabel(s) : n; }).join(", ") + "."
-          : (a.kinds || []).length ? blankCarries(a.kinds) : G.blankCovers));
+        cb.appendChild((a.samples || []).length ? p("Built in this app: " + a.samples.map(function (n) { var s = byName(n); return s ? sampleLabel(s) : n; }).join(", ") + ".")
+          : (a.kinds || []).length ? p(blankCarries(a.kinds)) : el("p", {}, G.blankCovers, el("a", { href: G.canAddUrl, text: G.canAdd }), "."));
         return;
       }
       cv.built.forEach(function (c) {
@@ -1306,6 +1319,7 @@
     more.appendChild(vKey(a.app));
     if (who.role === "owner") more.appendChild(vHandOver(a.app));
     more.appendChild(vCancel(a.app));
+    more.appendChild(vRemoveApp(a.app));
     return el("div", {}, box, vWhere(a.app), vb, cb, more);
   }
 
@@ -1608,13 +1622,7 @@
       sec.lines.forEach(function (l) { ul.appendChild(el("li", { text: l })); });
       what.appendChild(ul);
     });
-    if ((c.changes || []).length) {
-      what.appendChild(el("h4", { text: T.updates }));
-      var cu = el("ul", {});
-      c.changes.forEach(function (l) { cu.appendChild(el("li", { text: l })); });
-      what.appendChild(cu);
-    }
-    what.appendChild(el("details", {}, el("summary", { text: T.wording }), el("pre", { text: c.wording || "" })));
+    updateList(what, c, function (t) { return el("h4", { text: t }); });
     if ((c.money || {}).line) what.appendChild(p(c.money.line));
     box.appendChild(what);
     return box;
@@ -1711,6 +1719,7 @@
         sec.lines.forEach(function (l) { ul.appendChild(el("li", { text: l })); });
         box.appendChild(ul);
       });
+      updateList(box, inst, function (t) { return el("p", {}, el("strong", { text: t })); });   // J6j: as Try draws it
       box.appendChild(button(S.installNow, function (ev) {
         ev.target.disabled = true;
         data.inst[k] = Object.assign({}, inst, { step: "installing", words: "" });
@@ -2012,6 +2021,35 @@
     box.appendChild(root.document.createTextNode(" "));
     box.appendChild(button(G.notNow, function () { data.back = null; render(); }, true));
     return box;
+  }
+
+  // J6l APPREMOVE: Remove this app, for anyone of its company: what goes, read when it opens, then one press; a copy still
+  // running, a site that has it or the list keeps it, and the hosting's words say what to do first, here, where it was asked
+  function vRemoveApp(app) {
+    var d = el("details", {}, el("summary", { text: U.removeApp }));
+    var c = data.removeApp && data.removeApp.app === app ? data.removeApp : null;
+    d.addEventListener("toggle", function () {
+      if (!d.open) { data.removeApp = null; return; }   // closed: the next open asks afresh (a copy stopped meanwhile)
+      if (!c) call("POST", "/app/remove", { app: app }).then(function (r) { data.removeApp = r; render(); },
+                                                             function (e) { data.removeApp = { app: app, words: e.message }; render(); });
+    });
+    if (c) {
+      d.open = true;
+      d.appendChild(p(c.words));
+      if (c.button) {
+        d.appendChild(button(c.button, function (ev) {
+          ev.target.disabled = true;
+          call("POST", "/app/remove", { app: app, go: true }).then(function (r) {
+            data.removeApp = null; data.app = null; data.appId = null; data.cancel = null; data.pick = null;
+            if (data.apps && data.apps.apps) data.apps.apps = data.apps.apps.filter(function (x) { return x.app !== app; });
+            go("home"); say(r.words); render();
+          }, function (e) { data.removeApp = { app: app, words: e.message }; render(); });
+        }));
+        d.appendChild(root.document.createTextNode(" "));
+        d.appendChild(button(c.keep, function () { data.removeApp = null; render(); }, true));
+      }
+    }
+    return d;
   }
 
   // J13-03: Cancel at month end, naming the sites still using the service before it asks

@@ -1990,5 +1990,29 @@ class MapTests(unittest.TestCase):
         self.assertEqual(check_links.check(out), [])
 
 
+
+class KitSnapshotTests(unittest.TestCase):
+    """KITPINFOLLOW: the snapshot My apps follows (site/kit_snapshot.py) is the same bytes on every run, names its own
+    SHA-256, and carries tools/ and samples/ only, with no screenshot."""
+    import kit_snapshot                                                     # noqa: E402
+
+    def test_snapshot(self):
+        import gzip, hashlib, io, tarfile                                   # noqa: E401
+        a, b = pathlib.Path(tempfile.mkdtemp()), pathlib.Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, a)
+        self.addCleanup(shutil.rmtree, b)
+        one, two = self.kit_snapshot.write(a), self.kit_snapshot.write(b)
+        self.assertEqual(one, two)
+        self.assertRegex(one["commit"], r"^[0-9a-f]{12}$")
+        data = (a / "kit" / f"{one['commit']}.tar.gz").read_bytes()
+        self.assertEqual(data, (b / "kit" / f"{two['commit']}.tar.gz").read_bytes())
+        self.assertEqual(hashlib.sha256(data).hexdigest(), one["sha256"])
+        self.assertEqual(json.loads((a / "kit" / "snapshot.json").read_text()), one)
+        with tarfile.open(fileobj=io.BytesIO(gzip.decompress(data))) as t:
+            names = t.getnames()
+        self.assertIn("tools/manifest/combine.py", names)
+        self.assertTrue(all(n.split("/")[0] in ("tools", "samples") for n in names))
+        self.assertFalse([n for n in names if "/screenshots/" in n or "/__pycache__/" in n])
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

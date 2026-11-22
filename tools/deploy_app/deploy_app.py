@@ -7,7 +7,7 @@ uploading and running it are `ivn publish`, `ivn push` and `ivn status` (`tools/
     python3 tools/deploy_app/deploy_app.py <app folder> --zip <out.zip> [--root <folder>] --plan starter --partner <you> …
 
 An app whose `app.json` says `"runs": "function"` (a press-only app: a till key, a check, a webhook; chapter 1a) is
-hosted as a function paid per call, not an always-on container (an app with background work too, when its `schedule`
+hosted as a function, run only when called, not an always-on container (an app with background work too, when its `schedule`
 runs it: a feed pass, a daily job, each call at most its `timeout`, 900 seconds): it takes `--zip`, where this tool writes the package
 (the `package` paths of `app.json`, read from `--root`, by default the app's folder; never a file whose name starts with
 a dot, never `__pycache__`), and no `--image`. An app that says nothing about `runs` is a container, exactly as before.
@@ -178,7 +178,7 @@ def describe(m: dict, image: str, plan: str, partner: str, env: str, customer: s
 
 
 def describe_function(m: dict, plan: str, partner: str, env: str, customer: str, package: str) -> dict:
-    """A press-only app: a function paid per call behind the shared load balancer, no container (chapter 1a)."""
+    """A press-only app: a function run only when called, behind the shared load balancer, no container (chapter 1a)."""
     p = PLANS["plans"][plan]
     ident = m["app"] if env == "prod" else f"{m['app']}-{env}"
     plain = [e["name"] for e in m.get("env", []) if not e.get("secret")]
@@ -191,7 +191,7 @@ def describe_function(m: dict, plan: str, partner: str, env: str, customer: str,
         "enforced": p["enforced"], "includes": FUNCTION_INCLUDES,
         "secrets_to_supply": [], "secrets_added_when_used": [], "settings_to_supply": plain,
         "creates": [
-            f"a function {ident}, {FUNCTION_MB} MB, ARM64, run only when called (paid per call), "
+            f"a function {ident}, {FUNCTION_MB} MB, ARM64, run only when called (priced per month on its plan; no charge once listed in the App library, with no schedule), "
             f"handler {m['handler']}, its code the package {key}, each call at most {m.get('timeout', 10)} seconds",
             *[f"a schedule {n}: the function runs {w} (UTC), with a role that may call this function and nothing else"
               for n, w in sorted((m.get("schedule") or {}).items())],

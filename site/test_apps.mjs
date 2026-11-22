@@ -205,9 +205,11 @@ check("J2-06: the name and its line", G.name === "Name your app" && G.appName ==
   G.yourNameHint === "Your first word, then one or two words of your own. Installed names never change, so choose with care.");
 // J1 DEVSTART: Start blank, the first tile of New app; the same Name, Made and Try a sample's app gets
 check("Start blank: its words", G.blank === "Start blank" && G.blankTitle === "My app" && !INSIDE_WORDS.test(G.blankHint) &&
-  G.blankHint === "No sample matches the need? Start with an empty app: its README lists each kind you can add, with an example and its recipe. You can add a sample to it later.");
-check("a blank app's What it covers says so, never an empty list", G.blankCovers === "A blank app: no sample in it yet. Its README.md lists what you can add." &&
-  src.includes('(a.samples || []).length ? "Built in this app: "') && src.includes(": G.blankCovers));"));
+  G.blankHint === "No sample matches the need? Start with an empty app: its page links what you can add, each kind with an example and its recipe. You can add a sample to it later." && !/README/.test(G.blankHint));
+check("a blank app's What it covers says so, never an empty list, and says what to do on the page (J6h F21)",
+  G.blankCovers === "A blank app: nothing in it yet. Set it up in Desk on your sandbox, then press Capture from a site, or add to it by hand: " &&
+  G.canAdd === "what you can add" && G.canAddUrl === "/recipes/manifest-steps.html" && !/README/.test(G.blankCovers) &&
+  src.includes('(a.samples || []).length ? p("Built in this app: "') && src.includes(': el("p", {}, G.blankCovers, el("a", { href: G.canAddUrl, text: G.canAdd }), "."));'));
 check("Made shows no next button until the app's row is read (never Next: its settings, then Try)",
   /var loaded = data\.app && data\.app\.app === data\.appId;[^\n]*\n\s*if \(!loaded\) \{ box\.appendChild\(p\("Reading the app…"\)\); return box; \}/.test(src));
 check("Start blank: Making says a blank app", a.making("My app", 0) === "Making My app, a blank app…");
@@ -443,7 +445,7 @@ check("J6f F5: the header's My apps (apps.html while the address reads /apps) go
 check("J6f F6: Making… is not drawn on Made", !/function vMade\(\) \{[\s\S]{0,200}data\.made\.making/.test(src));
 check("J6f F7: a blank app that carries entries says what it carries",
   a.blankCarries(["custom_fields", "workflows"]) === "Started blank. It carries: custom fields, workflows." &&
-  src.includes(": (a.kinds || []).length ? blankCarries(a.kinds) : G.blankCovers"));
+  src.includes(": (a.kinds || []).length ? p(blankCarries(a.kinds)) : el(\"p\", {}, G.blankCovers"));
 check("J6f F8: Try on names the site by its label", src.includes('G.tryOn.replace("{site}", siteName(site))') &&
   src.includes("return hit && hit.label ? hit.label : site;"));
 check("MYSITES: the page's doors, a secret box that does not echo, one press for a sandbox, and logins kept on this screen only",
@@ -459,6 +461,18 @@ check("MYSITES: Install now's state is per site and version: words read first, o
   a.installState({ step: "installing" }) === "wait" && a.installState({ done: true }) === "done" && a.installState({}, true) === "done");
 check("MYSITES: a refused Install now brings its button back, and a refused Add keeps what was typed",
   src.includes("if (body.sha) delete data.inst[k]; else data.inst[k] = { refused: true };") && src.includes("data.addForm = data.addForm ||"));
+check("J6j: Install now draws an update's list and the exact wording as Try does, by one shared function",
+  (src.match(/updateList\(/g) || []).length === 3 && src.includes("updateList(box, inst, function (t)") &&
+  src.includes("updateList(what, c, function (t)") && src.includes("box.appendChild(head(T.updates))") &&
+  src.includes('if (c.wording) box.appendChild(el("details", {}, el("summary", { text: T.wording })'));
+check("J6l: Remove this app sits under More for anyone of the company, reads what goes, removes with one press, then goes home; a refusal shows its words in place",
+  a.U.removeApp === "Remove this app" && src.includes("more.appendChild(vRemoveApp(a.app));") &&
+  !/if \(who\.role === "owner"\) more\.appendChild\(vRemoveApp/.test(src) &&
+  src.includes('call("POST", "/app/remove", { app: app })') && src.includes('call("POST", "/app/remove", { app: app, go: true })') &&
+  src.includes('data.removeApp = null; data.app = null; data.appId = null; data.cancel = null; data.pick = null;') &&
+  src.includes('go("home"); say(r.words); render();') && src.includes("if (!d.open) { data.removeApp = null; return; }") &&
+  src.includes("data.where = null; data.whereAsked = null; data.removeApp = null;") &&
+  (src.match(/data\.removeApp = \{ app: app, words: e\.message \}/g) || []).length === 2);
 check("W227 F-OP-22: a refused read of the words waits for a press of Install now, never asks again by itself",
   a.installState({ refused: true }) === "again" && a.installState({ refused: true }, true) === "done" &&
   src.includes('state === "again"') && src.includes("button(S.installNow, function () { delete data.inst[k]; render(); })"));

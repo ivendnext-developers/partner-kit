@@ -51,6 +51,10 @@ jobs:
         env:
           CHROME: /usr/bin/google-chrome
           GITHUB_SHA: ${{ github.sha }}
+      - name: Publish the kit's tools and samples beside the site, so My apps follows main with no pin to move (KITPINFOLLOW)
+        run: python3 site/kit_snapshot.py site/_out
+        env:
+          GITHUB_SHA: ${{ github.sha }}
       - name: Check every internal link, image and fragment of the built site
         run: python3 site/check_links.py site/_out
       - name: Test the search against the built index (the golden queries, each planted fault red)
