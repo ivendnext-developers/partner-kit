@@ -38,7 +38,7 @@ ivn try
 
 ### 0.1.5
 
-- The VAT line is every tax the sale books, a charge's own tax included (*Fulfillment Tax*, *Surcharge Tax*), and *Charges* is the charge money alone, as the till and its seeded receipt print them since POS build 2.1.0.726 (`receipt_tax.receipt_tax_figure`). Before, a delivery's or an item charge's own tax was printed inside *Charges*, so the VAT read low on such a sale.
+- The VAT line is every tax the sale books, a charge's own tax included (*Fulfillment Tax*, *Surcharge Tax*), and *Charges* is the charge money alone, as the till and its seeded receipt print them since POS build 2.1.0.726 (`receipt_tax.receipt_tax_figure`). Before, a delivery's or an item charge's own tax was printed inside *Charges*, so the VAT read low on such a sale. A taxed charge's base prints as *Taxable value, charges*, so the taxable values explain the VAT.
 
 ### 0.1.4
 
