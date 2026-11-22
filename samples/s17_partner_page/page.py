@@ -6,7 +6,7 @@ context in the address's FRAGMENT (``…/board/#ctx=<payload>.<signature>``), so
 
 * the SIGNATURE — base64url HMAC-SHA256 of the payload's bytes with the subscription's secret (the installer handed it
   back once, as ``pp_pge:sub:board``);
-* the EXPIRY — ``exp``, five minutes after ``iat``.
+* the EXPIRY — ``exp``, fifteen minutes after ``iat``.
 
 On the till the page answers server to server, and the shop takes one answer: ``submit_body`` + ``sign`` make the signed POST to the shop's
 ``ivendnext_mpos.api.page.submit`` (``X-iVendNext-Timestamp`` and ``X-iVendNext-Signature``: base64 HMAC-SHA256 of

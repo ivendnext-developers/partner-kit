@@ -37,7 +37,7 @@ A partner page is your own screen, served from your own server, that iVendNext s
 
 3. **Read the context on your server, never trust it in the browser.** iVendNext opens your page with `#ctx=<payload>.<signature>` in the address. The **fragment** never reaches a server log or a `Referer`. Your page's script reads it once, takes it out of the address bar, and sends it to your own server. Your server checks two things:
    - the **signature**: base64url HMAC-SHA256 of the payload's bytes, with the secret the installer handed back (`pp_pge:sub:board`) — checked before you parse it;
-   - the **expiry**: `exp`, five minutes after it was made.
+   - the **expiry**: `exp`, fifteen minutes after it was made.
 
    The payload says where it was opened: on the till, the store, the POS Profile and the sale as the till holds it (no money); in Desk, the record type and name. Show what it says with `textContent`, never as markup. It also carries a `nonce`; step 4 sends it back as `ctx_nonce`. Your server refuses a forged context and an expired one, and the same context may open again until it runs out.
 
@@ -57,7 +57,7 @@ A partner page is your own screen, served from your own server, that iVendNext s
 
    *The delivery number is on the sale.*
 
-5. **In Desk, the server checks who may open it.** `/app/partner-page/<page>?doctype=Sales Order&name=…` asks iVendNext for a context. `page_roles` says who may open it: S17's *Desk User* is every staff user, and the retailer can narrow it in *Who may open the Desk page* on the record. iVendNext gives a context only to a user who holds one of those roles **and** may read that record. Anyone else is told *"You can't open this page for that record."*
+5. **In Desk, the server checks who may open it.** `/app/partner-page/<page>?doctype=Sales Order&name=…` (`/desk/partner-page/<page>` on a release that serves Desk at `/desk`; a link that begins `/app/` works on every release and is sent on to `/desk/` where that applies) asks iVendNext for a context. `page_roles` says who may open it: S17's *Desk User* is every staff user, and the retailer can narrow it in *Who may open the Desk page* on the record. iVendNext gives a context only to a user who holds one of those roles **and** may read that record. Anyone else is told *"You can't open this page for that record."*
 
    ![the board as a Desk page for a Sales Order](../samples/s17_partner_page/screenshots/05_board_as_desk_page.png)
 

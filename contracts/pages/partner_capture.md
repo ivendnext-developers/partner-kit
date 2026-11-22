@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_capture.md @ b13203dcf85e, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_capture.md @ 9dc717ba13fe, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Partner capture
 
 **Contract:** [`partner_capture.v1.schema.json`](../extension_contracts/partner_capture.v1.schema.json)
@@ -20,8 +20,11 @@ Your HTTPS service is asked at a moment the cashier did not choose, at one of fo
   cashier sees them on a confirm sheet first). Every other scan is untouched and calls nobody (an item field
   the filter names that is later removed from Item, or changed to a field that holds no value of its own,
   matches nothing; a capture that cannot run for an item the filter names applies your declared down answer,
-  flagged, and a filter that cannot be read lets the item on). A scan of
-  an item coming back on a return, and an item the cashier picked from a list, are never asked about.
+  flagged, and a filter that cannot be read lets the item on). An item the cashier picks at the sell screen
+  (from the search list, a tile, the item card or the size and colour picker) is asked about as a scanned one
+  is, when the till is online (if the till's own request gets no reply, an item added from the item card goes
+  on unasked). An item coming back on a return, an item picked to change an order, and an exchange's
+  replacement picked from a list are never asked about.
 - **On customer add** — when the cashier adds a new customer, **before** the customer is created. You
   answer *allow*, *refuse*, or *challenge*: you have sent the customer a one-time code, and the till shows
   a code field. The cashier types what the customer reads out; the till sends it to you with the
@@ -111,7 +114,8 @@ and `settings`, a JSON object:
   with the scan's rules.
 
 One service answers each of customer add, customer select and a quantity change for a POS Profile; a scan
-may have several (*Several services on one scan*, below). The form shows the time to answer for the event the
+may have several (*Several services on one scan*, below). An app whose service would overlap one that is
+already on installs it switched off, and its package row's To-do says to give each service its own stores before it is switched on. The form shows the time to answer for the event the
 settings name (section 5's table) and stops a longer one before the save. Then the System Manager ticks the
 consent (section 5).
 
@@ -127,8 +131,9 @@ shared secret (the method and a verifier: [remote till key](remote_till_key.md),
          "batch_no":"","serial_no":"","scanned_code":"5901234123457"}}}
 ```
 
-- `sale_ref` is the till's own id for the sale. It is empty on a sale's first scan: an empty basket is no
-  sale yet. `customer` is the sale's customer as the till sent it, or `null`.
+- `scanned_code` is the code the cashier scanned or typed; for a picked item it is the item code.
+- `sale_ref` is the till's own id for the sale. On a sale's first scan it is the reference the sale's
+  first line will take. `customer` is the sale's customer as the till sent it, or `null`.
 - `qty_milli` is the quantity in thousandths (one scan = 1000). The line has no till id yet: it does not
   exist until your answer lets it on.
 - No price, total or tender is sent.
@@ -376,7 +381,8 @@ groups and the items whose field is set), in its boot snapshot. On scan: an item
 takes them off. A sale paid offline with a customer you were not asked about books when it syncs, flagged
 once (*"customer on the sale offline, not asked"*); paid after the connection returns, it is refused until
 the customer is picked again. If the till could not read its declared answers, every scanned item goes on
-and is flagged (the scan's answer is advisory), and a new customer waits for a connection.
+and is flagged (the scan's answer is advisory), and a new customer waits for a connection. An item picked
+at the sell screen offline (not scanned or typed) takes no declared answer: it goes on unasked.
 **Several scan services offline:** the till holds one answer for a scan. If any of them declares `refuse`, the
 items their filters name are refused; otherwise every filter's items go on and are flagged. ⚠ Bound: beside a
 service that refuses, an item only an `allow_and_flag` service names goes on offline unflagged.

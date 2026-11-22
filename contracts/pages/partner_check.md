@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_check.md @ b13203dcf85e, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_check.md @ 9dc717ba13fe, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Partner check
 
 **Contract:** [`partner_check.v1.schema.json`](../extension_contracts/partner_check.v1.schema.json)
@@ -83,7 +83,8 @@ tick the consent (section 5).
   its own reads `rate_minor` 0, its list value in `discount_minor` and in `promo_qty_milli` the units the
   promotion marked as its own (a one-unit article: 1000); a cashier's 100% line discount reads the same with `promo_qty_milli`
   0; an item simply priced 0 reads neither. A promotion that gives the same article free (buy one, get one) books the pair as one line
-  at part of its price rather than a line at 0: two units, half the list off, `promo_qty_milli` 1000. A till
+  at part of its price rather than a line at 0: two units, half the list off, `promo_qty_milli` 2000 (both units, the
+  paid one and the free one, are the promotion's). A till
   offline never sends `is_free_item` 1: a pricing rule adds its free row when the sale reaches the server.
   Both are **part of the fingerprint**, so on the shop's first deploy with them a check asked just before is
   asked once more.

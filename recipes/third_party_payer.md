@@ -72,7 +72,7 @@ use the till's own *On Account* tender instead: there is nothing to split.
 3. **The customer's set-up, which switches the payer on** (tell the retailer's administrator, payer page §2): an enabled **Custom**
    mode of payment with no tender discount, minimum, maximum, over-tender, counting at the close or rounding, whose
    account in each company is its own open balance-sheet account in the company's currency (not a receivable,
-   payable, bank, cash, stock or temporary one); that mode on each of the service's POS Profiles' payment methods with **Allow in Returns**
+   payable, cash, stock or temporary one: from POS build `2.1.0.714` use an account of type **Bank** kept for this mode alone, which no one reconciles, since the payer's share never stays on it past the day's close; an older build refuses a bank account); that mode on each of the service's POS Profiles' payment methods with **Allow in Returns**
    ticked, and never as the default. Name it for what it is, such as *Billed to payer*: the posted invoice lists
    it among its payments. Then the customer names that mode as the subscription's clearing mode, and the payer is on. One payer service per
    POS Profile.

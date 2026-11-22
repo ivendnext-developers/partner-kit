@@ -148,7 +148,7 @@
       }
     },
     "scan_context": {
-      "description": "No price, total or tender. sale_ref is empty on a sale's first scan; customer is the till's, or null.",
+      "description": "No price, total or tender. sale_ref is the till's own id for the sale (on a sale's first scan, the reference the sale's first line will take); customer is the till's, or null.",
       "type": "object",
       "required": [
         "v",

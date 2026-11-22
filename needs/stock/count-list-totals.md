@@ -18,6 +18,7 @@ A manifest report on the stock count, *Count lines*, with columns from its item 
 ## Limits
 - One table per report, one line per item row; with a totals row, no number column of the count itself.
 - *Quantity Difference* is a read-only field, so its total stays blank in the totals row (run by the product).
+- The report opens at 2500 rows unless it names its own `page_length` (20, 100, 500 or 2500): the totals row adds the rows loaded, and a longer result shows *rows loaded of N*, not a total of all of it.
 - Desk opens the report sorted by the record type's default, not by the report's own order.
 - A filter on the item rows leaves out a count with no rows.
 - A `sum_rows` total is a figure on screen, never money; a row saved on its own re-totals at the count's next save.

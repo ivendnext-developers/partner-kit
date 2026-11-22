@@ -8,7 +8,7 @@ Two extension points, one app:
   ``<prefix> ID Checked``, holding *"18 or over"*. The till shows the sentence and the value on one sheet: **Add with
   these details** puts the item on the sale and records the check; **Don't add it** leaves both off.
 - **a check before payment** (``check/1``): when the cashier presses Pay, ``on_check`` refuses the sale when a line it
-  sells needs an age the sale's recorded check does not cover: no check recorded (an item picked from a list, or a
+  sells needs an age the sale's recorded check does not cover: no check recorded (an item picked while the till was offline, or a
   *Don't add it* earlier), or a lower age than the line needs. The cashier can type the age in *Sale details*. A check
   typed as an age alone (*19*) is most likely the age the ID shows: under the line's age, the refusal says to take the
   line off, or, if their ID shows the line's age or over (a cashier may have typed an earlier line's age), to enter it.
@@ -238,7 +238,7 @@ class Asked:
 
     def covered(self, shop: str, sale_ref: str, age: int) -> bool:
         if not sale_ref:
-            return False                         # a sale's first scan has no reference yet
+            return False                         # a first scan from a till older than build 2.1.0.698 has no reference yet
         with self.lock:
             hit = self.seen.get((shop, sale_ref))
         return bool(hit and self.clock() - hit[0] < ASKED_TTL and hit[1] >= age)

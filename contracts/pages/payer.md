@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/payer.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/payer.md @ 9dc717ba13fe, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Payer — your service pays part of a sale for someone else
 
 **Contract:** [`payer.v1.schema.json`](../extension_contracts/payer.v1.schema.json)
@@ -36,14 +36,14 @@ in `extension_subscriptions`, switched off until the shop names its clearing mod
 |---|---|
 | `prescription` | up to three of the sale's own details sent as the prescription: `reference`, `prescriber`, `prescriber_licence`, each the name of a sale detail (empty: none sent) |
 | `bill_back_role` | the role that may bill a rejected claim back to the customer (empty: Accounts User) |
-| `line_net` | `true`: every `coverage` line also carries `net_minor` (section 3.2). Off or absent: the lines carry exactly the ten keys of the table there. Turning it on or off changes the consent text (section 6). Tick it only for a service built for it: a service that checks every request against an older copy of the contract refuses each ask, which reads as no cover |
-| `clearing_mode` | **the shop's own**, required before the service is switched on: an enabled mode of payment of type Custom, with no tender discount, minimum, maximum, over-tender, counting at the close or rounding, whose account in every company the service answers is its own (no other mode's), open, in the company's currency, on the balance sheet and not a receivable, payable, bank, cash, stock or temporary account. It carries your share for an instant, until it is moved to you, and it is never a tender a cashier presses. ⭐ It must also be on each of the service's POS Profiles' payment methods with **Allow in Returns** ticked: a return gives your share back on it (the product refunds only to a mode its POS Profile allows in returns). The till never shows it as a tender or as a way to pay a refund back. A manifest never carries it |
+| `line_net` | `true`: every `coverage` line also carries `net_minor` (section 3.2). Off or absent: the lines carry exactly the ten keys of the table there. Turning it on or off changes the consent text (section 6). Turn it on only for a service built for it: a service that checks every request against an older copy of the contract refuses each ask, which reads as no cover |
+| `clearing_mode` | **the shop's own**, required before the service is switched on: an enabled mode of payment of type Custom, with no tender discount, minimum, maximum, over-tender, counting at the close or rounding, whose account in every company the service answers is its own (no other mode's), open, in the company's currency, on the balance sheet and not a receivable, payable, cash, stock or temporary account. Use an account of type **Bank** kept for this mode alone: it is not a bank account anyone reconciles, since a payer's share never stays on it past the day's close. It carries your share until it is moved to you, and it is never a tender a cashier presses. ⭐ It must also be on each of the service's POS Profiles' payment methods with **Allow in Returns** ticked: a return gives your share back on it (the product refunds only to a mode its POS Profile allows in returns). The till never shows it as a tender or as a way to pay a refund back. A manifest never carries it |
 
 A subscription is refused, in these words:
 
 - *"No extension point named payer is installed on this site."* (an older version of the product)
 - *"Name the clearing mode before you switch the payer service on: the mode of payment that carries the payer's share until it is moved to the payer."*
-- *"No mode of payment named ⟨mode⟩."* · *"clearing_mode is the name of one mode of payment."* · *"The clearing mode must be an enabled mode of payment of type Custom."* · *"⟨mode⟩ must take the payer's share exactly: switch off its tender discount, minimum, maximum, over-tender, counting at the close and rounding."* · *"⟨mode⟩ has no account for ⟨company⟩."* · *"⟨mode⟩'s account for ⟨company⟩ must be an open balance sheet account in the company's currency that is not a receivable, payable, bank, cash, stock or temporary account."* · *"⟨mode⟩'s account for ⟨company⟩ is another mode of payment's too: give it its own."* · *"Add ⟨mode⟩ to ⟨POS Profile⟩'s payment methods with Allow in Returns ticked, so a payer's sale can be returned there. The till never shows it as a tender."* (for a service that answers every POS Profile, this is asked till by till, when a sale is booked) · *"⟨mode⟩ can't be ⟨POS Profile⟩'s default payment method: it carries a payer's share."* (the POS Profile's own save says the same: *"⟨mode⟩ carries a payer's share on this till: keep it here with Allow in Returns ticked, and not as the default."*)
+- *"No mode of payment named ⟨mode⟩."* · *"clearing_mode is the name of one mode of payment."* · *"The clearing mode must be an enabled mode of payment of type Custom."* · *"⟨mode⟩ must take the payer's share exactly: switch off its tender discount, minimum, maximum, over-tender, counting at the close and rounding."* · *"⟨mode⟩ has no account for ⟨company⟩."* · *"⟨mode⟩'s account for ⟨company⟩ must be an open balance sheet account in the company's currency that is not a receivable, payable, cash, stock or temporary account. Use an account of type Bank kept for this mode alone."* · *"⟨mode⟩'s account for ⟨company⟩ is another mode of payment's too: give it its own."* · *"Add ⟨mode⟩ to ⟨POS Profile⟩'s payment methods with Allow in Returns ticked, so a payer's sale can be returned there. The till never shows it as a tender."* (for a service that answers every POS Profile, this is asked till by till, when a sale is booked) · *"⟨mode⟩ can't be ⟨POS Profile⟩'s default payment method: it carries a payer's share."* (the POS Profile's own save says the same: *"⟨mode⟩ carries a payer's share on this till: keep it here with Allow in Returns ticked, and not as the default."*)
 - *"⟨label⟩ already answers payer sales for ⟨POS Profile⟩. One payer service per POS Profile."*
 - *"The extension point's settings must be a JSON object."* · *"The settings of a payer service may only carry: bill_back_role, clearing_mode, line_net, prescription."* · *"line_net is true or false."* · *"prescription names up to three sale details: reference, prescriber, prescriber_licence."* · *"No sale detail named ⟨name⟩."* · *"No role named ⟨name⟩."* · *"The bill-back role must be a role the shop gives to some users, not ⟨role⟩."* (All, Desk User, Administrator and Guest are given by the system itself)
 - *"The time to answer must be more than 0 and at most 5 seconds."* · *"When the service is down, this extension point can only: no_cover."*
@@ -301,8 +301,7 @@ whose claim reference moved between two asks for the same sale reads as no cover
 
 ## 6. Consent
 
-The administrator ticks consent to this text, which the product writes (a change to the prescription details or to
-`line_net` changes it, and the calls stop until consent is ticked again). The part in ⟨⟩ holds only what the settings
+The administrator ticks consent to this text, which the product writes. The part in ⟨⟩ holds only what the settings
 name, in this order: each line's amount before tax and charges (`line_net`), then the prescription's details:
 
 > When a cashier sells on a payer, iVendNext sends your service: the customer's record name, the cover's
@@ -312,6 +311,20 @@ name, in this order: each line's amount before tax and charges (`line_net`), the
 > reference, the prescriber, the prescriber's licence⟩. Health data stays in the
 > shop's country where the law there requires it: your service must run there. No card data, serial or batch is
 > sent.
+
+What a change to the prescription details or to `line_net` does depends on how it is made:
+
+- **An update of your app from the App library does not stop the calls.** When the update gives your service new
+  words (for example *each line's amount before tax and charges*), its dialog lists them and asks the administrator
+  to agree once; a service that was switched on keeps running under that agreement. An update that asks nothing
+  new (no new words, and nothing else new in the update) carries the earlier consent over with no dialog, and
+  dropping a word asks nothing.
+- **A service that was switched off stays off.** An update that changes it clears its consent: the administrator
+  ticks it again in Desk when switching it on.
+- **Editing the settings by hand in Desk so that your service receives more or fewer details** (`line_net` turned
+  on or off, a prescription detail added or removed) **clears the consent**, and the calls stop until an
+  administrator ticks it again. If an update arrives first, it switches the service off: the administrator ticks
+  the consent and switches it on.
 
 ## 7. Bounds, stated
 

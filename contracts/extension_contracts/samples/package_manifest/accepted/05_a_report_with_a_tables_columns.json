@@ -1,7 +1,7 @@
 {
   "extension_point": "package_manifest",
   "contract": "manifest",
-  "about": "A report over the shop's stock count with one line per item row: the count's date beside each row's item, counted quantity and value difference, a filter on the rows, and a totals row.",
+  "about": "A report over the shop's stock count with one line per item row: the count's date beside each row's item, counted quantity and value difference, a filter on the rows, a totals row, and 100 rows to a page.",
   "payload": {
     "manifest_version": 2,
     "app": "pp_rpc",
@@ -25,7 +25,8 @@
           ]
         ],
         "order_by": "posting_date desc",
-        "add_total_row": 1
+        "add_total_row": 1,
+        "page_length": 100
       }
     ]
   }

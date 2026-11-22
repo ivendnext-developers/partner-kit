@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_page.md @ b13203dcf85e, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_page.md @ 9dc717ba13fe, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Partner page
 
 **Contract:** [`partner_page.v1.schema.json`](../extension_contracts/partner_page.v1.schema.json)
@@ -10,7 +10,9 @@
 ## 1. What it is and when it fires
 
 Your own page, inside our frame: a delivery partner's order board in a sheet over the sale on the till
-(counter and tablet), or a console in Desk at `/app/partner-page/<page>`. Your page learns who is looking
+(counter and tablet), or a console in Desk at `/app/partner-page/<page>`. (A link that begins `/app/` works on
+every release. A release that serves Desk at `/desk` sends it on to the same address under `/desk/` and keeps
+its query.) Your page learns who is looking
 at what from a **signed context** in its address, good for 15 minutes, and on the till your server may
 **answer once** — a message, Sale Attribute rows, or both — which the cashier confirms like any till key.
 
