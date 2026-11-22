@@ -56,6 +56,8 @@ Every form says the same in its own words:
 - It is answered in the issue with one of: **answered** (a door already exists), **needs more** (a question back to you), **planned** (it joins the work we do and you can follow it) or **declined** (with the reason).
 - Requests of the same kind are collected into a periodic roll-up that decides what we build next. We give no date.
 
+**When you hear back.** We answer a form in its issue within a week. A request that is **planned** hears back there again when it is built, with the build that carries it; one we drop is marked **declined** there, with the reason. Either way the issue is then closed.
+
 ## If you change a form (for the kit's code owners)
 
 Edit the Markdown form here, then run `python3 .github/scripts/issue_forms.py` from the repository's root: it rewrites the issue forms in `.github/ISSUE_TEMPLATE/`, and `--check` fails when the two differ. The forms are filed in the private `partner-feedback` repository, so copy the seven generated files (the six forms and `config.yml`) into that repository's `.github/ISSUE_TEMPLATE/` unchanged and compare them byte for byte.
