@@ -50,7 +50,7 @@ A connected app is your own service, on **its own server, in any language**, tha
 
    ⚠ **A booking call that times out may still have booked.** Before you send it again, look for it, for example by a reference you put in its remarks. The sample's `/pick` does not do this yet: a caller must not blindly retry a pick that timed out.
 
-7. **React to events with webhooks, and make up for lost ones.** A booked sale reaches you as a signed webhook. Follow `recipes/webhook_receiver.md`: verify the raw body, reject replays, handle each sale idempotently, and run a reconciliation pull.
+7. **React to events with webhooks, and make up for lost ones.** A booked sale reaches you as a signed webhook, when you register one. (S1, the warranty sample, hosted by CitiXsys, needs none: its pass reads the booked sales itself every few minutes.) Follow `recipes/webhook_receiver.md`: verify the raw body, reject replays, handle each sale idempotently, and run a reconciliation pull.
 
    Here is the warranty sample end to end. A cashier sells a covered phone:
 

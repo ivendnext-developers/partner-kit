@@ -504,7 +504,7 @@ class Service:
 
     # ── the decision ─────────────────────────────────────────────────────────
 
-    # ── 0.1.6 (D6): the sweep, on its own schedule, never inside a till's check ──────────────────────────────────────
+    # ── 0.1.6: the sweep, on its own schedule, never inside a till's check ──────────────────────────────────────
 
     def sweep_all(self, seconds: float = SWEEP_EVERY) -> dict:
         """Every shop's open reservations of the last SWEEP_DAYS days, read and resolved as a patient's own are at each

@@ -251,7 +251,7 @@
     var hit = (((data && data.sites) || {}).company || []).filter(function (x) { return x.site === site; })[0];
     return hit && hit.label ? hit.label : site;
   }
-  // MYSITES (J2, KK 11-10): the developer's own list of sites: add any site they administer (with a key made there on
+  // the developer's own list of sites: add any site they administer (with a key made there on
   // their own user, Try installs in one press), label it by customer, test or live, make one their default, remove one;
   // and a sandbox of their own in one press. The words a door answers are the hosting's, shown as given (§0b rule 8).
   var S = {
@@ -1407,7 +1407,7 @@
   // J3: Capture from a site: pick a site, read it, untick what to leave out, capture into the app's next version; with no
   // app (J3b, New app's From a site), Next names the new app, which is made with what stays ticked
   function vCapture(app, c) {
-    // only a site Capture can read: one of ours granted to the company, or one added with its key (J3 critic)
+    // only a site Capture can read: one of ours granted to the company, or one added with its key
     var box = card(app ? G.capture : G.fromSite), sites = ((data.sites || {}).company || []).filter(function (x) { return x.press; });
     box.appendChild(p(G.captureLede));
     var sel = el("select", { "aria-label": "Site" });

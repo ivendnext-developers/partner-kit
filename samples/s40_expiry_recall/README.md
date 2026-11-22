@@ -47,6 +47,10 @@ ivn try
 
 ## Versions
 
+### 1.1.5
+
+- The goods-receipt check is titled *Goods receipt check*: a receipt refused only for the supplier's note number read *Shelf life at receipt*. The recall report and the disposal record print every word through `_()` (a site's own language) and in the reader's direction (`dir="auto"`). Manifest 0.2.4. The service is unchanged.
+
 ### 1.1.4
 
 - *Try it at the till* starts with the *Expiry and recall settings* record `Default` and the store's hours from UTC: without it the notice's *Blocked on* and *Traced on* read UTC's time, a day late in an American evening. The service and the manifest are unchanged.

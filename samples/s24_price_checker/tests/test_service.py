@@ -37,6 +37,7 @@ class Api:
         self.items = {"4006381333931": {"barcode": "4006381333931", "item_code": "PEN-01", "uom": "Nos"}}
         self.prices = {"PEN-01": details(image="/files/pen.jpg")}
         self.calls, self.down, self.refuse = [], False, set()
+        self.labels = {}          # a price-and-weight label → the item code it names (the site decodes it as the till does)
 
     def kiosk(self, url, key, prefix, code):
         self.calls.append(("kiosk", url, key, prefix, code))
@@ -44,17 +45,15 @@ class Api:
             raise app.ShopUnreadable("down")
         return self.kiosks.get((url, code))
 
-    def scan(self, url, key, text):
-        self.calls.append(("scan", url, key, text))
+    def check(self, url, key, text, args):
+        self.calls.append(("check", url, key, text, args))
         if self.down:
             raise app.ShopUnreadable("down")
-        return dict(self.items.get(text) or {})
-
-    def price(self, url, key, args):
-        self.calls.append(("price", url, key, args))
-        if args["item_code"] in self.refuse:
+        hit = dict(self.items.get(text) or ({"item_code": self.labels[text], "label": {"price": 6.71, "qty": 0.559}}
+                                            if text in self.labels else {}))
+        if hit.get("item_code") in self.refuse:
             raise app.NotPriced("417")
-        return dict(self.prices[args["item_code"]])
+        return {"scan": hit, "price": dict(self.prices[hit["item_code"]], item_code=hit["item_code"]) if hit else None}
 
 
 class Clock:
@@ -80,12 +79,27 @@ class OneShop(unittest.TestCase):
         self.assertEqual((code, out["status"], out["item"], out["price"], out["currency"]), (200, "found", "Blue pen", 10.0, "USD"))
         self.assertEqual(out["image"], "https://shop.example/files/pen.jpg")
         self.assertEqual([c[:3] for c in api.calls], [("kiosk", "https://shop.example", "k:s"),
-                                                      ("scan", "https://shop.example", "k:s"),
-                                                      ("price", "https://shop.example", "k:s")])
+                                                      ("check", "https://shop.example", "k:s")])
         self.assertEqual(api.calls[0][3], "PP PRC")
-        args = api.calls[2][3]
-        self.assertEqual((args["selling_price_list"], args["customer"], args["transaction_date"], args["uom"]),
-                         ("Standard Selling", "Walk-in", "2026-10-15", "Nos"))
+        self.assertEqual(api.calls[1][3], "4006381333931")
+        args = api.calls[1][4]
+        self.assertEqual((args["selling_price_list"], args["customer"], args["transaction_date"]),
+                         ("Standard Selling", "Walk-in", "2026-10-15"))
+        self.assertFalse({"item_code", "uom", "batch_no", "rate"} & set(args))   # the site's own scan supplies the item and its unit
+
+    def test_on_a_site_with_the_price_check_one_call_prices_a_scale_label(self):
+        api = Api()
+        api.labels = {"2011010067113": "PEN-01"}        # a price-and-weight label the site decodes as the till does
+        code, out = one(api).price(body(scan="2011010067113"))
+        self.assertEqual((code, out["status"], out["item"], out["price"]), (200, "found", "Blue pen", 10.0))  # one unit, never the label's 6.71
+        self.assertEqual([c[0] for c in api.calls], ["kiosk", "check"])
+        args = api.calls[1][4]
+        self.assertNotIn("item_code", args)
+        self.assertNotIn("rate", args)
+        self.assertEqual((args["selling_price_list"], args["customer"], args["qty"]), ("Standard Selling", "Walk-in", 1))
+        self.assertEqual(one(api).price(body(scan="NO-SUCH"))[1]["status"], "not_found")
+        api.refuse.add("PEN-01")
+        self.assertEqual(one(api).price(body(scan="2011010067113"))[1]["status"], "not_on_sale")
 
     def test_the_prefix_names_the_record_type(self):
         api = Api()
@@ -106,7 +120,7 @@ class OneShop(unittest.TestCase):
         self.assertEqual(one(api).price(body(kiosk="zzzzzzzzzz")), (403, app.price.refusal("not_set_up")))
         api.kiosks[("https://shop.example", CODE)]["enabled"] = 0
         self.assertEqual(one(api).price(body()), (403, app.price.refusal("not_set_up")))
-        self.assertNotIn("scan", [c[0] for c in api.calls])           # the shop's items are never read for it
+        self.assertNotIn("check", [c[0] for c in api.calls])          # the shop's items are never read for it
 
     def test_a_malformed_code_never_reaches_the_shop(self):
         api = Api()
@@ -150,7 +164,7 @@ class OneShop(unittest.TestCase):
         api = Api()
         one(api).price(body(date="2026-10-16"))
         one(api).price(body(date="2027-01-01"))
-        self.assertEqual([c[3]["transaction_date"] for c in api.calls if c[0] == "price"], ["2026-10-16", "2026-10-15"])
+        self.assertEqual([c[4]["transaction_date"] for c in api.calls if c[0] == "check"], ["2026-10-16", "2026-10-15"])
 
 
 class Page(unittest.TestCase):
@@ -324,32 +338,26 @@ class ShopApi(unittest.TestCase):
         with self.assertRaises(app.ShopUnreadable):
             self.api.kiosk(self.url, "k:s", "PP PRC", CODE)
 
-    def test_the_lookup_and_the_pricer_are_the_shops_whitelisted_calls(self):
-        FakeShop.script = {app.SCAN_BARCODE: (200, {"message": {"item_code": "PEN-01", "uom": "Nos"}}),
-                           app.PRICER: (200, {"message": details()})}
-        self.assertEqual(self.api.scan(self.url, "k:s", "4006381333931")["item_code"], "PEN-01")
-        self.assertEqual(self.api.price(self.url, "k:s", {"item_code": "PEN-01"})["price_list_rate"], 10.0)
-        (m1, p1, a1, b1), (m2, p2, a2, b2) = FakeShop.seen
-        self.assertEqual((m1, p1, a1, json.loads(b1)), ("POST", app.SCAN_BARCODE, "token k:s", {"search_value": "4006381333931"}))
-        self.assertEqual((m2, p2, json.loads(b2)), ("POST", app.PRICER, {"args": {"item_code": "PEN-01"}}))
+    def test_the_price_check_is_one_whitelisted_call(self):
+        FakeShop.script = {app.PRICE_CHECK: (200, {"message": {"scan": {"item_code": "PEN-01", "uom": "Nos"}, "price": details()}})}
+        both = self.api.check(self.url, "k:s", "4006381333931", {"qty": 1})
+        self.assertEqual((both["scan"]["item_code"], both["price"]["price_list_rate"]), ("PEN-01", 10.0))
+        (m, p, a, b), = FakeShop.seen
+        self.assertEqual((m, p, a, json.loads(b)), ("POST", app.PRICE_CHECK, "token k:s",
+                                                    {"search_value": "4006381333931", "args": {"qty": 1}}))
 
     def test_the_shops_refusals(self):
-        FakeShop.script = {app.SCAN_BARCODE: (417, {"exc_type": "ValidationError"}), app.PRICER: (417, {"exc_type": "ValidationError"})}
-        self.assertEqual(self.api.scan(self.url, "k:s", "LOT7"), {})
-        with self.assertRaises(app.NotPriced):
-            self.api.price(self.url, "k:s", {"item_code": "OLD"})
-        FakeShop.script = {app.PRICER: (404, {"exc_type": "DoesNotExistError"})}
-        with self.assertRaises(app.ShopUnreadable):                  # a 404 is not "not on sale"
-            self.api.price(self.url, "k:s", {"item_code": "PEN-01"})
-        FakeShop.script = {app.SCAN_BARCODE: (500, {}), app.PRICER: (500, {})}
-        with self.assertRaises(app.ShopUnreadable):
-            self.api.scan(self.url, "k:s", "x")
-        with self.assertRaises(app.ShopUnreadable):
-            self.api.price(self.url, "k:s", {"item_code": "PEN-01"})
+        FakeShop.script = {app.PRICE_CHECK: (417, {"exc_type": "ValidationError"})}
+        with self.assertRaises(app.NotPriced):                       # the shop will not price what it found
+            self.api.check(self.url, "k:s", "OLD", {"qty": 1})
+        for code in (404, 500):                                      # anything else is the shop unreadable, never "not on sale"
+            FakeShop.script = {app.PRICE_CHECK: (code, {})}
+            with self.assertRaises(app.ShopUnreadable):
+                self.api.check(self.url, "k:s", "x", {"qty": 1})
 
     def test_never_a_rate(self):
         with self.assertRaises(ValueError):
-            self.api.price(self.url, "k:s", {"item_code": "PEN-01", "rate": 1})
+            self.api.check(self.url, "k:s", "x", {"qty": 1, "rate": 1})
         self.assertEqual(FakeShop.seen, [])
 
     def test_a_redirect_is_not_followed(self):
@@ -360,7 +368,7 @@ class ShopApi(unittest.TestCase):
 
     def test_a_shop_that_does_not_answer_is_unreadable(self):
         with self.assertRaises(app.ShopUnreadable):
-            self.api.scan("http://127.0.0.1:9", "k:s", "x")
+            self.api.check("http://127.0.0.1:9", "k:s", "x", {"qty": 1})
 
 
 def cut_answer(*args, **kwargs):

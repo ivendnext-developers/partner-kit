@@ -87,7 +87,9 @@ class ManifestTest(unittest.TestCase):
         reps = {r["name"]: r for r in self.m["reports"]}
         for name in ("PP RBO Sales by item", "PP RBO Covers, turns and tips"):
             self.assertEqual(reps[name]["filters"], [["posting_date", "Timespan", "yesterday"]], name)
-        self.assertFalse(reps["PP RBO Sales by item"].get("add_total_row"))   # a total of the 20 lines loaded read as the day's
+        # a report opens at 2500 rows (POS 2.1.0.717, a manifest that names no page size), so the totals add the day's lines
+        self.assertEqual(reps["PP RBO Sales by item"].get("add_total_row"), 1)
+        self.assertNotIn("page_length", reps["PP RBO Sales by item"])
         self.assertFalse(reps["PP RBO Food cost by ingredient"].get("add_total_row"))
         # Desk adds up only the rows it has loaded (20): a row per check made a day of 62 covers read 21. A row per
         # store and day, its sums worked out by the service, makes the totals the day's

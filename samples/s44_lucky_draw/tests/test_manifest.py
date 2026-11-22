@@ -52,9 +52,11 @@ class ManifestTest(unittest.TestCase):
 
     def test_the_results_customer_details_are_the_shops_own_fetched_on_save(self):
         res = {f["fieldname"]: f for f in self.types["PP LDW Result"]["fields"]}
-        self.assertEqual({k: res[k]["fetch_from"] for k in ("customer_name", "mobile_no", "email_id")},
+        self.assertEqual({k: res[k]["fetch_from"] for k in ("customer_name", "mobile_no", "email_id", "till_phone", "till_email")},
                          {"customer_name": "customer.customer_name", "mobile_no": "customer.mobile_no",
-                          "email_id": "customer.email_id"})
+                          "email_id": "customer.email_id",
+                          # a customer added at the till holds its phone and e-mail here, never in mobile_no (POS customer.py)
+                          "till_phone": "customer.custom_phone_no", "till_email": "customer.custom_email"})
 
     def test_the_manager_runs_campaigns_and_the_apps_role_reads_and_writes_them_only(self):
         perms = {p["role"]: p for p in self.types["PP LDW Campaign"]["permissions"]}

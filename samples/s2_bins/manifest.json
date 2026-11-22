@@ -3,7 +3,7 @@
  "app": "pp_bln",
  "prefix": "PP BLN",
  "title": "Bin locations",
- "version": "0.1.6",
+ "version": "0.1.7",
  "publisher": "Partner Programme sample",
  "description": "Where stock sits inside a store: locations (back room, shop floor), aisles, bins and what is in each bin. The retailer's own stock and valuation stay in iVendNext; these records only say where. The install makes the app's own user, with the role PP BLN Integration, and names it on the feed registration PP BLN Bins feed, which follows the locations (they seldom change); the site connects the app and hands the Where is it? service that user's key.",
  "allowed_urls": [
@@ -100,10 +100,10 @@
      "email": 1
     },
     {
-     "role": "PP Integration",
+     "role": "PP BLN Integration",
      "read": 1,
-     "write": 1,
-     "create": 1,
+     "write": 0,
+     "create": 0,
      "delete": 0,
      "report": 0,
      "export": 0,
@@ -173,10 +173,10 @@
      "email": 1
     },
     {
-     "role": "PP Integration",
+     "role": "PP BLN Integration",
      "read": 1,
-     "write": 1,
-     "create": 1,
+     "write": 0,
+     "create": 0,
      "delete": 0,
      "report": 0,
      "export": 0,
@@ -254,10 +254,10 @@
      "email": 1
     },
     {
-     "role": "PP Integration",
+     "role": "PP BLN Integration",
      "read": 1,
-     "write": 1,
-     "create": 1,
+     "write": 0,
+     "create": 0,
      "delete": 0,
      "report": 0,
      "export": 0,
@@ -367,7 +367,7 @@
      "email": 1
     },
     {
-     "role": "PP Integration",
+     "role": "PP BLN Integration",
      "read": 1,
      "write": 1,
      "create": 1,
@@ -430,20 +430,36 @@
    "value": "1",
    "property_type": "Check"
   },
-  {"doc_type": "PP BLN Location", "property": "documentation", "property_type": "Data",
-   "value": "https://developer.ivendnext.com/samples/s2_bins/index.html"},
-  {"doc_type": "PP BLN Aisle", "property": "documentation", "property_type": "Data",
-   "value": "https://developer.ivendnext.com/samples/s2_bins/index.html"},
-  {"doc_type": "PP BLN Bin", "property": "documentation", "property_type": "Data",
-   "value": "https://developer.ivendnext.com/samples/s2_bins/index.html"},
-  {"doc_type": "PP BLN Item In Bin", "property": "documentation", "property_type": "Data",
-   "value": "https://developer.ivendnext.com/samples/s2_bins/index.html"}
+  {
+   "doc_type": "PP BLN Location",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s2_bins/index.html"
+  },
+  {
+   "doc_type": "PP BLN Aisle",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s2_bins/index.html"
+  },
+  {
+   "doc_type": "PP BLN Bin",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s2_bins/index.html"
+  },
+  {
+   "doc_type": "PP BLN Item In Bin",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s2_bins/index.html"
+  }
  ],
  "print_formats": [
   {
    "name": "PP BLN Bin Label",
    "doc_type": "PP BLN Bin",
-   "html": "<div class=\"pp-bln-label\"><h2>{{ doc.bin_code }}</h2><p>{{ doc.aisle }} · {{ doc.location }}</p></div>",
+   "html": "<div class=\"pp-bln-label\" dir=\"auto\"><h2>{{ doc.bin_code }}</h2><p>{{ doc.aisle }} · {{ doc.location }}</p></div>",
    "css": ".pp-bln-label h2 { font-size: 28px; }"
   }
  ],
@@ -537,20 +553,35 @@
   }
  ],
  "registered_applications": [
-  {"name": "PP BLN Bins feed", "description": "the Where is it? service reads the site's bin records", "events": ["PP BLN Location"]}
+  {
+   "name": "PP BLN Bins feed",
+   "description": "the Where is it? service reads the site's bin records",
+   "events": [
+    "PP BLN Location"
+   ]
+  }
  ],
  "role_rights": [
-  {"doctype": "Item", "role": "PP BLN Integration", "rights": ["read"]}
+  {
+   "doctype": "Item",
+   "role": "PP BLN Integration",
+   "rights": [
+    "read"
+   ]
+  }
  ],
  "translations": [
-  {"language": "en", "words": {
-   "PP BLN Bins": "Bin locations",
-   "PP BLN Location": "Stock area",
-   "PP BLN Aisle": "Aisle",
-   "PP BLN Bin": "Bin location",
-   "PP BLN Item In Bin": "Item in bin",
-   "PP BLN Bin Movement": "Bin movement",
-   "PP BLN Bin Label": "Bin label"
-  }}
+  {
+   "language": "en",
+   "words": {
+    "PP BLN Bins": "Bin locations",
+    "PP BLN Location": "Stock area",
+    "PP BLN Aisle": "Aisle",
+    "PP BLN Bin": "Bin location",
+    "PP BLN Item In Bin": "Item in bin",
+    "PP BLN Bin Movement": "Bin movement",
+    "PP BLN Bin Label": "Bin label"
+   }
+  }
  ]
 }

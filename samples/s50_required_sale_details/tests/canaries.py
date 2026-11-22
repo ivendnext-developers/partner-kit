@@ -97,7 +97,7 @@ CANARIES = [
     ("the integration role carries the prefix", "manifest.json", '"role": "PP RSD Integration"', '"role": "PP Integration"',
      M + "test_the_integration_role_only_reads_the_rules"),
     ("the check lets the sale go on when down", "manifest.json", '"down_answer": "allow_and_flag"', '"down_answer": "refuse"',
-     M + "test_one_check_switched_off_that_lets_the_sale_go_on_when_down"),
+     M + "test_one_check_on_from_the_install_that_lets_the_sale_go_on_when_down"),
     ("the details table is never required", "manifest.json", '"options": "PP RSD Rule Detail",', '"options": "PP RSD Rule Detail",\n   "reqd": 1,',
      M + "test_one_rule_per_group_named_by_it_with_the_fields_the_service_reads"),
     # the test call (X-iVendNext-Test: 1, tools/app_template/service/testcall.py): checked as a real call, never the handler

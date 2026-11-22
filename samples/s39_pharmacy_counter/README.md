@@ -32,7 +32,7 @@ More: the [recipe](../../recipes/pharmacy_counter.md).
 
 **Sale details in the shop's words:** the till shows a sale detail by its name (*PP RXC Rx Number*). On the dispensary's till theme, in POS Studio's **Fields** tab, relabel the five on the *Sale details* screen: *Prescription number*, *Prescriber*, *Prescriber's licence*, *Directions*, *Prescription date*. Hide *Prescriber*, *Prescriber's licence* and *Directions* where the pharmacists never type over what the prescription says: the check reads them from the prescription. Keep *Prescription date* shown: the check fills it.
 
-The label carries what Abu Dhabi, Dubai and Saudi Arabia ask of a part pack (the lot, expiry and storage). For the label: before installing, the line detail **Dose** (a Transaction Item Attribute, active), or the install stops; *Read* and *Print* on Retail Label Layout for the dispensary's roles; each medicine's *Strength*, *Route* and *Storage*. For the erasure: *Keep a patient's records for (years)* in *PP RXC Settings*, the longest period its pharmacy law sets for a prescription or a register, and who gets **PP RXC Records Officer**; afterwards a System Manager deletes the copies the Desk keeps in *Deleted Documents*.
+The label carries what Abu Dhabi, Dubai and Saudi Arabia ask of a part pack (the lot, expiry and storage). For the label: before installing, the line detail **Dose** (a Transaction Item Attribute, active), or the install stops; the install gives *PP RXC Pharmacist* and *PP RXC Pharmacist in Charge* *Print* on Retail Label Layout (`role_rights`, as the label contract asks; another role that prints it, the retailer gives); each medicine's *Strength*, *Route* and *Storage*. For the erasure: *Keep a patient's records for (years)* in *PP RXC Settings*, the longest period its pharmacy law sets for a prescription or a register, and who gets **PP RXC Records Officer**; afterwards a System Manager deletes the copies the Desk keeps in *Deleted Documents*.
 
 ## Run it
 
@@ -52,6 +52,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.2.2
+
+- Manifest 0.2.2: the install gives *PP RXC Pharmacist* and *PP RXC Pharmacist in Charge* print on Retail Label Layout (`role_rights`), so the dispensing label prints without a step in Role Permissions. The service is unchanged.
 
 ### 1.2.1
 

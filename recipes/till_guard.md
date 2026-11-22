@@ -25,13 +25,13 @@ A retailer rarely wants one rule at the till. It wants a handful: a manager for 
 
    | Rule | Answer |
    |---|---|
-   | a line priced above 0 and at or below the retailer's placeholder price | `{"verdict": "refuse", "reason": "Line 2: PEN-01 is priced 0.01 AED. Correct its price before the sale is paid."}` |
-   | a line holding more than the retailer's most (line by line: a promotion may split one item across lines) | `{"verdict": "refuse", "reason": "Line 1: 60 of WATER-24. The most on one line is 50."}` |
+   | a line priced above 0 and at or below the retailer's placeholder price | `{"verdict": "refuse", "reason": "Line 2: Blue pen is priced 0.01 AED. Correct its price before the sale is paid."}` |
+   | a line holding more than the retailer's most (line by line: a promotion may split one item across lines) | `{"verdict": "refuse", "reason": "Line 1: 60 of Water, 24 pack. The most on one line is 50: take 10 off."}` |
    | more lines sold than the retailer's most lines on one sale | `{"verdict": "refuse", "reason": "This sale has 41 lines. The most on one sale is 40. Ring the rest as a second sale."}` |
-   | a line priced above 0 and below its lowest price, in the retailer's price list of lowest prices (the line's own unit; `approve` chosen) | `{"verdict": "approve", "reason": "Line 2: CEMENT-50 is 18.00 SAR, below its lowest price of 20.00 SAR. It needs a manager's approval."}` |
+   | a line priced above 0 and below its lowest price, in the retailer's price list of lowest prices (the line's own unit; `approve` chosen) | `{"verdict": "approve", "reason": "Line 2: Cement, 50 kg is 18.00 SAR, below its lowest price of 20.00 SAR. It needs a manager's approval."}` |
    | a sale at or above the approval amount (the retailer's default, `ask`) | `{"verdict": "ask", "question": "This sale is 5,000.00 AED or more. Has a manager agreed to it?"}` |
    | the same, when the retailer chose `approve` | `{"verdict": "approve", "reason": "Sales of 5,000.00 AED or more need a manager's approval."}` |
-   | a flagged item scanned | `{"verdict": "confirm", "question": "PEN-01: Check this item before it goes on the sale. Add it?"}` |
+   | a flagged item scanned | `{"verdict": "confirm", "question": "Blue pen: Check this item before it goes on the sale. Add it?"}` |
 
 6. **Tell iVendNext what to do** (the sample's README, and your card's setup steps): the services are on from the install, so the customer makes the `Default` record and ticks the items; the app's role (the install added it, and the app's own user holds it) has its reads from the install and the manifest's `role_rights` (Item Price and Batch in S23), so the administrator gives none. For `approve`: first give each manager *May Approve a Partner's Check* on their Retail Permission and write access to *Retail Override Request* (the check refuses the next tick until someone other than the cashier can approve), then tick *May ask for a manager's approval* on the check. Without the tick, an `approve` answer cannot be used and the till applies your down answer.
 

@@ -3,9 +3,9 @@
  "app": "pp_prc",
  "prefix": "PP PRC",
  "title": "Price-checker kiosk",
- "version": "0.2.3",
+ "version": "0.2.4",
  "publisher": "Partner Programme sample",
- "description": "A price checker for the sales floor. A tablet opens the app's kiosk page; a customer scans an item and the page shows its name, picture and price: the store's price list price for one unit, in the scanned unit. Offers are worked out at the till, and the page says so. The service, outside your site, asks your site for each scan with the app's integration user: its barcode lookup, then its own line pricer for one unit on the store's price list, for the store's walk-in customer. It reads your site and writes nothing. allowed_urls is the service's own address, for the hosted handshake (the site connects to it after install, update, Finish and Connect again, and says goodbye at uninstall); a partner writes its own. Each screen is a PP PRC Kiosk record, named by a random code the kiosk's address carries; the record takes its company, price list, currency, walk-in customer and store from the till profile chosen on it, and switching it off stops that kiosk within a minute. Your site must have the role PP Integration before this is installed; after install the install has made the app's own user and named it on the feed registration PP PRC Kiosk feed. The install gives the app's user read on PP PRC Kiosk (the record the feed follows) and, from role_rights, read on Item and Item Price.",
+ "description": "A price checker for the sales floor. A tablet opens the app's kiosk page; a customer scans an item and the page shows its name, picture and price: the store's price list price for one unit, in the scanned unit. Offers are worked out at the till, and the page says so. The service, outside your site, asks your site for each scan with the app's integration user: its price check, which reads a barcode, a serial number, a batch or a price-and-weight label and prices one unit on the store's price list, for the store's walk-in customer. It reads your site and writes nothing. allowed_urls is the service's own address, for the hosted handshake (the site connects to it after install, update, Finish and Connect again, and says goodbye at uninstall); a partner writes its own. Each screen is a PP PRC Kiosk record, named by a random code the kiosk's address carries; the record takes its company, price list, currency, walk-in customer and store from the till profile chosen on it, and switching it off stops that kiosk within a minute. The install makes the role PP PRC Integration and the app's own user, and names it on the feed registration PP PRC Kiosk feed. The install gives the app's user read on PP PRC Kiosk (the record the feed follows) and, from role_rights, read on Item and Item Price.",
  "allowed_urls": [
   "https://prc.partner.example"
  ],
@@ -39,7 +39,7 @@
    ],
    "permissions": [
     {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1, "share": 0, "print": 1, "email": 0},
-    {"role": "PP Integration", "read": 1, "write": 0, "create": 0, "delete": 0, "report": 0, "export": 0, "share": 0, "print": 0, "email": 0}
+    {"role": "PP PRC Integration", "read": 1, "write": 0, "create": 0, "delete": 0, "report": 0, "export": 0, "share": 0, "print": 0, "email": 0}
    ]
   }
  ],

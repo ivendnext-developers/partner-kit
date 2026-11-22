@@ -280,11 +280,11 @@ class WebAddressNames(unittest.TestCase):
 
 class SharedNames(unittest.TestCase):
     """A role or a till theme named with our first word alone ("PP Integration", "PP Partner Till") is renamed wherever the
-    copy names it, the manifest's own sentences included, so the manifest and the code agree (S24's tests read it)."""
+    copy names it, the manifest's own sentences included, so the manifest and the code agree."""
 
     def test_a_role_and_a_theme_named_in_the_description_follow(self):
-        for sample, old, new in (("s24_price_checker", "PP Integration", "ACME TST Integration"),
-                                 ("s21_field_rules", "PP Partner Till", "ACME TST Partner Till")):
+        # (no sample names the shared "PP Integration" role since S2 0.1.7 and S24 0.2.4: each names its own)
+        for sample, old, new in (("s21_field_rules", "PP Partner Till", "ACME TST Partner Till"),):
             with self.subTest(sample=sample), tempfile.TemporaryDirectory() as d:
                 repo = repository(d)
                 rc, out = run(sample, "--prefix", PREFIX, "--into", str(repo), "--test")
@@ -297,14 +297,14 @@ class SharedNames(unittest.TestCase):
         real = start.rewrite
 
         def broken(text, m, prefix, sample, app):
-            return real(text, m, prefix, sample, app).replace("ACME TST Integration", "PP Integration")
+            return real(text, m, prefix, sample, app).replace("ACME TST Partner Till", "PP Partner Till")
 
         with tempfile.TemporaryDirectory() as d:
             repo = repository(d)
             with mock.patch.object(start, "rewrite", broken):
-                rc, out = run("s24_price_checker", "--prefix", PREFIX, "--into", str(repo))
+                rc, out = run("s21_field_rules", "--prefix", PREFIX, "--into", str(repo))
             self.assertEqual(rc, 1, out)
-            self.assertIn("PP Integration", out)
+            self.assertIn("PP Partner Till", out)
             self.assertFalse((repo / "apps").exists())
 
 

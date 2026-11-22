@@ -23,6 +23,8 @@
   function check(name, ok) { ok ? pass++ : fail++; out.push((ok ? "PASS " : "FAIL ") + name); }
   var root = document.documentElement, css = function (n) { return root.style.getPropertyValue(n); };
   var wait = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+  // waits until ok() holds or `ms` have passed, so a slow machine is given time rather than failed on a fixed wait
+  var until = async function (ok, ms) { for (var t = 0; !ok() && t < ms; t += 20) { await wait(20); } };
 
   // applyTheme — allow-list and value checks
   var r = ivnKit.applyTheme({ mode: "dark", vars: {
@@ -89,21 +91,23 @@
   check("focus returns to the opener", document.activeElement === opener);
 
   // link search — calls the page's function, keyboard works, out-of-order answers dropped
-  var asked = [], picked = null, input = document.getElementById("ls");
+  var asked = [], answered = [], picked = null, input = document.getElementById("ls");
   ivnKit.linkSearch(input, {
     search: function (text) {
       asked.push(text);
       var rows = [{ value: "A", label: "Alpha bin" }, { value: "B", label: "Beta bin", description: "Aisle 2" }];
-      return new Promise(function (res) { setTimeout(function () { res(text === "slow" ? [{ value: "S", label: "Stale" }] : rows); }, text === "slow" ? 400 : 10); });
+      return new Promise(function (res) { setTimeout(function () { answered.push(text); res(text === "slow" ? [{ value: "S", label: "Stale" }] : rows); }, text === "slow" ? 400 : 10); });
     },
     onPick: function (it) { picked = it; }
   });
   input.focus();
   input.value = "slow"; input.dispatchEvent(new Event("input"));
-  await wait(250);
+  await until(function () { return asked.indexOf("slow") >= 0; }, 3000);
   input.value = "b"; input.dispatchEvent(new Event("input"));
-  await wait(600);
   var list = document.getElementById(input.getAttribute("aria-controls"));
+  // both answers back (the late one for "slow" last), and the list drawn from "b"'s
+  await until(function () { return answered.indexOf("slow") >= 0 && answered.indexOf("b") >= 0 && list && list.children.length === 2; }, 4000);
+  await wait(50);
   check("search function was called with the text", asked.indexOf("b") >= 0);
   check("late answer for an older search is dropped", list.textContent.indexOf("Stale") < 0 && list.children.length === 2);
   check("list is open and announced", !list.hidden && input.getAttribute("aria-expanded") === "true");

@@ -22,7 +22,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/price_checker.md).
 
-**The customer sets:** one **Price-checker kiosk** (`PP PRC Kiosk`) record per screen, with the store's till profile. On the tablet, open the app's address with `#shop=` and the site's **key address** (the App library shows it at its top: *This site's key address: …*, with **Copy**), then `&kiosk=` and the record's name, in full screen. A domain of the retailer's own that points at the site is not the key address: a kiosk given another address answers *This kiosk is not set up*. A barcode scanner connected as a keyboard scans into the page. **It reads an item's own barcode:** a pre-packed label that carries the price or the weight (a scale's label for a meat pack) is not decoded, and the kiosk says it could not find the item.
+**The customer sets:** one **Price-checker kiosk** (`PP PRC Kiosk`) record per screen, with the store's till profile. On the tablet, open the app's address with `#shop=` and the site's **key address** (the App library shows it at its top: *This site's key address: …*, with **Copy**), then `&kiosk=` and the record's name, in full screen. A domain of the retailer's own that points at the site is not the key address: a kiosk given another address answers *This kiosk is not set up*. A barcode scanner connected as a keyboard scans into the page. **It reads a pre-packed label too:** a label that carries the price or the weight (a scale's label for a meat pack) is read as the till reads it, and the kiosk shows the item's price for one unit (POS build `2.1.0.698` or later; on an earlier build the kiosk says it could not find the item).
 
 ## Run it
 
@@ -32,6 +32,10 @@ ivn try
 ```
 
 ## Versions
+
+### 1.1.5
+
+- The kiosk asks the site's price check (`ivendnext_mpos.api.v1.price_check`) in one call (it wraps the barcode lookup and the line pricer the service called before), so a scale's price-and-weight label is read as the till reads it and shows the item's price for one unit. Manifest 0.2.4: the app's own role, `PP PRC Integration`, reads the Kiosk records (the role the install gives the app's user; it was `PP Integration`, which that user does not hold), and the description no longer asks the site to make a role first.
 
 ### 1.1.4
 

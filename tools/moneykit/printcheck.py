@@ -4,12 +4,13 @@ text — a number that appears anywhere else on the page (a payment row, a CSS w
 
     agrees(inv, html, total_label="Total", tax_label="VAT") -> list of differences (empty = the print agrees)
 
-The expected VAT is the figure the till screen and the seeded receipt print: item-charge money and the
-delivery charge ride total_taxes_and_charges but are not tax (the POS app's own receipt fix). When the format shows 'Taxable value @ N%' rows (the S4
+The expected VAT is the figure the till screen and the seeded receipt print: every tax the sale books, a charge's own
+tax included (Fulfillment Tax, Surcharge Tax); a charge's own amount rides total_taxes_and_charges and is not tax. When the format shows 'Taxable value @ N%' rows (the S4
 sample does), their amounts must add up to the sale's net total.
 Imports frappe.utils only; takes the invoice document and the rendered html.
-The tax-figure expression is COPIED from ivendnext/iVendNext_PWA · apps/ivendnext_mpos/ivendnext_mpos/install.py ·
-RECEIPT_FORMAT_HTML @ 05bb4dab9; a defect here is a defect there — report it on the POS app's board.
+The tax-figure expression is COPIED from ivendnext/iVendNext_PWA · apps/ivendnext_mpos/ivendnext_mpos/business_logic/
+receipt_tax.py · receipt_tax_figure @ 9dc717ba1 (build 2.1.0.726, 2026-11-22); a defect here is a defect there — report
+it on the POS app's board.
 """
 
 import re
@@ -26,13 +27,15 @@ def text_of(html: str, marker: str = 'class="pp-rcp"') -> str:
     return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", body)).strip()
 
 
+CHARGE_TAX_ROWS = ("Fulfillment Tax", "Surcharge Tax")   # a charge's own tax: it is tax (receipt_tax.CHARGE_TAX_ROWS)
+
+
 def expected_tax(inv) -> float:
-    """What the till prints as Tax: the engine's charge-excluding figure on a charged sale, else the total; the delivery
-    charge rows come off on both branches (copied from the seeded receipt, install.py RECEIPT_FORMAT_HTML @ 05bb4dab9)."""
-    delivery = sum(flt(t.tax_amount) for t in inv.get("taxes") or []
-                   if t.get("custom_surcharge") and t.description in ("Fulfillment Charges", "Fulfillment Tax"))
-    base = flt(inv.get("custom_tax_before_surcharge")) if inv.get("custom_item_surcharges") else flt(inv.total_taxes_and_charges)
-    return base - delivery
+    """What the till prints as Tax: the taxes the sale books less each charge row's own amount (a row marked
+    custom_surcharge that is not a charge's tax row), copied from receipt_tax.receipt_tax_figure @ 9dc717ba1."""
+    return flt(flt(inv.get("total_taxes_and_charges"))
+               - sum(flt(t.get("tax_amount")) for t in inv.get("taxes") or []
+                     if t.get("custom_surcharge") and t.get("description") not in CHARGE_TAX_ROWS))
 
 
 def _forms(inv, field: str, value) -> list[str]:

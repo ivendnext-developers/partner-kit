@@ -45,6 +45,10 @@ ivn try
 
 ## Versions
 
+### 1.1.2
+
+- Each result also shows the phone and e-mail the till took (*Phone taken at the till*, *E-mail taken at the till*): a customer added at the till keeps them there and has no mobile, so a winner made at the till had no contact on the result. Manifest 0.2.2. The service is unchanged.
+
 ### 1.1.1
 
 - Desk shows plain names (Lucky draw campaign, Lucky draw result) through the manifest's `translations` block, so a search for *lucky draw* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.2.1.

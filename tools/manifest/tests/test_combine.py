@@ -207,8 +207,9 @@ class Combine(Base):
             self.assertIn(f"`{e['name']}`: {e['purpose']}", server)
         self.assertIn("Give it a public https address and put that address on Where the service runs.", server)
         self.assertIn("Nothing to install: the samples use Python's standard library.", text)
-        self.assertIn("python3 -m unittest discover -s apps/acme_hk/tests", text)
-        self.assertIn("python3 apps/acme_hk/service/app.py --local", text)
+        # in the app's own folder, so the line works in the kit and in the unzipped download alike
+        self.assertIn("In the app's folder (`apps/acme_hk/` in the kit, or the folder you unzipped):", text)
+        self.assertIn("python3 -m unittest discover -s tests\npython3 service/app.py --local", text)
         self.assertIn("It reads test values from .env.local, which New app wrote for you; put your own outside keys there. "
                       "It answers on http://localhost:8000.", text)
         self.assertIn("Change it with your AI assistant: open your copy of the kit in it. It reads AGENTS.md, which knows "
@@ -470,7 +471,8 @@ class Refusals(Base):
         for sample, words in (("s3_price_audit", "runs on its own server and keeps one list (deviation)"),
                               ("s1_warranty", "a till key, a warranty registered on each booked sale and one list (warranty term)"),
                               ("s2_bins", "a till key and five lists (bin movement, location, aisle and 2 more)"),
-                              ("s28_merge_and_history", "a button in Desk and a page")):
+                              ("s28_merge_and_history", "a button in Desk and a page"),
+                              ("s21_field_rules", "field rules for the till")):   # data only: never "its lists and settings"
             with self.subTest(sample):
                 part = combine.make_part(sample, "ACME ONE", "acme_one", False, KIT / "samples")
                 self.assertEqual(combine.does(part), words)

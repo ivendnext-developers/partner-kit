@@ -30,6 +30,10 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(validate.validate(MANIFEST), [])
         self.assertEqual(validate.warnings(MANIFEST), [])
 
+    def test_the_pharmacists_print_the_dispensing_label_with_no_step(self):   # KITREADY3b (b)
+        rights = {r["role"]: r["rights"] for r in MANIFEST["role_rights"] if r.get("doctype") == "Retail Label Layout"}
+        self.assertEqual(rights, {"PP RXC Pharmacist": ["print"], "PP RXC Pharmacist in Charge": ["print"]})
+
     def test_seven_services_with_the_designs_down_answers(self):
         self.assertEqual({k: (s["point"], s.get("down_answer")) for k, s in SUBS.items()},
                          {"dispensary": ("check", "refuse"), "front": ("check", "allow_and_flag"),

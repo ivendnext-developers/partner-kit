@@ -50,6 +50,17 @@ class CheckRules(unittest.TestCase):
         self.assertEqual(out, {"verdict": "refuse",
                                "reason": "Line 2: PEN-01 is priced 0.01 AED. Correct its price before the sale is paid."})
 
+    def test_a_refusal_names_the_item_by_the_name_the_cashier_knows(self):   # each check line carries item_name (POS T42)
+        named = dict(line(1, "100234", qty=6, rate=10), item_name="USB-C Cable (1 m)")
+        out = guard.on_check(context([named]), guard.settings_of(dict(SETTINGS, max_qty_per_line=5)))
+        self.assertEqual(out["reason"], "Line 1: 6 of USB-C Cable (1 m). The most on one line is 5: take 1 off.")
+        priced = dict(line(2, "100235", rate=1), item_name="Blue pen")
+        self.assertEqual(guard.on_check(context([line(1), priced]), self.rules)["reason"],
+                         "Line 2: Blue pen is priced 0.01 AED. Correct its price before the sale is paid.")
+        half = dict(line(1, "100236", qty=7.5, rate=10), item_name="Rope (m)")
+        self.assertIn("The most on one line is 5: take 2.5 off.",
+                      guard.on_check(context([half]), guard.settings_of(dict(SETTINGS, max_qty_per_line=5)))["reason"])
+
     def test_a_free_line_priced_zero_is_never_refused(self):
         self.assertEqual(guard.on_check(context([line(1), line(2, "GIFT", rate=0)]), self.rules), {"verdict": "allow"})
 
@@ -58,7 +69,7 @@ class CheckRules(unittest.TestCase):
 
     def test_more_than_the_most_on_one_line_is_refused(self):
         out = guard.on_check(context([line(1, "WATER-24", qty=60, rate=10)]), self.rules)
-        self.assertEqual(out, {"verdict": "refuse", "reason": "Line 1: 60 of WATER-24. The most on one line is 50."})
+        self.assertEqual(out, {"verdict": "refuse", "reason": "Line 1: 60 of WATER-24. The most on one line is 50: take 10 off."})
 
     def test_exactly_the_most_is_allowed(self):
         self.assertEqual(guard.on_check(context([line(1, "WATER-24", qty=50, rate=10)]), self.rules)["verdict"], "allow")

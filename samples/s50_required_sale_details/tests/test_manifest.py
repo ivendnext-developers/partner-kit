@@ -20,7 +20,7 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(validate.validate(MANIFEST), [])
         self.assertEqual(validate.warnings(MANIFEST), [])
 
-    def test_one_check_switched_off_that_lets_the_sale_go_on_when_down(self):
+    def test_one_check_on_from_the_install_that_lets_the_sale_go_on_when_down(self):
         (sub,) = MANIFEST["extension_subscriptions"]
         self.assertEqual((sub["key"], sub["point"], sub["down_answer"], sub["timeout_seconds"]),
                          ("details", "check", "allow_and_flag", 3))

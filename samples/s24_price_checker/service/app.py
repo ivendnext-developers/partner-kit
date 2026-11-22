@@ -11,8 +11,9 @@
 A kiosk is a browser on a tablet: it holds no secret and signs nothing. Its call names its shop and its kiosk; the service
 answers only for a shop that connected (or the one shop it is set up for) and a Kiosk record of that code which the shop
 has switched on, read with the app's own integration key and kept one minute (``KIOSK_TTL``). Then it asks the shop:
-its barcode lookup (``ivendnext_mpos.api.v1.scan_barcode``) and its line pricer
-(``ivendnext_mpos.api.v1.get_item_details``), both whitelisted and read-only as called here (never a ``rate``).
+its price check (``ivendnext_mpos.api.v1.price_check``: the barcode lookup, a price-and-weight label decoded as the till
+reads it from POS build 2.1.0.698, then the line pricer for one unit), whitelisted and read-only as called here (never
+a ``rate``).
 The service writes nothing to the shop and keeps nothing but the Kiosk records it read.
 
 ONE SHOP (env or an env file):
@@ -54,8 +55,7 @@ import oneshop  # noqa: E402
 import shops  # noqa: E402
 
 KIOSK_TTL, READ_TIMEOUT = 60, 3.0
-SCAN_BARCODE = "/api/method/ivendnext_mpos.api.v1.scan_barcode"
-PRICER = "/api/method/ivendnext_mpos.api.v1.get_item_details"
+PRICE_CHECK = "/api/method/ivendnext_mpos.api.v1.price_check"
 STATIC = {"/": ("kiosk.html", "text/html; charset=utf-8"), "/kiosk.js": ("kiosk.js", "text/javascript; charset=utf-8"),
           "/kiosk.css": ("kiosk.css", "text/css; charset=utf-8")}
 
@@ -119,26 +119,17 @@ class ShopApi:
                 return None
             raise ShopUnreadable(f"the shop answered {e.code}") from None
 
-    def scan(self, url: str, key: str, text: str) -> dict:
-        """The shop's barcode lookup: a barcode, a serial number or a batch. {} when nothing matches."""
-        try:
-            return _call(url, key, SCAN_BARCODE, {"search_value": text}).get("message") or {}
-        except urllib.error.HTTPError as e:
-            e.close()
-            if e.code == 417:       # the lookup's own refusal (a batch of an item that has serial numbers): no match
-                return {}
-            raise ShopUnreadable(f"the shop answered {e.code}") from None
-
-    def price(self, url: str, key: str, args: dict) -> dict:
-        """The shop's line pricer for one unit."""
+    def check(self, url: str, key: str, text: str, args: dict) -> dict:
+        """The shop's price check, one call: ``{"scan": …, "price": …}``. ``args`` carry no item (the scan supplies it)
+        and never a rate. ``{}`` when nothing matches."""
         if "rate" in args:      # an explicit refusal, not an assert (python -O drops asserts)
             raise ValueError("never send a rate: the shop's pricer may then write a price row")
         try:
-            return _call(url, key, PRICER, {"args": args}).get("message") or {}
+            return _call(url, key, PRICE_CHECK, {"search_value": text, "args": args}).get("message") or {}
         except urllib.error.HTTPError as e:
             e.close()
-            if e.code == 417:       # the pricer refused the item (disabled, past its end of life, a template); any other
-                raise NotPriced(str(e.code)) from None   # refusal (a 404: no such call on this shop) is unreadable
+            if e.code == 417:       # the pricer refused the item the shop found (disabled, past its end of life, a template)
+                raise NotPriced(str(e.code)) from None
             raise ShopUnreadable(f"the shop answered {e.code}") from None
 
 
@@ -204,11 +195,14 @@ class Service:
             kiosk = self.kiosk(name, shop, code)
             if not kiosk:
                 return 403, price.refusal("not_set_up")
-            hit = self.api.scan(shop["url"], shop["key"], text)
-            if not isinstance(hit, dict) or not isinstance(hit.get("item_code"), str) or not hit["item_code"]:
+            base = price.pricer_args(kiosk, {"item_code": ""}, price.kiosk_date(body.get("date"), self.today()))
+            del base["item_code"]
+            both = self.api.check(shop["url"], shop["key"], text, base)
+            hit = both.get("scan") if isinstance(both, dict) else None
+            if not isinstance(hit, dict) or not isinstance(hit.get("item_code"), str) or not hit["item_code"] \
+                    or not isinstance(both.get("price"), dict):
                 return 200, price.refusal("not_found")
-            args = price.pricer_args(kiosk, hit, price.kiosk_date(body.get("date"), self.today()))
-            answer = price.answer_of(self.api.price(shop["url"], shop["key"], args), kiosk)
+            answer = price.answer_of(both["price"], kiosk)
         except NotPriced:
             return 200, price.refusal("not_on_sale")
         except ShopUnreadable:
