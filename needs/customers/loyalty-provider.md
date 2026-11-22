@@ -10,13 +10,14 @@ blocked-by: -
 recipe: recipes/loyalty_provider.md
 sample: samples/s22_customer_loyalty
 request: -
-verified: read 2026-10-22 in the event feed, wallet and capture recipes and contracts · the three together not run (no sample calls a provider)
+verified: read 2026-10-22 in the event feed, wallet and capture recipes and contracts · the three together not run (no sample calls a provider); airline limit added 2026-11-22, not run
 ---
 ## What you build
 Your outside app between iVendNext and the provider: earning from the event feed, spending through the wallet, and a one-time code where the provider asks for one. The provider's account and keys stay on your server.
 
 ## Limits
 - The combination is not run: no sample calls a provider.
+- An airline's frequent-flyer miles are a provider like any other: the member's number is a sale detail or the code field, and the airline decides whether members may spend with a retailer. Not run.
 - A sale earns seconds after it books, not inside it.
 - The wallet is online only: an offline till does not offer it.
 - Going live needs a CERTIFIED conformance report: ask CitiXsys first (the wallet recipe, *Certification*).

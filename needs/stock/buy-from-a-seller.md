@@ -3,7 +3,7 @@ id: buy-from-a-seller
 title: Buying pieces outright from a seller for cash or store credit
 area: stock
 topic: moves-and-orders
-asks: A person brings pieces to the counter and the store buys them there and then, paying in cash or in store credit, and the pieces go into stock at what was paid
+asks: A person brings pieces to the counter and the store buys them there and then (a trade-in), paying in cash or in store credit, and the pieces go into stock at what was paid
 status: ready-with-limits
 door: desk-action
 blocked-by: -
@@ -11,7 +11,7 @@ recipe: recipes/consignment_payouts.md
 sample: samples/s61_consignment_payouts
 request: -
 related: store-wallet-at-till, consignment-payouts, donation-intake
-verified: read against the kit's samples S45, S57, S61 and the wallet recipe 2026-11-09 · not run
+verified: read against the kit's samples S45, S57, S61 and the wallet recipe 2026-11-09 · not run; serial and trade-in limits added 2026-11-22, read in the units-as-serials recipe, not run
 ---
 ## What you build
 A purchase as your manifest's own record type, shaped as S57's donation and S61's payout: the seller (a customer; for cash alone a name typed at the counter), the store, the day, and one row per lot with its item and what was paid, *Cash* or *Store credit*. A Desk button calls your service, which makes and submits the Stock Entry of type Material Receipt at the price paid, as S45's service makes its Material Issue (`role_rights` read, create and submit on Stock Entry), and for *Store credit* adds the amount to the customer's balance in the wallet your service keeps (`recipes/wallet.md`). A save rule locks the purchase once it is booked.
@@ -21,7 +21,9 @@ A purchase as your manifest's own record type, shaped as S57's donation and S61'
 - Store credit needs the seller to be a customer, since the wallet is spent only with a customer on the sale; a seller typed in is paid in cash, or added as a customer first.
 - The Material Receipt books the stock against the company's stock adjustment account: the cash paid and the credit owed are your service's own entries (the credit as a liability, the wallet's account), or the books show a gain and a cost.
 - Store credit is spent at the till through the wallet (the card *store-wallet-at-till*): online only, and a wallet that goes live passes the certification in `recipes/wallet.md`. A store that pays only cash leaves the wallet out.
+- A phone traded in or bought back is bought with its serial number: the item needs batch and serial tracking, and the code goes on the Material Receipt row, as `recipes/units_as_serials.md` receives with the codes. A phone this chain sold, received again by a receipt, not a return, stays refused at the till. Your service writing the code is not run.
+- A trade-in against a new sale is two steps today: the credit goes to the customer's wallet, then is spent on the new sale through the wallet, online only. It is not one step at the till.
 - Not run: no sample buys from a seller yet.
 
 ## Tell the customer
-Each purchase is recorded at the counter with who sold what and what was paid, the pieces go into stock at that price, and credit is added to a customer's balance when they choose it over cash.
+Each purchase is recorded at the counter with who sold what and what was paid, the pieces go into stock at that price, and credit is added to a customer's balance when they choose it over cash; a trade-in against a new sale is credit first, then spent.

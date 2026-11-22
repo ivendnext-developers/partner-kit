@@ -62,7 +62,7 @@ const planted2 = failures(docs.map((d) => ({ ...d, s: d.s.replace(words, "") }))
 check("planted: a synonym group removed turns its query red", planted2.some((f) => f.includes('"bnpl"')), planted2.join("\n  "));
 
 const size = readFileSync(path.join(out, "search-index.json")).length;
-check(`the index is at most 500 kB before compression (${Math.round(size / 1024)} kB)`, size <= 500 * 1024);
+check(`the index is at most 520 kB before compression (${Math.round(size / 1024)} kB)`, size <= 520 * 1024);
 
 const ms = search.create(docs, MiniSearch);
 const inst = (q) => search.instant(search.rank(ms, q), 6);

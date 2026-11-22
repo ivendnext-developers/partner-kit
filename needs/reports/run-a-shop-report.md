@@ -3,14 +3,14 @@ id: run-a-shop-report
 title: Run one of the retailer's own reports from our service
 area: reports
 topic: reports-and-bi
-asks: Our service runs one of the retailer's reports, with filters, and reads the rows
+asks: Our service runs one of the retailer's reports, with filters, and reads the rows: an airport's concession report, say
 status: ready-with-limits
 door: outside-app
 blocked-by: -
 recipe: recipes/shop_reports.md
 sample: samples/s54_sell_through
 request: -
-verified: run on a sandbox 2026-10-21 · POS 2.0.0.658 · run_report on a report (59 rows); a prepared report answered nothing before a run, then prepare_report queued a run, and run_report read it by its filters and by its record name (60 rows); both runs deleted; not run: a caller naming another user, a user with fewer rights (the product's tests)
+verified: run on a sandbox 2026-10-21 · POS 2.0.0.658 · run_report on a report (59 rows); a prepared report answered nothing before a run, then prepare_report queued a run, and run_report read it by its filters and by its record name (60 rows); both runs deleted; not run: a caller naming another user, a user with fewer rights (the product's tests); concession limit added 2026-11-22, not run
 ---
 ## What you build
 Your service calls `/api/method/ivendnext_mpos.api.v1.run_report` with the report's name and its filters, as Desk runs it, and reads the columns and rows. A report iVendNext prepares in the background is queued with `prepare_report` and read when its run is done (`recipes/shop_reports.md`).
@@ -19,6 +19,7 @@ Your service calls `/api/method/ivendnext_mpos.api.v1.run_report` with the repor
 - A prepared report is never started by `run_report`: it answers the last finished run for those filters, or nothing. Queue a run once, then poll it.
 - `run_report` reads **as the user the call names** (`user`), not only as your service's user, and a named run is read whole by its record name. Never pass a user or a run name iVendNext did not choose.
 - `prepare_report` checks no right: any signed-in user may queue any report, and reads its output filtered only by their own User Permissions.
+- An airport concession report (what the retailer owes the airport, in the airport's own form) is your service reading the stores' sales this way and laying them out as that airport asks. The form and the percentage are the airport's, not iVendNext's. Not run.
 - What a report shows depends on the key's user: a branch user's stock reports are fenced by some reports, not all (the card *branch-sees-own-stock*).
 
 ## Tell the customer
