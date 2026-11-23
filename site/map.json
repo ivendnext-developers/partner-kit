@@ -198,6 +198,18 @@
    "Register books",
    "The books of a regulated-stock register, such as a controlled-drug register."
   ],
+  "field_rules": [
+   "Field rules",
+   "The retailer's say over the fields the till shows, in a till theme: hide one, relabel it, require it on a new customer, or show up to three more Item and Customer fields."
+  ],
+  "scan_sources": [
+   "Scan sources",
+   "A table of the retailer's own unit codes, such as a barcode per pack or a tag per handset, which the till's scan reads when it finds no item, batch or serial."
+  ],
+  "label_layouts": [
+   "Label layouts",
+   "A shelf or item label printed from the till: the item, its barcode, its price, and for a batch item its batch and expiry."
+  ],
   "allowed_urls": [
    "Your addresses",
    "The addresses your service is reached at; the retailer sees them at install, and every call your app's points make goes only there."

@@ -44,6 +44,10 @@ ivn try
 
 ## Versions
 
+### 1.1.6
+
+- The manifest marks its event feed `"reads_events": false`: this app reads its records itself and follows the feed only to get its own user, so the package's connection test (the one `ivn try` and the hosting dashboard read) answers the feed *Passed*, on POS build 2.1.0.728 or later. No logic changed.
+
 ### 1.1.5
 
 - Each site call of a press may take what is left of 7 seconds from the press's start, where each was cut at 3 s: a slow read no longer makes Desk say *Mark down did not answer in time* with most of the shop's 10 seconds unused. `BUDGET_S` still decides when no new lot is started. The manifest is unchanged.

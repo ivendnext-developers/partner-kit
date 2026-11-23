@@ -44,6 +44,10 @@ ivn try
 
 ## Versions
 
+### 1.1.5
+
+- The manifest marks its event feed `"reads_events": false`: this app reads its records itself and follows the feed only to get its own user, so the package's connection test (the one `ivn try` and the hosting dashboard read) answers the feed *Passed*, on POS build 2.1.0.728 or later. No logic changed.
+
 ### 1.1.4
 
 Manifest 0.2.2 (unchanged: the words are the hosted service's).

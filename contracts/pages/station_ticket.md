@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/station_ticket.md @ 9dc717ba13fe, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/station_ticket.md @ dfe04e5658aa, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Station ticket — the kitchen's tickets on a kitchen screen (`station_ticket/1`)
 
 **Who this is for:** a partner building a kitchen display (a screen per station, an expo screen, a
@@ -16,7 +16,7 @@ check) and from a Sales Order sent to the kitchen (§3b).
 When a till presses *Send*, each kitchen station gets its own ticket: the dishes, their choices, notes,
 the guest and course on a table's check, the allergen line, and the place or the call number. The
 station's printer prints it. This door lets your kitchen screen read the same tickets and answer them:
-*started* (a cook took it), *ready* (it is on the pass), *bumped* (it left). The shop's tills are not told
+*started* (a cook took it), *ready* (it is on the pass), *bumped* (it left). The retailer's tills are not told
 anything new by your screen in this version.
 
 The kitchens and which item goes to which one are set up in iVendNext Desk (**Kitchen Stations**, on the

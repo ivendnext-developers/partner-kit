@@ -33,6 +33,10 @@ ivn try
 
 ## Versions
 
+### 1.1.6
+
+- The manifest marks its event feed `"reads_events": false`: this app reads its records itself and follows the feed only to get its own user, so the package's connection test (the one `ivn try` and the hosting dashboard read) answers the feed *Passed*, on POS build 2.1.0.728 or later. No logic changed.
+
 ### 1.1.5
 
 - The kiosk asks the site's price check (`ivendnext_mpos.api.v1.price_check`) in one call (it wraps the barcode lookup and the line pricer the service called before), so a scale's price-and-weight label is read as the till reads it and shows the item's price for one unit. Manifest 0.2.4: the app's own role, `PP PRC Integration`, reads the Kiosk records (the role the install gives the app's user; it was `PP Integration`, which that user does not hold), and the description no longer asks the site to make a role first.

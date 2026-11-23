@@ -42,6 +42,10 @@ ivn try
 
 ## Versions
 
+### 1.1.5
+
+- The manifest marks its event feed `"reads_events": false`: this app reads its records itself and follows the feed only to get its own user, so the package's connection test (the one `ivn try` and the hosting dashboard read) answers the feed *Passed*, on POS build 2.1.0.728 or later. No logic changed.
+
 ### 1.1.4
 
 - *Try it at the till* starts with the *Duty-free allowance settings* record `Default` and the airport's hours from UTC: without it the check reads the day in UTC, so in an American evening today's boarding pass was refused as *another day*. The service and the manifest are unchanged.

@@ -631,6 +631,7 @@ class Add(Base):
         self.assertEqual(self.app_json(folder)["version"], "1.1.0")
         self.assertEqual([r["name"] for r in self.app_json(folder)["samples"]], ["s23_till_guard", "s22_customer_loyalty"])
         self.assertEqual(len(after["registered_applications"]), 1)
+        self.assertNotIn("reads_events", after["registered_applications"][0])  # S22 reads its feed: the one feed is read
         self.check(folder)
 
     def edited_app(self):

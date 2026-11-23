@@ -44,6 +44,10 @@ ivn try
 
 ## Versions
 
+### 1.1.3
+
+- The manifest marks its event feed `"reads_events": false`: this app reads its records itself and follows the feed only to get its own user, so the package's connection test (the one `ivn try` and the hosting dashboard read) answers the feed *Passed*, on POS build 2.1.0.728 or later. No logic changed.
+
 ### 1.1.2
 
 - *Try it at the till* starts with what to set in Desk first (the *Sale Attribute*, and a *Required sale details rule* for the customer's group): the app installs no rule, so a first sale went straight through. Words only; no service or manifest changes.

@@ -3,7 +3,7 @@
  "app": "pp_bln",
  "prefix": "PP BLN",
  "title": "Bin locations",
- "version": "0.1.7",
+ "version": "0.1.8",
  "publisher": "Partner Programme sample",
  "description": "Where stock sits inside a store: locations (back room, shop floor), aisles, bins and what is in each bin. The retailer's own stock and valuation stay in iVendNext; these records only say where. The install makes the app's own user, with the role PP BLN Integration, and names it on the feed registration PP BLN Bins feed, which follows the locations (they seldom change); the site connects the app and hands the Where is it? service that user's key.",
  "allowed_urls": [
@@ -558,7 +558,8 @@
    "description": "the Where is it? service reads the site's bin records",
    "events": [
     "PP BLN Location"
-   ]
+   ],
+   "reads_events": false
   }
  ],
  "role_rights": [

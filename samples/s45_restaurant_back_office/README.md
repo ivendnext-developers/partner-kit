@@ -42,6 +42,10 @@ ivn try
 
 ## Versions
 
+### 1.2.6
+
+- The manifest marks its event feed `"reads_events": false`: this app reads its records itself and follows the feed only to get its own user, so the package's connection test (the one `ivn try` and the hosting dashboard read) answers the feed *Passed*, on POS build 2.1.0.728 or later. No logic changed.
+
 ### 1.2.5
 
 - *Sales by item* has its *Totals* row again: a report now opens with up to 2500 rows (POS build `2.1.0.717`), so the total is the day's, not the 20 rows once on screen. Manifest 0.3.4. The service is unchanged.

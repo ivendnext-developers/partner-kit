@@ -42,6 +42,10 @@ ivn try
 
 ## Versions
 
+### 1.2.5
+
+- The manifest marks its event feed `"reads_events": false`: this app reads its records itself and follows the feed only to get its own user, so the package's connection test (the one `ivn try` and the hosting dashboard read) answers the feed *Passed*, on POS build 2.1.0.728 or later. No logic changed.
+
 ### 1.2.4
 
 - The README says how long the cashier's next steps may be: the till shows 140 characters at most, so keep each to about 40, as they are now. A wording too long turns the tests red with a message that names the word to shorten in `coupons.py` and how many characters its refusal leaves it, or says the coupon's name was left out to fit. No service, rule or manifest change (manifest 0.3.3).

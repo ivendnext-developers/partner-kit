@@ -10,7 +10,7 @@ blocked-by: -
 recipe: recipes/manifest.md
 sample: none
 request: -
-verified: 2026-11-22 · iVendNext's own checker as the kit copies it (build 2.1.0.726) run on a manifest with a required field: accepted on a Purchase Order, refused on a POS Invoice and on a Sales Invoice; not installed on a site
+verified: 2026-11-23 · iVendNext's own checker as the kit copies it (build 2.1.0.728) run on a manifest with a required field: accepted on a Purchase Order, refused on a POS Invoice and on a Sales Invoice; not installed on a site
 popular: yes
 ---
 ## What you build

@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/register_books.md @ 9dc717ba13fe, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/register_books.md @ dfe04e5658aa, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Register books
 
 **Contract:** [`register_book.v1.schema.json`](../extension_contracts/register_book.v1.schema.json)
@@ -14,7 +14,7 @@ and *Verify book* in `business_logic/register_print.py`.
 Pharmacies, liquor shops and duty-free shops must keep a legal register of regulated stock: one
 line for every movement, numbered with no gaps, a running balance, never edited, corrected only in
 the way the market's law says. The POS app keeps such registers through one general **register
-door**. A shop's books are **declared as data**, one **Retail Register Book** per book, so a new
+door**. A retailer's books are **declared as data**, one **Retail Register Book** per book, so a new
 market is a data set, not new code.
 
 A book says which items it takes, which movements enter it, how its lines are numbered and

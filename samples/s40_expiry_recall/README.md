@@ -47,6 +47,10 @@ ivn try
 
 ## Versions
 
+### 1.1.6
+
+- The manifest marks its event feed `"reads_events": false`: this app reads its records itself and follows the feed only to get its own user, so the package's connection test (the one `ivn try` and the hosting dashboard read) answers the feed *Passed*, on POS build 2.1.0.728 or later. No logic changed.
+
 ### 1.1.5
 
 - The goods-receipt check is titled *Goods receipt check*: a receipt refused only for the supplier's note number read *Shelf life at receipt*. The recall report and the disposal record print every word through `_()` (a site's own language) and in the reader's direction (`dir="auto"`). Manifest 0.2.4. The service is unchanged.

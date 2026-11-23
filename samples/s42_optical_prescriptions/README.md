@@ -44,6 +44,10 @@ ivn try
 
 ## Versions
 
+### 1.1.7
+
+- The manifest marks its event feed `"reads_events": false`: this app reads its records itself and follows the feed only to get its own user, so the package's connection test (the one `ivn try` and the hosting dashboard read) answers the feed *Passed*, on POS build 2.1.0.728 or later. No logic changed.
+
 ### 1.1.6
 
 - *Try it at the till* starts with marking the lens item group *Spectacles*: the first sale of a try went through, as no group carried the mark. Words only; the service and the manifest are unchanged (manifest 0.2.5).

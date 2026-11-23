@@ -53,6 +53,10 @@ ivn try
 
 ## Versions
 
+### 1.2.3
+
+- The manifest marks its event feed `"reads_events": false`: this app reads its records itself and follows the feed only to get its own user, so the package's connection test (the one `ivn try` and the hosting dashboard read) answers the feed *Passed*, on POS build 2.1.0.728 or later. No logic changed.
+
 ### 1.2.2
 
 - Manifest 0.2.2: the install gives *PP RXC Pharmacist* and *PP RXC Pharmacist in Charge* print on Retail Label Layout (`role_rights`), so the dispensing label prints without a step in Role Permissions. The service is unchanged.

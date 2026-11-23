@@ -399,7 +399,11 @@ def build_manifest(parts: list[Part], prefix: str, app: str, base: dict | None =
                     merged = next((x for x in m.get(section) or [] if x.get("name") == feed), None)
                     if merged is None:
                         merged = {"name": feed, "description": "the app's service reads these events", "events": []}
+                        if r.get("reads_events") is False:
+                            merged["reads_events"] = False
                         m.setdefault(section, []).append(merged)
+                    if r.get("reads_events") is not False:      # one part reads its events: the one feed is read
+                        merged.pop("reads_events", None)
                     for e in r.get("events") or []:
                         if e not in merged["events"]:
                             merged["events"].append(e)

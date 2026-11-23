@@ -18,7 +18,7 @@ can check an answer against these before it reaches a shop. They are what the [s
 | Label layout | [pages/label_layout.md](pages/label_layout.md) | [label_layout.v1.schema.json](extension_contracts/label_layout.v1.schema.json) |
 | List mark (a coloured label on a Desk list row, a manifest kind) | [pages/list_mark.md](pages/list_mark.md) | [list_mark.v1.schema.json](extension_contracts/list_mark.v1.schema.json) |
 | Print template readers (`ivn_rows`, `ivn_value`: what a manifest's print format may read) | [pages/print_template_readers.md](pages/print_template_readers.md) | none: the manifest's schema and its samples |
-| Receipt (store settings: the shop's own lines, WhatsApp, a checked layout) | [pages/receipt.md](pages/receipt.md) | none: store settings, not a declaration |
+| Receipt (store settings: the retailer's own lines, WhatsApp, a checked layout) | [pages/receipt.md](pages/receipt.md) | none: store settings, not a declaration |
 | Capture at the till | [pages/partner_capture.md](pages/partner_capture.md) | [partner_capture.v1.schema.json](extension_contracts/partner_capture.v1.schema.json) |
 | Check at the till | [pages/partner_check.md](pages/partner_check.md) | [partner_check.v1.schema.json](extension_contracts/partner_check.v1.schema.json) |
 | Open check (`open_check/1`: an outside app opens a table's, a tab's or a pre-order's running order and adds lines; the till prices it and takes the payment) | [pages/open_check.md](pages/open_check.md) | [open_check.v1.schema.json](extension_contracts/open_check.v1.schema.json) |

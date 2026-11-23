@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/event_feed.md @ 9dc717ba13fe, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/event_feed.md @ dfe04e5658aa, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Event feed
 
 **Contract:** [`event_feed.v1.schema.json`](../extension_contracts/event_feed.v1.schema.json)
@@ -40,7 +40,10 @@ your own roles under `role_rights` ([installing a manifest](package_install.md#r
 the shop's to grant. ⚠ Disabling the user does not stop its key (a key request does not check it): to cut the
 app off, uninstall it, or make a new key on its user: that stops the app for good, except an app hosted by
 CitiXsys, which receives the new key at its next update or when *Connect again* is pressed. One user, one
-registration: a key registered to two applications is answered *"not registered"*.
+registration: a key registered to two applications is answered *"not registered"*. An app that reads its
+records itself and lists the feed only to get its own user writes `"reads_events": false` on the feed, and has
+the feed follow only the app's own record (its settings): each save of it leaves two events (three when the record is
+first made) that are never read and stay waiting, and the connection test still answers *Passed*, so a record saved now and then keeps the list short.
 
 Any record type can be followed, the till's own included: a registration that follows **Retail Override
 Request** receives each manager approval as `retail_override_request.on_update` (requested, approved,
@@ -54,7 +57,8 @@ hosting dashboard reads) answers one line per feed: *Events waiting: N · Last r
 when events are waiting and nothing has read them, *The app has not read its events. Ask its maker to check the
 app's log.* A feed that is being read answers *Passed*; never read with events waiting, *Failed*, and so does one the app
 reads but leaves events waiting from before its last read (*The app reads its events but has not marked N done…*);
-never read with nothing waiting yet, *Inconclusive*.
+never read with nothing waiting yet, *Inconclusive*. A feed marked `"reads_events": false` answers *Passed*,
+*… The app reads its records itself.*, whatever waits.
 
 ## 2. Version
 

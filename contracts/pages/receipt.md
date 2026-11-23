@@ -1,5 +1,5 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/receipt.md @ 9dc717ba13fe, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
-# Receipt: the shop's own lines, WhatsApp, a checked layout
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/receipt.md @ dfe04e5658aa, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+# Receipt: the retailer's own lines, WhatsApp, a checked layout
 
 **Contract:** none. These are store settings on the register, not a declaration a manifest carries.
 · code: `business_logic/receipt_additions.py` (`receipt_shop_additions`),
@@ -10,7 +10,7 @@ the till's `public/js/mpos_fiscal.js` (the Print sheet).
 
 ## 1. What it is and when it fires
 
-Three things a shop wants on its receipt without copying the receipt layout (a copied layout stops receiving
+Three things a retailer wants on its receipt without copying the receipt layout (a copied layout stops receiving
 our fixes):
 
 - **Its own lines on the shipped receipt.** Lines under the store's name (an address, a tax number, a

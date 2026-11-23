@@ -41,6 +41,10 @@ ivn try
 
 ## Versions
 
+### 1.1.6
+
+- The manifest marks its event feed `"reads_events": false`: this app reads its records itself and follows the feed only to get its own user, so the package's connection test (the one `ivn try` and the hosting dashboard read) answers the feed *Passed*, on POS build 2.1.0.728 or later. No logic changed.
+
 ### 1.1.5
 
 - Manifest 0.1.7: the rights on the four bin record types are the app's own role's, `PP BLN Integration`, the role the install gives the app's user (they named `PP Integration`, which that user does not hold): it reads them all and writes a bin's contents (*Item In Bin*). A stock move the local service books (`/putaway`, `/pick`) needs rights on Stock Entry that the retailer gives that role. The bin label prints in the reader's direction (`dir="auto"`). The service is unchanged.

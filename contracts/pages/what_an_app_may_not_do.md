@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/what_an_app_may_not_do.md @ 9dc717ba13fe, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/what_an_app_may_not_do.md @ dfe04e5658aa, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # What an app may not do
 
 An app may do anything the shop's administrator can do in Desk: a workflow that approves and
@@ -45,6 +45,8 @@ refusal added anywhere else fails the build.
 | manifest_check | `_webhooks` | 3 | B T | A webhook calls an address the consent shows, and sends the thin body, because a body of its own is a template that can read any record without rights and send it there (B); a condition on the till's own records runs inside its save (T). |
 | manifest_check | `_reports` | 4 | B C S | A query report runs SQL over the whole database and a script report runs Python (B, C); the sort order is written into the report's query (C); a page size Desk's report screen cannot page by (20, 100, 500 or 2500 rows) is a partner's typo (S). |
 | manifest_check | `_roles` | 1 | B | Guest and All open the app's records to people outside the shop's staff. |
+| manifest_check | `_required_when` | 1 | S | A required-when save rule names one to three conditions: the install's save refuses the same rule, so Check says it first, in the same words. A partner meets it once, writing the manifest. |
+| manifest_check | `_derived_reach` | 3 | A | A derived save rule writes only a field the shop or the package added where it could reach money (a booked sale's own field, a total of rows or days between into a standard field, a field a total is computed from): the install's save refuses the same rule, so Check says it first, in the same words. |
 | manifest_check | `_workflows` | 2 | A T | A workflow on the till's own records holds the sale for an approval nobody at the counter gives (T); a state writes only the app's own field, because it writes and then submits, so a warehouse, tax or discount field would post a figure nobody chose (A). |
 | manifest_check | `_naming_rules` | 1 | A | The sale's own records are numbered by the shop's series, which its books and tax authority read. |
 | manifest_check | `_endpoint` | 1 | B | A till key or a service calls an https address the consent shows. |

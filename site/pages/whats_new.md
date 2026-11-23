@@ -4,6 +4,14 @@ One entry for each iVendNext POS build, newest first: what you can now do, or me
 
 A build number names the POS app's version: *Build 2.1.0.726* is version 2.1.0.726. An app that needs a feature names the build it first appeared in.
 
+## Build 2.1.0.728 · 23 November
+
+- **Check refuses two save rules before the install does.** A `required_when` rule with no condition or more than three, and a `derived` rule that writes a booked sale's standard field, a total of rows or days between into a standard field (or into a field of your own record type), or a field a total is computed from, are refused at Check, in the save's own words for most cases, so you learn at Check what used to surface on the retailer's install day. A label in a manifest that is not text no longer stops Check with a server error.
+- **The manifest's published schema names `field_rules`, `scan_sources` and `label_layouts`.** The schema no longer lacks three keys that Check already accepted.
+- **An app that follows a feed only to get its own user can mark the feed `"reads_events": false`.** For an app that reads its records itself, the package's connection test (the one the hosting dashboard and `ivn try` read) then answers *Passed* for that feed instead of *Failed*, and `ivn try` ends on *Passed*. The samples that follow a feed only for their user carry the mark.
+- **A Desk button's and a document check's consent list names its fields by their Desk labels**, so the retailer approving an install reads the names they know.
+- **A document check's answer names the record type as Desk does**, so a partner reading a refused check sees the record type the retailer sees.
+
 ## Build 2.1.0.726 · 22 November
 
 - **A refused install or update lists each refusal on its own line.** When an app's install, update, check, finish or connect-again is refused, the popup shows each refusal with where it is in your manifest (*where (name): reason*, the place in bold), the same list the package's *Refused because* shows. A manifest refused on several rows now shows which row each refusal is about. The server's answers are unchanged.
@@ -25,7 +33,7 @@ A build number names the POS app's version: *Build 2.1.0.726* is version 2.1.0.7
 
 Nothing new for developers: no extension page, contract, check or `v1` read changed.
 
-No developer changelog was written for these two releases. What the kit's copies of the product's files hold at build 2.1.0.726 is the reference.
+No developer changelog was written for these two releases. What the kit's copies of the product's files hold at build 2.1.0.728 is the reference.
 
 ## Build 2.1.0.717 · 17 November
 

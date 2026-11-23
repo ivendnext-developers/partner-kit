@@ -41,6 +41,10 @@ ivn try
 
 ## Versions
 
+### 1.3.7
+
+- The manifest marks its event feed `"reads_events": false`: this app reads its records itself and follows the feed only to get its own user, so the package's connection test (the one `ivn try` and the hosting dashboard read) answers the feed *Passed*, on POS build 2.1.0.728 or later. No logic changed.
+
 ### 1.3.6
 
 - A dish marked sold out stops the tills within about a minute, not at once. Words only; the service and the manifest are unchanged (manifest 0.3.4).
