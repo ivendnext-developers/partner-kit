@@ -95,6 +95,11 @@ WORDS = {
     "downloaded": "{version} ({state}made by {who} {how}) into apps/{app}/.",  # J11-01
     "check_green": "CHECK GREEN · {n} tests run, {n} passed",  # J3-04
     "check_red": "CHECK RED: {what}",  # J3-04
+    # the site's own refusal of such an update, said before the try (My apps' `feed_events`)
+    "feed_changed": "Before you try: in this folder the event feed {feed} follows other events than in {version}, the "
+                    "version you tried on {site}, and an update cannot change them. Take the tried copy off first: in "
+                    "{site}'s Desk open your app's package ({app}) and press Export and uninstall. Then ivn try installs "
+                    "this version fresh.",
     "m06": "Not kept: the kit's check refused this folder. {verdict}. Nothing changed on the server. Fix it, run ivn check, "
            "and upload again.",  # J8-06
     "pushed": "Checked: CHECK GREEN. Uploaded as {version} (draft: on our server, on no site yet).",  # J3-07
@@ -721,8 +726,40 @@ def cmd_download(a) -> int:
     return 0
 
 
+def feeds_of(manifest: dict) -> dict:
+    return {f.get("name"): sorted(map(str, f.get("events") or [])) for f in manifest.get("registered_applications") or []
+            if isinstance(f, dict) and f.get("name")}
+
+
+def feed_changed(folder: pathlib.Path) -> str | None:
+    """The version last tried on your sandbox has an event feed that follows other record types than this folder's: the
+    site refuses that update, so it is said before the try. Nothing is said offline, signed out, or with nothing tried."""
+    try:
+        app = app_id(folder)
+        tried = next((s for s in door("/v1/where", {"app": app}).get("sites") or []
+                      if s.get("sandbox") and s.get("version")), None)
+        if not tried:
+            return None
+        with zipfile.ZipFile(io.BytesIO(fetch_version(app, tried["version"]))) as z:
+            old = json.loads(z.read(min((n for n in z.namelist() if n.rsplit("/", 1)[-1] == "manifest.json"),
+                                        key=lambda n: n.count("/"))))
+        now = read_json(folder / "manifest.json")
+    except (Stop, Offline, ValueError, KeyError, OSError, zipfile.BadZipFile):
+        return None
+    before, after = feeds_of(old), feeds_of(now)
+    changed = [n for n in after if n in before and before[n] != after[n]]
+    if not changed:
+        return None
+    return WORDS["feed_changed"].format(feed=", ".join(changed), version=tried["version"], site=tried.get("site"),
+                                        app=now.get("app") or app)
+
+
 def cmd_check(a) -> int:
-    ok, verdict = check_folder(app_folder(a))
+    folder = app_folder(a)
+    ok, verdict = check_folder(folder)
+    warn = feed_changed(folder)
+    if warn:
+        print(warn)
     print(verdict)
     return 0 if ok else 1
 
