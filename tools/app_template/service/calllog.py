@@ -16,7 +16,8 @@ import json
 # A connection point's kind, in the words a person reads ("a connection point is a place where a site calls the app")
 PLAIN = {"check": "a check at Pay", "capture": "a question at the till", "remote_key": "a till key",
          "webhook": "a notice of each sale", "feed": "new sales and customers from your site", "module": "a module at the till",
-         "page": "a page in Desk"}
+         "page": "a till key's page", "desk_page": "a page in Desk", "till_desk_page": "a page on a till key and in Desk"}
+# a page is named by where it opens (its declaration's `page_placement`): *Till key* is `page`
 OUTCOMES = {200: "answered", 401: "refused", 403: "refused", 404: "not found"}
 
 

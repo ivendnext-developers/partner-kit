@@ -275,6 +275,19 @@ class Combine(Base):
                 self.assertEqual(mis[0], 401, path)
 
 
+class PagePlacement(unittest.TestCase):
+    """A page's Logs line names where it opens (a developer's report, 23 Nov: a till key's page read *a page in Desk*)."""
+
+    def test_a_pages_kind_follows_its_placement(self):
+        sys.path.insert(0, str(KIT / "tools" / "app_template" / "service"))
+        import calllog  # noqa: PLC0415
+        page = {"point": "page", "endpoint_url": "https://x.example/board", "key": "k"}
+        kinds = [next(iter(combine.routes({"extension_subscriptions": [dict(page, **({"page_placement": p} if p else {}))]})
+                            .values()))[0] for p in ("Till key", "Desk page", "Till key and Desk page", None)]
+        self.assertEqual([calllog.plain(k) for k in kinds], ["a till key's page", "a page in Desk",
+                                                            "a page on a till key and in Desk", "a till key's page"])
+
+
 class DeskButtons(Base):
     """A Desk button names its subscription by key (its `service`): combined or added, it names the tagged key, so the
     kit's check passes (found by EASY3a's walk, 2026-11-01: S23 with S49 was refused by the check)."""

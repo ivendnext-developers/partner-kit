@@ -517,6 +517,32 @@ class CheckAndPush(Base):
         self.assertEqual(rc, 0, out)
         self.assertRegex(out.strip(), r"^CHECK GREEN · (\d+) tests run, \1 passed$")
 
+    def test_check_warns_when_the_tried_versions_feed_follows_other_events(self):  # TRYREUSE (a developer's report)
+        folder, _ = self.made()
+        self.in_app(folder)
+        app = "acme_member_till"
+        version = self.stub.apps[app]["versions"][-1]["version"]
+        tried = ivn.unzip_into(self.stub.objects[f"folders/{app}/{version}.zip"], self.work / "tried")
+        for where, events in ((tried, ["POS Invoice"]), (folder, ["POS Invoice", "Sales Invoice"])):
+            m = json.loads((where / "manifest.json").read_text("utf-8"))
+            m["registered_applications"] = [{"name": "ACME Feed", "events": events}]
+            (where / "manifest.json").write_text(json.dumps(m, indent=1) + "\n", "utf-8")
+        self.stub.objects[f"folders/{app}/{version}.zip"] = ivn.zip_folder(tried)
+        sites = {"sites": [{"site": "acme.sandbox.ivend.co", "sandbox": True, "version": version}]}
+        with unittest.mock.patch.dict(Stub.ROUTES, {"/v1/where": lambda s, b: sites}):
+            _, out = self.run_ivn("check")
+        self.assertEqual(out.splitlines()[0], (
+            f"Before you try: in this folder the event feed ACME Feed follows other events than in {version}, the version "
+            f"you tried on acme.sandbox.ivend.co, and an update cannot change them. Take the tried copy off first: in "
+            f"acme.sandbox.ivend.co's Desk open your app's package ({app}) and press Export and uninstall. Then ivn try "
+            f"installs this version fresh."))
+        m = json.loads((folder / "manifest.json").read_text("utf-8"))
+        m["registered_applications"][0]["events"] = ["POS Invoice"]  # the same events: nothing said
+        (folder / "manifest.json").write_text(json.dumps(m, indent=1) + "\n", "utf-8")
+        with unittest.mock.patch.dict(Stub.ROUTES, {"/v1/where": lambda s, b: sites}):
+            _, out = self.run_ivn("check")
+        self.assertNotIn("Before you try", out)
+
     def test_check_red_says_what(self):  # UX-29 (J3-04)
         folder, _ = self.made()
         self.in_app(folder)

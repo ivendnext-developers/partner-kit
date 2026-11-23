@@ -95,6 +95,11 @@ WORDS = {
     "downloaded": "{version} ({state}made by {who} {how}) into apps/{app}/.",  # J11-01
     "check_green": "CHECK GREEN · {n} tests run, {n} passed",  # J3-04
     "check_red": "CHECK RED: {what}",  # J3-04
+    # the site's own refusal of such an update, said before the try (My apps' `feed_events`)
+    "feed_changed": "Before you try: in this folder the event feed {feed} follows other events than in {version}, the "
+                    "version you tried on {site}, and an update cannot change them. Take the tried copy off first: in "
+                    "{site}'s Desk open your app's package ({app}) and press Export and uninstall. Then ivn try installs "
+                    "this version fresh.",
     "m06": "Not kept: the kit's check refused this folder. {verdict}. Nothing changed on the server. Fix it, run ivn check, "
            "and upload again.",  # J8-06
     "pushed": "Checked: CHECK GREEN. Uploaded as {version} (draft: on our server, on no site yet).",  # J3-07
@@ -269,7 +274,8 @@ def _send(method: str, url: str, data: bytes | None, headers: dict, timeout: flo
         raise Offline(str(e)) from None
 
 
-def door(path: str, body: dict | None = None, token: str | None = None, method: str = "POST", need_token: bool = True) -> dict:
+def door(path: str, body: dict | None = None, token: str | None = None, method: str = "POST", need_token: bool = True,
+         timeout: float = 90) -> dict:
     """One door, as the page calls it, with the token in place of the page's session."""
     token = token or (token_now() if need_token else None)
     if need_token and not token:
@@ -277,7 +283,7 @@ def door(path: str, body: dict | None = None, token: str | None = None, method: 
     base = os.environ.get("IVN_HOSTING_URL", HOSTING).rstrip("/")
     headers = {"Content-Type": "application/json", **({"Authorization": "Bearer " + token} if token else {})}
     data = None if method == "GET" else json.dumps(body or {}).encode()
-    status, raw = _send(method, base + path, data, headers)
+    status, raw = _send(method, base + path, data, headers, timeout)
     try:
         out = json.loads(raw or b"{}")
     except ValueError:
@@ -403,10 +409,10 @@ def unzip_into(data: bytes, into: pathlib.Path) -> pathlib.Path:
     return root
 
 
-def fetch_version(app: str, version: str | None) -> bytes:
+def fetch_version(app: str, version: str | None, timeout: float = 90) -> bytes:
     """One version's folder, as *Download the app folder* gives it."""
-    got = door("/v1/download", {"app": app, **({"version": version} if version else {})})
-    status, raw = _send("GET", got["url"], None, {})
+    got = door("/v1/download", {"app": app, **({"version": version} if version else {})}, timeout=timeout)
+    status, raw = _send("GET", got["url"], None, {}, timeout)
     if status != 200:
         raise Stop(f"The folder could not be fetched (it answered {status}). Nothing was changed: try again.")
     return raw
@@ -721,8 +727,48 @@ def cmd_download(a) -> int:
     return 0
 
 
+def feeds_of(manifest: dict) -> dict:
+    return {f.get("name"): sorted(map(str, f.get("events") or [])) for f in manifest.get("registered_applications") or []
+            if isinstance(f, dict) and f.get("name")}
+
+
+def feed_changed(folder: pathlib.Path) -> str | None:
+    """The version last tried on your sandbox has an event feed that follows other record types than this folder's: the
+    site refuses that update, so it is said before the try. Nothing is said offline, signed out (no token: no call), or
+    with nothing tried; a slow network costs a few seconds, never the check."""
+    try:
+        if not token_now():
+            return None
+        app = app_id(folder)
+        tried = next((s for s in door("/v1/where", {"app": app}, timeout=5).get("sites") or []
+                      if s.get("sandbox") and s.get("version") and s.get("installed") is not False), None)
+        if not tried:
+            return None
+        kept = TOKEN_FILE.parent / "feeds" / f"{app}-{tried['version']}.json"  # a version never changes: read once
+        before = read_json(kept) if kept.is_file() else None
+        if before is None:
+            with zipfile.ZipFile(io.BytesIO(fetch_version(app, tried["version"], timeout=10))) as z:
+                before = feeds_of(json.loads(z.read(min((n for n in z.namelist() if n.rsplit("/", 1)[-1] == "manifest.json"),
+                                                        key=lambda n: n.count("/")))))
+            kept.parent.mkdir(parents=True, exist_ok=True)
+            kept.write_text(json.dumps(before) + "\n", "utf-8")
+        now = read_json(folder / "manifest.json")
+    except (Stop, Offline, ValueError, KeyError, OSError, zipfile.BadZipFile):
+        return None
+    after = feeds_of(now)
+    changed = [n for n in after if n in before and before[n] != after[n]]
+    if not changed:
+        return None
+    return WORDS["feed_changed"].format(feed=", ".join(changed), version=tried["version"], site=tried.get("site"),
+                                        app=now.get("app") or app)
+
+
 def cmd_check(a) -> int:
-    ok, verdict = check_folder(app_folder(a))
+    folder = app_folder(a)
+    ok, verdict = check_folder(folder)
+    warn = feed_changed(folder)
+    if warn:
+        print(warn)
     print(verdict)
     return 0 if ok else 1
 
