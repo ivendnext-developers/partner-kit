@@ -1,5 +1,5 @@
 # COPY — source: repo ivendnext/iVendNext_PWA, path apps/ivendnext_mpos/ivendnext_mpos/tests/test_allowbydefault.py,
-# at development 9dc717ba13fe1399bee7e0a13d3089ffb997c6d4; changed: the import, one line so unittest runs it, the docstring's ids, and one test left out (it runs the shop's installer, which the kit does not carry). A defect here is a defect there:
+# at development dfe04e5658aa8dedeab1a97a88ebf25cc2bba42d; changed: the import, one line so unittest runs it, the docstring's ids, and one test left out (it runs the shop's installer, which the kit does not carry). A defect here is a defect there:
 # report it with the Kit defect form (feedback/README.md).
 """A partner's app may do what the customer's administrator can do in Desk. The checker refuses only a wrong money, tax, stock or fiscal
 figure, the till's own sale or customer failing to save, customer data sent where the customer

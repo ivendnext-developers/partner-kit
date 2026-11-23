@@ -45,6 +45,10 @@ ivn try
 
 ## Versions
 
+### 0.3.6
+
+- The manifest marks its event feed `"reads_events": false`: this app reads its records itself and follows the feed only to get its own user, so the package's connection test (the one `ivn try` and the hosting dashboard read) answers the feed *Passed*, on POS build 2.1.0.728 or later. No logic changed.
+
 ### 0.3.5
 
 - The hosted service's first pass on a site starts at the install, so a sale rung in the minutes between the install and that pass gets its warranty too (it was left without one). The manifest is unchanged.

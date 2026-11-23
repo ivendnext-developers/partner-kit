@@ -1,0 +1,14 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "A required-when rule with no condition at all.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Tax id needed",
+    "record_type": "Customer",
+    "kind": "required_when",
+    "field": "tax_id",
+    "conditions": []
+  },
+  "expect_refusal": "Give 1 to 3 conditions."
+}

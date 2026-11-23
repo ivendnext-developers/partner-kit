@@ -1,0 +1,43 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A warranty app whose service reads the shop's sales and its own terms itself: it registers a feed on its own settings record only to get its own user, marks it \"reads_events\": false, and gives that user read on POS Invoice. The connection test answers the feed Passed whatever waits on it.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_wty",
+    "prefix": "PP WTY",
+    "version": "1.0.0",
+    "doctypes": [
+      {
+        "name": "PP WTY Settings",
+        "issingle": 1,
+        "fields": [
+          {
+            "fieldname": "cover_months",
+            "fieldtype": "Int",
+            "label": "Cover (months)"
+          }
+        ]
+      }
+    ],
+    "registered_applications": [
+      {
+        "name": "PP WTY Feed",
+        "description": "The app's own user",
+        "events": [
+          "PP WTY Settings"
+        ],
+        "reads_events": false
+      }
+    ],
+    "role_rights": [
+      {
+        "doctype": "POS Invoice",
+        "role": "PP WTY Integration",
+        "rights": [
+          "read"
+        ]
+      }
+    ]
+  }
+}

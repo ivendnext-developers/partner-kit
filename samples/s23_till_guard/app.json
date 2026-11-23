@@ -1,6 +1,6 @@
 {
  "app": "till-guard",
- "version": "1.4.2",
+ "version": "1.4.3",
  "port": 8080,
  "health": "/health",
  "size": "small",

@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/package_install.md @ 9dc717ba13fe, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/package_install.md @ dfe04e5658aa, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Installing a manifest (self-service install)
 
 **Contract:** [`package_manifest.v1.schema.json`](../extension_contracts/package_manifest.v1.schema.json)
@@ -236,7 +236,9 @@ follows**, for its own user's role `<PREFIX> Integration` (on a site whose regis
 only, nothing else on. The consent names them on one line, *Reads: Batch, POS Invoice, …* (sorted). A row the shop already
 gave that role is left exactly as it is and never removed. The rows go at uninstall. An app installed before that
 gets its reads at its next update, or, for an app CitiXsys hosts, when *Connect again* is pressed on its package. What else the app needs is
-declared under `role_rights`, below.
+declared under `role_rights`, below. A feed marked `"reads_events": false` (an app that reads its records itself and
+follows the feed only for its user) installs the same: the mark changes only the connection test's answer for the feed,
+to *Passed* ([event feed](event_feed.md)), and an update may add it.
 
 ### Rights for your own roles
 

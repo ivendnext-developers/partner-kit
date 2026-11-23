@@ -1,5 +1,5 @@
 # COPY — source: repo ivendnext/iVendNext_PWA, path apps/ivendnext_mpos/ivendnext_mpos/business_logic/manifest_check.py,
-# at development 9dc717ba13fe1399bee7e0a13d3089ffb997c6d4. The shop's own checker (the install screen runs it) is the source;
+# at development dfe04e5658aa8dedeab1a97a88ebf25cc2bba42d. The shop's own checker (the install screen runs it) is the source;
 # this copy lets you check a manifest before you send it, and refuses the same manifests in the same words. Everything
 # below this header equals the source. A defect here is a defect there: report it with the Kit defect form (feedback/README.md).
 """The companion manifest — the VALIDATOR. Pure Python: no framework import, no network.
@@ -1375,6 +1375,39 @@ def _desk_actions(v: _V):
         _roles(v, w, label, a.get("roles"))
 
 
+# ── the save rules' own lists: ONE home (save_rules binds the same names from here), so Check refuses
+# what the install's save refuses, in its words, and the kit's copy of this file carries them ──
+CONDITIONS_MAX = 3
+DERIVED_TARGETS = ("Int", "Float", "Percent")
+FORMULAS = ("scale", "days_until", "percent", "sum_rows", "count_rows", "days_between")
+# a total of a table's rows, written on the record's own header
+ROW_FORMULAS = ("sum_rows", "count_rows")
+# the formulas that write only a field the shop added, on any record type: the totals of rows and
+# days between two dates; v1's three keep v1's regime
+SHOP_ONLY_FORMULAS = ROW_FORMULAS + ("days_between",)
+
+# a derived value never writes a field a total is computed from (``docs/extending``
+# Trap 5): any name holding one of these words, whatever its type
+TOTALS_WORDS = (
+    "amount",
+    "rate",
+    "total",
+    "price",
+    "discount",
+    "tax",
+    "qty",
+    "margin",
+    "conversion",
+    "paid",
+    "outstanding",
+    "commission",
+    "exchange",
+    "incentive",
+    "allocated",
+    "change",
+    "opening",  # Item.opening_stock books a valued opening entry (reviewer-deep re-grade)
+)
+
 RULE_KEYS = {
     "rule_name",
     "record_type",
@@ -1424,6 +1457,65 @@ def _save_rules(v: _V):
         v.no_script(
             f"{w}.message", name, r.get("message")
         )  # the product shows it as the refusal, unescaped
+        if r.get("kind") == "required_when":
+            _required_when(v, w, name, r)
+        elif r.get("kind") == "derived":
+            _derived_reach(v, w, name, r)
+
+
+def _required_when(v: _V, w: str, name, r: dict):
+    """S: the install's save refuses a required-when rule with no condition, or with too many."""
+    c = r.get("conditions")
+    if not isinstance(c, list) or not 1 <= len(c) <= CONDITIONS_MAX:
+        v.refuse(w, name, f"Give 1 to {CONDITIONS_MAX} conditions.")
+
+
+def _derived_reach(v: _V, w: str, name, r: dict):
+    """A: the save's own words for a derived value written where it could reach money, in the save's
+    order, decided from the manifest alone (``save_rules._validate_derived``). ⚠ Bound, stated: where
+    the save refuses first for a reason only the site shows (a money record that is not a till sale,
+    a ``custom_…`` field an app made, a field the site lacks, a field another installed package
+    made) this passes, and the install refuses as before; where it refuses first in other words (a
+    shop field named without ``custom_``, a total into a standard field whose name holds a totals
+    word, ``sum_rows`` into a whole-number field; a derived value into a field named with a totals word)
+    Check's words differ and both refuse. Check never
+    refuses what the save accepts."""
+    dt, field, formula = r.get("record_type"), r.get("field"), r.get("formula")
+    if not (isinstance(dt, str) and isinstance(field, str)) or formula not in FORMULAS:
+        return
+    if formula in ROW_FORMULAS and r.get("child_table"):
+        return
+    made = {
+        c.get("fieldname"): c.get("fieldtype")
+        for c in v.m.get("custom_fields") or []
+        if isinstance(c, dict)
+    }
+    own = field in made or field.startswith(v.fprefix)
+    shops = own or field.startswith("custom_")
+    if dt in v.own:
+        # a package's own record type: its fields are not Custom Fields, so a total or days between
+        # never writes one (the save reads them as not the shop's)
+        if formula in SHOP_ONLY_FORMULAS and field not in made:
+            v.refuse(w, name, _shop_only_words(formula, dt))
+        return
+    if not shops and (dt in TILL_SALE or formula in SHOP_ONLY_FORMULAS):
+        return v.refuse(w, name, _shop_only_words(formula, dt))
+    if any(word in field.lower() for word in TOTALS_WORDS) and (
+        not own or made.get(field) in DERIVED_TARGETS
+    ):
+        v.refuse(
+            w,
+            name,
+            f"A derived value cannot write {field}: a money field, or one a total is computed from.",
+        )
+
+
+def _shop_only_words(formula: str, dt: str) -> str:
+    if formula in ROW_FORMULAS:
+        return "A total of rows can only write a field the shop added."
+    if formula in SHOP_ONLY_FORMULAS:
+        return "Days between can only write a field the shop added."
+    return f"On {dt}, a derived value can only write a field the shop added."
 
 
 FISCAL_DT = "POS Invoice"

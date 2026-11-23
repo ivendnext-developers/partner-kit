@@ -1,5 +1,5 @@
 # COPY — source: repo ivendnext/iVendNext_PWA, path apps/ivendnext_mpos/ivendnext_mpos/tests/test_manifest_check.py,
-# at development 9dc717ba13fe1399bee7e0a13d3089ffb997c6d4; changed: the import, the fixture folder and the ids in comments. A defect here is a defect there:
+# at development dfe04e5658aa8dedeab1a97a88ebf25cc2bba42d; changed: the import, the fixture folder, the contracts folder and the ids in comments. A defect here is a defect there:
 # report it with the Kit defect form (feedback/README.md).
 """Validator tests: stdlib only, no bench. Every fixture passes; each kept gate, planted into a good
 manifest, is refused with its own reason and nothing else; what Desk allows the shop's administrator
@@ -523,3 +523,151 @@ class Helpers(unittest.TestCase):
 
     def test_a_fiscal_reader_warns_what_the_shop_grants(self):
         self.assertEqual([w["what"] for w in warnings(FISCAL)], ["level_zero"])
+
+
+# ── Check refuses what the save refuses and the manifest alone decides ──
+CONTRACTS = pathlib.Path(__file__).resolve().parents[3] / "contracts" / "extension_contracts"
+SAVE_SAMPLES = CONTRACTS / "samples" / "save_rules"
+
+
+def _rule(**extra):
+    r = {
+        "rule_name": "PP KND rule",
+        "record_type": "POS Invoice",
+        "kind": "derived",
+        "field": "notes",
+    }
+    r.update({"formula": "scale", "source": "grand_total", "factor": 2})
+    r.update(extra)
+    return lambda m: m.update(save_rules=[r])
+
+
+def _save_rule_reasons(change):
+    out = planted(KINDS, change)
+    return [o["reason"] for o in out if o["where"].startswith("save_rules[0]")]
+
+
+def _own_field_on(dt, fieldname="pp_knd_days", fieldtype="Float"):
+    def change(m):
+        m["custom_fields"] = [
+            {"dt": dt, "fieldname": fieldname, "fieldtype": fieldtype, "label": "Days"}
+        ]
+
+    return change
+
+
+def _both(*changes):
+    return lambda m: [c(m) for c in changes]
+
+
+class SaveRuleReach(unittest.TestCase):
+    def test_required_when_without_one_to_three_conditions_is_refused(self):
+        for conditions in ({}, {"conditions": []}, {"conditions": [{"field": "a"}] * 4}):
+            with self.subTest(conditions):
+                got = _save_rule_reasons(
+                    _rule(
+                        kind="required_when", record_type="Customer", field="tax_id", **conditions
+                    )
+                )
+                self.assertEqual(got, ["Give 1 to 3 conditions."])
+
+    def test_a_derived_value_into_a_standard_field_of_a_till_sale_is_refused(self):
+        got = _save_rule_reasons(_rule())
+        self.assertEqual(
+            got, ["On POS Invoice, a derived value can only write a field the shop added."]
+        )
+
+    def test_the_same_rule_into_the_manifests_own_field_is_not_refused(self):
+        change = _both(_own_field_on("POS Invoice"), _rule(field="pp_knd_days"))
+        self.assertEqual(_save_rule_reasons(change), [])
+
+    def test_a_row_rule_into_the_packages_own_field_on_a_table_row_is_not_refused(self):
+        change = _both(
+            _own_field_on("POS Invoice Item", "pp_knd_note", "Float"),
+            _rule(child_table="items", field="pp_knd_note", source="qty"),
+        )
+        self.assertEqual(_save_rule_reasons(change), [])
+
+    def test_a_total_or_days_between_into_a_field_of_the_packages_own_record_type_is_refused(self):
+        own = lambda m: m.setdefault("doctypes", []).append(  # noqa: E731
+            {
+                "name": "PP KND Claim",
+                "fields": [{"fieldname": "lines", "fieldtype": "Float", "label": "Lines"}],
+            }
+        )
+        rows = _rule(
+            formula="count_rows", source_table="items", record_type="PP KND Claim", field="lines"
+        )
+        got = _save_rule_reasons(_both(own, rows))
+        self.assertEqual(got, ["A total of rows can only write a field the shop added."])
+        days = _rule(formula="days_between", record_type="PP KND Claim", field="lines")
+        self.assertEqual(
+            _save_rule_reasons(_both(own, days)),
+            ["Days between can only write a field the shop added."],
+        )
+        # a derived value of another formula there is not this pass's to refuse
+        self.assertEqual(
+            _save_rule_reasons(_both(own, _rule(record_type="PP KND Claim", field="lines"))), []
+        )
+
+    def test_an_unknown_formula_is_not_refused_by_this_pass(self):
+        self.assertEqual(_save_rule_reasons(_rule(formula="nonsense")), [])
+
+    def test_the_save_words_by_formula_and_reach(self):
+        rows = _rule(formula="sum_rows", source_table="items", record_type="BOM", field="quantity")
+        self.assertEqual(
+            _save_rule_reasons(rows), ["A total of rows can only write a field the shop added."]
+        )
+        days = _rule(formula="days_between", record_type="BOM", field="quantity")
+        self.assertEqual(
+            _save_rule_reasons(days), ["Days between can only write a field the shop added."]
+        )
+        money = _rule(record_type="Item", field="max_discount")
+        self.assertEqual(
+            _save_rule_reasons(money),
+            [
+                "A derived value cannot write max_discount: a money field, or one a total is computed from."
+            ],
+        )
+        shop = _rule(record_type="Item", field="custom_shelf_days")
+        self.assertEqual(_save_rule_reasons(shop), [])
+
+    def test_an_own_field_with_a_totals_word_is_refused_only_when_numeric(self):
+        for fieldtype, want in (("Float", 1), ("Data", 0)):
+            with self.subTest(fieldtype):
+                change = _both(
+                    _own_field_on("Item", "pp_knd_rate", fieldtype),
+                    _rule(record_type="Item", field="pp_knd_rate"),
+                )
+                self.assertEqual(len(_save_rule_reasons(change)), want)
+
+    def test_the_contract_samples_get_the_saves_own_words(self):
+        ran = 0
+        for p in sorted((SAVE_SAMPLES / "refused").glob("*.json")):
+            s = json.loads(p.read_text())
+            if p.name[:2] not in ("05", "06", "14", "24"):
+                continue
+            payload = {k: v for k, v in s["payload"].items() if k != "doctype"}
+            ran += 1
+            with self.subTest(p.name):
+                self.assertEqual(
+                    _save_rule_reasons(lambda m: m.update(save_rules=[payload])),
+                    [s["expect_refusal"]],
+                )
+        self.assertEqual(ran, 4)
+        for p in sorted((SAVE_SAMPLES / "accepted").glob("*.json")):
+            payload = {
+                k: v for k, v in json.loads(p.read_text())["payload"].items() if k != "doctype"
+            }
+            with self.subTest(p.name):
+                self.assertEqual(_save_rule_reasons(lambda m: m.update(save_rules=[payload])), [])
+
+
+class SchemaNamesEveryKind(unittest.TestCase):
+    def test_the_manifest_schema_keys_are_the_checkers(self):
+        from validate import KINDS, TOP_KEYS
+
+        schema = json.loads((CONTRACTS / "package_manifest.v1.schema.json").read_text())
+        self.assertEqual(
+            set(schema["$defs"]["manifest"]["properties"]), set(TOP_KEYS) | set(KINDS)
+        )

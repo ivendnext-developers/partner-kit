@@ -43,6 +43,10 @@ ivn try
 
 ## Versions
 
+### 1.2.3
+
+- The manifest marks its event feed `"reads_events": false`: this app reads its records itself and follows the feed only to get its own user, so the package's connection test (the one `ivn try` and the hosting dashboard read) answers the feed *Passed*, on POS build 2.1.0.728 or later. No logic changed.
+
 ### 1.2.2
 
 - A search in Desk for the card's title, *Payment method rules*, now finds the rules: the manifest adds a Report Builder report, *PP PMR Rules*, worded with the title in `translations`. Who sees a rule is still the record's own read. Manifest 0.3.2.

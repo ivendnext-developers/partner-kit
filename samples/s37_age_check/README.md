@@ -44,6 +44,10 @@ ivn try
 
 ## Versions
 
+### 1.1.9
+
+- The manifest marks its event feed `"reads_events": false`: this app reads its records itself and follows the feed only to get its own user, so the package's connection test (the one `ivn try` and the hosting dashboard read) answers the feed *Passed*, on POS build 2.1.0.728 or later. No logic changed.
+
 ### 1.1.8
 
 - Manifest 0.2.4: the description no longer says an item picked from a list has no recorded check (the till asks its age too). The service is unchanged.

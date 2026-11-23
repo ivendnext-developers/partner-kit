@@ -43,6 +43,10 @@ ivn try
 
 ## Versions
 
+### 1.0.3
+
+- The manifest marks its event feed `"reads_events": false`: this app reads its records itself and follows the feed only to get its own user, so the package's connection test (the one `ivn try` and the hosting dashboard read) answers the feed *Passed*, on POS build 2.1.0.728 or later. No logic changed.
+
 ### 1.0.2
 
 - The tests check that a refusal or a refund gives a reason and that it names the methods kept, not the sentence, so the words in `refunds.py` can be changed with them green. The refusal when nothing is set is `NOTHING_SET`. The manifest is unchanged.

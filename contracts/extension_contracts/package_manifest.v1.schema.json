@@ -205,11 +205,17 @@
           }
         },
         "registered_applications": {
-          "description": "The event feed the manifest installs (one per app: list every record type it follows in its events): checked by the installer's checker inside the site (business_logic/manifest_check.py). The install makes the app's own user, <app>@integration.invalid, with the role <PREFIX> Integration alone, and names it on the feed.",
+          "description": "The event feed the manifest installs (one per app: list every record type it follows in its events): checked by the installer's checker inside the site (business_logic/manifest_check.py). The install makes the app's own user, <app>@integration.invalid, with the role <PREFIX> Integration alone, and names it on the feed. An app that reads its records itself and follows the feed only for that user writes \"reads_events\": false on it. Page: docs/extending/event_feed.md.",
           "maxItems": 1,
           "type": "array",
           "items": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+              "reads_events": {
+                "type": "boolean",
+                "description": "false when the app reads its records itself and follows this feed only for its own user: the connection test then answers the feed Passed. Left out: true."
+              }
+            }
           }
         },
         "remote_keys": {
@@ -348,6 +354,27 @@
         },
         "register_books": {
           "description": "The regulated-stock register books the manifest installs: each element is the register_book contract (register_book.v1.schema.json), checked by the installer's checker inside the site and again by the record's own validate at install, which reads every name a book names on the site.",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "scan_sources": {
+          "description": "The scan sources the manifest installs, each a table of the shop's unit codes the till's scan reads on a miss: each element is the scan_source contract (scan_source.v1.schema.json), checked by the installer's checker inside the site and again by the record's own validate at install.",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "field_rules": {
+          "description": "The field rules the manifest installs into the till's theme: each element is one rule of the fields contract (fields.v1.schema.json, $defs.rule), checked by the installer's checker inside the site and again by the theme's own validate at install.",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "label_layouts": {
+          "description": "The label layouts the manifest installs, each a label stock and its template: each element is the label_layout contract (label_layout.v1.schema.json), checked by the installer's checker inside the site and again by the record's own validate at install.",
           "type": "array",
           "items": {
             "type": "object"

@@ -40,6 +40,10 @@ ivn try
 
 ## Versions
 
+### 1.2.2
+
+- The manifest marks its event feed `"reads_events": false`: this app reads its records itself and follows the feed only to get its own user, so the package's connection test (the one `ivn try` and the hosting dashboard read) answers the feed *Passed*, on POS build 2.1.0.728 or later. No logic changed.
+
 ### 1.2.1
 
 - Desk shows plain names (Members-only and ID rule) through the manifest's `translations` block, so a search for *members-only* finds the record. The stored names are unchanged: an installed site keeps its records. Manifest 0.3.1.

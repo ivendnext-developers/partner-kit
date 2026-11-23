@@ -45,6 +45,10 @@ ivn try
 
 ## Versions
 
+### 1.1.3
+
+- The manifest marks its event feed `"reads_events": false`: this app reads its records itself and follows the feed only to get its own user, so the package's connection test (the one `ivn try` and the hosting dashboard read) answers the feed *Passed*, on POS build 2.1.0.728 or later. No logic changed.
+
 ### 1.1.2
 
 - Each result also shows the phone and e-mail the till took (*Phone taken at the till*, *E-mail taken at the till*): a customer added at the till keeps them there and has no mobile, so a winner made at the till had no contact on the result. Manifest 0.2.2. The service is unchanged.

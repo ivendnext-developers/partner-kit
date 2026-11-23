@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/save_rules.md @ 9dc717ba13fe, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/save_rules.md @ dfe04e5658aa, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Save rules
 
 **Contract:** [`save_rules.v1.schema.json`](../extension_contracts/save_rules.v1.schema.json)
@@ -101,6 +101,15 @@ threshold or required rule on rows says *"Row ⟨n⟩: …"*):
 - a rule that cannot be checked: *"A house rule could not be checked. Ask an administrator."* (refuses the
   save; flags where a refusal is never allowed) — ⚠ a `derived` rule never refuses: one that cannot be worked
   out flags and the save goes on (since 2026-10-17, §7)
+
+**Check** says two of the save's refusals below before the install does, from the manifest alone, in the save's
+words: *"Give 1 to 3 conditions."* for a required-when rule, and the derived rule's reach words (a booked sale's
+standard field, a total of rows or days between into a standard field, a field a total is computed from). Where the answer needs the
+site (a money record that is not a till sale, a `custom_…` field another app made, a field another installed package
+made, a field the site lacks), **Check** passes the rule and the install refuses it as before: **Check** never
+refuses what the save accepts. A rule the save would refuse first in other words (a shop field named without
+`custom_`, a total into a standard field whose name holds a totals word, a sum into a whole-number field) is still
+refused at **Check**, in **Check**'s words; so is a derived value into a field whose name holds a totals word.
 
 **When the rule record is saved:**
 
