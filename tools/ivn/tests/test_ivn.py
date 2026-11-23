@@ -535,7 +535,7 @@ class CheckAndPush(Base):
             f"Before you try: in this folder the event feed ACME Feed follows other events than in {version}, the version "
             f"you tried on acme.sandbox.ivend.co, and an update cannot change them. Take the tried copy off first: in "
             f"acme.sandbox.ivend.co's Desk open your app's package ({app}) and press Export and uninstall. Then ivn try "
-            f"installs this version fresh."))
+            f"installs this version fresh. If you have already taken it off, ivn try installs it fresh now."))
         m = json.loads((folder / "manifest.json").read_text("utf-8"))
         m["registered_applications"][0]["events"] = ["POS Invoice"]  # the same events: nothing said
         (folder / "manifest.json").write_text(json.dumps(m, indent=1) + "\n", "utf-8")

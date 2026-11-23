@@ -99,7 +99,7 @@ WORDS = {
     "feed_changed": "Before you try: in this folder the event feed {feed} follows other events than in {version}, the "
                     "version you tried on {site}, and an update cannot change them. Take the tried copy off first: in "
                     "{site}'s Desk open your app's package ({app}) and press Export and uninstall. Then ivn try installs "
-                    "this version fresh.",
+                    "this version fresh. If you have already taken it off, ivn try installs it fresh now.",
     "m06": "Not kept: the kit's check refused this folder. {verdict}. Nothing changed on the server. Fix it, run ivn check, "
            "and upload again.",  # J8-06
     "pushed": "Checked: CHECK GREEN. Uploaded as {version} (draft: on our server, on no site yet).",  # J3-07
