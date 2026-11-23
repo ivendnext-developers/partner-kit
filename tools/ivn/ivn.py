@@ -744,13 +744,18 @@ def feed_changed(folder: pathlib.Path) -> str | None:
                       if s.get("sandbox") and s.get("version") and s.get("installed") is not False), None)
         if not tried:
             return None
-        with zipfile.ZipFile(io.BytesIO(fetch_version(app, tried["version"], timeout=10))) as z:
-            old = json.loads(z.read(min((n for n in z.namelist() if n.rsplit("/", 1)[-1] == "manifest.json"),
-                                        key=lambda n: n.count("/"))))
+        kept = TOKEN_FILE.parent / "feeds" / f"{app}-{tried['version']}.json"  # a version never changes: read once
+        before = read_json(kept) if kept.is_file() else None
+        if before is None:
+            with zipfile.ZipFile(io.BytesIO(fetch_version(app, tried["version"], timeout=10))) as z:
+                before = feeds_of(json.loads(z.read(min((n for n in z.namelist() if n.rsplit("/", 1)[-1] == "manifest.json"),
+                                                        key=lambda n: n.count("/")))))
+            kept.parent.mkdir(parents=True, exist_ok=True)
+            kept.write_text(json.dumps(before) + "\n", "utf-8")
         now = read_json(folder / "manifest.json")
     except (Stop, Offline, ValueError, KeyError, OSError, zipfile.BadZipFile):
         return None
-    before, after = feeds_of(old), feeds_of(now)
+    after = feeds_of(now)
     changed = [n for n in after if n in before and before[n] != after[n]]
     if not changed:
         return None
