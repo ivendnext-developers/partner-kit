@@ -274,7 +274,8 @@ def _send(method: str, url: str, data: bytes | None, headers: dict, timeout: flo
         raise Offline(str(e)) from None
 
 
-def door(path: str, body: dict | None = None, token: str | None = None, method: str = "POST", need_token: bool = True) -> dict:
+def door(path: str, body: dict | None = None, token: str | None = None, method: str = "POST", need_token: bool = True,
+         timeout: float = 90) -> dict:
     """One door, as the page calls it, with the token in place of the page's session."""
     token = token or (token_now() if need_token else None)
     if need_token and not token:
@@ -282,7 +283,7 @@ def door(path: str, body: dict | None = None, token: str | None = None, method: 
     base = os.environ.get("IVN_HOSTING_URL", HOSTING).rstrip("/")
     headers = {"Content-Type": "application/json", **({"Authorization": "Bearer " + token} if token else {})}
     data = None if method == "GET" else json.dumps(body or {}).encode()
-    status, raw = _send(method, base + path, data, headers)
+    status, raw = _send(method, base + path, data, headers, timeout)
     try:
         out = json.loads(raw or b"{}")
     except ValueError:
@@ -408,10 +409,10 @@ def unzip_into(data: bytes, into: pathlib.Path) -> pathlib.Path:
     return root
 
 
-def fetch_version(app: str, version: str | None) -> bytes:
+def fetch_version(app: str, version: str | None, timeout: float = 90) -> bytes:
     """One version's folder, as *Download the app folder* gives it."""
-    got = door("/v1/download", {"app": app, **({"version": version} if version else {})})
-    status, raw = _send("GET", got["url"], None, {})
+    got = door("/v1/download", {"app": app, **({"version": version} if version else {})}, timeout=timeout)
+    status, raw = _send("GET", got["url"], None, {}, timeout)
     if status != 200:
         raise Stop(f"The folder could not be fetched (it answered {status}). Nothing was changed: try again.")
     return raw
@@ -733,14 +734,17 @@ def feeds_of(manifest: dict) -> dict:
 
 def feed_changed(folder: pathlib.Path) -> str | None:
     """The version last tried on your sandbox has an event feed that follows other record types than this folder's: the
-    site refuses that update, so it is said before the try. Nothing is said offline, signed out, or with nothing tried."""
+    site refuses that update, so it is said before the try. Nothing is said offline, signed out (no token: no call), or
+    with nothing tried; a slow network costs a few seconds, never the check."""
     try:
+        if not token_now():
+            return None
         app = app_id(folder)
-        tried = next((s for s in door("/v1/where", {"app": app}).get("sites") or []
-                      if s.get("sandbox") and s.get("version")), None)
+        tried = next((s for s in door("/v1/where", {"app": app}, timeout=5).get("sites") or []
+                      if s.get("sandbox") and s.get("version") and s.get("installed") is not False), None)
         if not tried:
             return None
-        with zipfile.ZipFile(io.BytesIO(fetch_version(app, tried["version"]))) as z:
+        with zipfile.ZipFile(io.BytesIO(fetch_version(app, tried["version"], timeout=10))) as z:
             old = json.loads(z.read(min((n for n in z.namelist() if n.rsplit("/", 1)[-1] == "manifest.json"),
                                         key=lambda n: n.count("/"))))
         now = read_json(folder / "manifest.json")

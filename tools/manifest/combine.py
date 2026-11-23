@@ -486,6 +486,8 @@ def routes(m: dict) -> dict:
                 continue
             path = endpoint_path(url)
             kind = POINT_KINDS[section] or x.get("point") or "check"
+            if kind == "page":  # Logs name a page by where it opens (calllog's PAGE_KINDS)
+                kind = {"Desk page": "desk_page", "Till key and Desk page": "till_desk_page"}.get(x.get("page_placement"), "page")
             if path in out and out[path][1] != x.get("key"):
                 raise Refused(f"Two connection points answer the same route {path}: {out[path][1]} and {x.get('key')}. "
                               "Untick one.", code="route")
