@@ -151,12 +151,17 @@ class SandboxCheck(unittest.TestCase):
         for label in ("the demo company", "3 stores, each with one till profile", "the request collection's first three files"):
             self.assertIn(f"PASS  {label} — {C.NO_DEMO}", out)
 
-    def test_another_company_without_the_demo_company_is_still_red(self):   # not empty: the demo company is asked for
-        a = self.empty_site()
+    def test_another_demo_pack_alone_is_green_and_says_multi_category_is_not_loaded(self):   # Travel retail or Electronics, loaded alone
+        a = copy.deepcopy(GOOD)
+        del a["/api/resource/Company/Demo%20Retail"]
         a["/api/resource/Company"] = [200, {"data": [{"name": "Corvane Travel Retail"}]}]
+        a["/api/resource/Warehouse"][1]["data"] = [{"name": "CVN JFK Departures - CVN", "warehouse_name": "CVN JFK Departures", "company": "Corvane Travel Retail"}]
+        a["/api/resource/POS%20Profile"][1]["data"] = []
         code, out = self.run_check(a)
-        self.assertEqual(code, 1)
-        self.assertFails(out, "the demo company")
+        self.assertEqual(code, 0, out)
+        for label in ("the demo company", "3 stores, each with one till profile"):
+            self.assertIn(f"PASS  {label} — {C.NO_MULTI}", out)
+        self.assertNotIn(C.NO_DEMO, out)                                      # the collection still runs: the site has items
 
     def own_shop(self):
         """A builder's own site: another company, two stores of its own name, its own integration user and role."""

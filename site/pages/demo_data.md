@@ -116,4 +116,4 @@ Its six people (a cashier in each store, a store manager, a stock clerk, someone
 
 ## More packs
 
-Each of our other industries has a demo chain of its own on its demo site: fashion, grocery, hardware, beauty, liquor, optical, thrift, distribution, hospitality and pharmacy. They are not packs yet. The ten retail industries' departments are in Multi-category retail today.
+Each of our other industries has a demo chain of its own on its demo site: fashion, grocery, hardware, beauty, liquor, optical, thrift, distribution, hospitality and pharmacy. They are not packs yet. The ten retail industries' departments are in Multi-category retail today. If you need one of those chains as a pack, [ask us](feedback.md#open-a-form): the first ask is what starts it.

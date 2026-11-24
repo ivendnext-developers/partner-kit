@@ -48,7 +48,7 @@ The e-mail addresses are made up. The site also gives every user its standard ro
    BASE=https://<your-site> KEY=<api key> SECRET=<api secret> python3 tools/sandbox_check/check.py
    ```
 
-   It checks that the site answers, that your key signs in, that the POS apps are installed, the demo company and its three stores, the integration user, the extension points' record types, and the request collection's first three files. On an empty sandbox the company, the stores and the collection each pass and say no demo data is loaded yet. With another pack alone on the site, the company and the stores fail: load Multi-category retail, or name that pack's company and stores with the variables below. The last line says `SANDBOX CHECK GREEN` or `SANDBOX CHECK RED` and names what failed. If it is red, send us its output: it never prints your key or secret.
+   It checks that the site answers, that your key signs in, that the POS apps are installed, the demo company and its three stores, the integration user, the extension points' record types, and the request collection's first three files. On an empty sandbox the company, the stores and the collection each pass and say no demo data is loaded yet. With another pack alone on the site, the company and the stores pass and say Multi-category retail is not loaded. The last line says `SANDBOX CHECK GREEN` or `SANDBOX CHECK RED` and names what failed. If it is red, send us its output: it never prints your key or secret.
 
    **On a site you made yourself** (not the hosted sandbox), three checks read the hosted sandbox's own data: the demo company, its three stores and the integration user. Name your own in the environment, and the check reads those instead:
 
