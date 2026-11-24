@@ -1,6 +1,6 @@
 # The hosted sandbox site — what you receive, your first hour, and its limits — the recipe
 
-A sandbox site is your company's iVendNext site, hosted by us, where you build and test before you touch a customer's site. It starts empty, and you choose its made-up demo data. This recipe is for any company in the iVendNext partner programme, and anyone whose partner application we approve. Every one of them receives the same site, made the same way.
+A sandbox site is your company's iVendNext site, hosted by us, where you build and test before you touch a customer's site. You choose its made-up demo data: a sandbox handed to a developer starts empty, and the one a partner's owner receives on the partner portal has Multi-category retail loaded within a few minutes. This recipe is for any company in the iVendNext partner programme, and anyone whose partner application we approve. Every one of them receives the same site, made the same way.
 
 **When to use it.** From step 2 of the path: right after you register, before you quote or build anything. It is where you try every rung of the ladder and run your tests.
 
@@ -8,7 +8,7 @@ A sandbox site is your company's iVendNext site, hosted by us, where you build a
 
 - **An address** — your company's site: every developer of your company sees it on **My sites**, and its owners see it on the partner portal home.
 - **An administrator login** for that site, with a one-time password. Your company's first sandbox shows its logins on the partner portal home, to your company's owners (a referral partner's owner accepts the iVendNext Developer Terms there first); a sandbox handed to a developer shows them once on that developer's **My sites**. You choose your own password the first time you sign in.
-- **Demo data when you choose it.** The site starts with no company, store or item. You load a demo pack on **My sites** (**Demo data**) or with `ivn demo load`, and the pack brings the retailer's people with it: Multi-category retail, the pack to start with, brings a store manager and two cashiers, each with a till sign-in ID and a password.
+- **Demo data you choose.** A sandbox handed to a developer starts with no company, store or item: you load a demo pack on **My sites** (**Demo data**) or with `ivn demo load`. The one a partner's owner receives on the partner portal comes with Multi-category retail loading. A pack brings the retailer's people with it: Multi-category retail, the pack to start with, brings a store manager and two cashiers, each with a till sign-in ID and a password.
 
 Nothing else. You never receive the software, a server, a container or a connection to the database. Your own code runs on your own machine or server and talks to your site over HTTPS, exactly as it will talk to a customer's site.
 
@@ -40,8 +40,8 @@ The e-mail addresses are made up. The site also gives every user its standard ro
 
 ## Your first hour
 
-1. **Sign in** at your address as `admin@demo-retail.example` with the one-time password **My sites** showed you. Choose your own password when the site asks.
-2. **Load your demo data:** on **My sites**, press **Demo data** on your sandbox, then **Load** on Multi-category retail (or run `ivn demo load multi-category`). It takes a few minutes; the screen then shows the store manager's and the cashiers' logins.
+1. **Sign in** at your address as `admin@demo-retail.example` with the one-time password the partner portal or **My sites** showed you. Choose your own password when the site asks.
+2. **Load your demo data** (skip this on the sandbox your owner received on the partner portal: **Demo data** already shows Multi-category retail loaded): on **My sites**, press **Demo data** on your sandbox, then **Load** on Multi-category retail (or run `ivn demo load multi-category`). It takes a few minutes; the screen then shows the store manager's and the cashiers' logins.
 3. **Check your site** with the kit's sandbox check (Python 3, plus bash, curl and jq):
 
    ```bash
@@ -108,7 +108,7 @@ The sandbox does not change either rule. Your site is online whenever our hostin
 - All sandbox sites run on one sandbox installation on our hosting. It runs the product's latest build, so it carries the extension points, and it runs with developer mode off.
 - Each site is made fresh, then set up by the **sandbox template**, which makes no demo data. It writes what a new site's set-up would (the root records, US dollars, the fiscal years), the site's time zone, sign-in by user name, mail off, a new item returnable for 30 days, the administrator, and the integration user with its starter role. It installs nothing of ours.
 - The template's own check runs on every site before hand-over. It fails on: a company, store, till or sale already on the site; a user whose roles differ from the table above; an administrator role that no listed job needs, or a job no role covers; developer mode, server scripts or mail switched on; an extension point or webhook switched on; an app of ours installed; a new item's default not returnable for 30 days.
-- **A demo pack is loaded by us, on our side**, when you press **Load**: the same steps that build our own demo sites. Each Load and Reset ends with the pack's own check, so a load that ends well is a pack that passed it.
+- **A demo pack is loaded by us, on our side**, when you press **Load**, or when the partner portal hands your owner a sandbox: the same steps that build our own demo sites. Each Load and Reset ends with the pack's own check, so a load that ends well is a pack that passed it.
 - The administrator is a named user, not the site's built-in Administrator: the site asks a named user for a new password at first sign-in.
 
 ### The sandbox check

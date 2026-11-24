@@ -1,6 +1,8 @@
 # Demo data for your sandbox
 
-A sandbox we hand out starts empty: no company, no store, no item. You choose what goes on it. A **demo pack** is one made-up retail chain, ready to sell: its company, stores, tills, people, catalogue with photos, stock, customers and a few past sales. Load one pack, or several side by side (Electronics and phones is the one that needs a sandbox to itself). Put one back before a demo, or take it off again. Each pack lives in a company of its own: your own companies, items, users and apps are never touched.
+A sandbox handed to a developer starts empty: no company, no store, no item. You choose what goes on it. A **demo pack** is one made-up retail chain, ready to sell: its company, stores, tills, people, catalogue with photos, stock, customers and a few past sales. Load one pack, or several side by side (Electronics and phones is the one that needs a sandbox to itself). Put one back before a demo, or take it off again. Each pack lives in a company of its own: your own companies, items, users and apps are never touched.
+
+**A sandbox a partner's owner receives arrives loaded.** The sandbox an owner receives on the partner portal has Multi-category retail loaded within a few minutes, because an owner works on the portal and has no **Demo data** button there. Its manager's and cashiers' logins are shown to your owners on the portal home, beside the administrator's, until one of them presses **I have saved them**; **Show its logins** on the pack shows them to a developer again. Any developer of the company can reset it, remove it or load another pack (Electronics and phones only after this one is removed) on **My sites**.
 
 Demo packs are for the sandboxes we hand out. A site you added yourself on **My sites**, such as a customer's test site, is not offered one: made-up sales do not belong in a customer's books.
 
