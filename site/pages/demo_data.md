@@ -19,7 +19,7 @@ On **My sites**, press **Demo data** on your sandbox. In a terminal, use `ivn de
 
 `ivn demo` acts on your default site; `--site` names another by its address or its label.
 
-**Load** takes a few minutes (about four for Multi-category retail) and runs on our side: you can leave the page and come back, and `ivn demo` follows a load that is still running. The screen shows each step, then the pack's logins: each person's till ID and password. **Then sell:** open the till at your sandbox's address, sign in as `cashier1` with that password, open a day (`Till-1` asks for a counted float) and ring a sale. If a load stops part-way, the pack says so the next time you look, and **Load** runs it again: it makes only what is missing.
+**Load** takes a few minutes (about three for Multi-category retail) and runs on our side: you can leave the page and come back, and `ivn demo` follows a load that is still running. The screen shows each step, then the pack's logins: each person's till ID and password. **Then sell:** open the till at your sandbox's address, sign in as `cashier1` with that password, open a day (`Till-1` asks for a counted float) and ring a sale. If a load stops part-way, the pack says so the next time you look, and **Load** runs it again: it makes only what is missing.
 
 **Reset** closes any till day left open on the pack's tills, tops its stock up, and puts its prices and card balances back. The sales you rang stay in the books.
 
