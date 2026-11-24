@@ -1,6 +1,6 @@
 # Request a sandbox
 
-A sandbox site is an iVendNext site of your company's, hosted by us. It is where you build and test before you touch a customer's site. It starts empty, and you choose its made-up demo data: [Demo data for your sandbox](demo_data.md). A sandbox comes with the iVendNext partner programme: a company that is not a partner yet can still ask, and when the request names the company it reaches our partner team as a partner application.
+A sandbox site is an iVendNext site of your company's, hosted by us. It is where you build and test before you touch a customer's site. You choose its made-up demo data: [Demo data for your sandbox](demo_data.md). A sandbox comes with the iVendNext partner programme: a company that is not a partner yet can still ask, and when the request names the company it reaches our partner team as a partner application.
 
 - **One free sandbox for your company.** Every developer of your company sees it on **My sites** and tries on it.
 - **Your customer's own test site for customer work.** Add it on **My sites** with a key you make there, and Try installs there in one press.
@@ -30,7 +30,7 @@ No GitHub account? Make a free one in two minutes with any e-mail.
 
 ## When access comes
 
-Your company's first sandbox comes when our partner team approves your partner application. It is on your partner portal home: everyone of your company there sees its address, and your owners see its administrator's login until one of them presses **I have saved them**, so keep it then. A store manager's and the cashiers' logins come with the demo pack you load. A referral partner's owner first accepts the iVendNext Developer Terms there. Every developer of your company sees the site on **My sites**, Try on My apps names it, and `ivn sites` lists it: there is no key to paste.
+Your company's first sandbox comes when our partner team approves your partner application. It is on your partner portal home: everyone of your company there sees its address, and your owners see its logins (an administrator's, a store manager's and two cashiers') until one of them presses **I have saved them**, so keep them then. It arrives with the demo pack Multi-category retail loading on it, and is ready to sell a few minutes after the approval; until then the manager's and the cashiers' logins will not sign in. When it is ready, open the site's address, sign in at the till as a cashier with the till ID and password shown, open a day and ring a sale. Your developers can reset or remove that pack, or load another (Electronics and phones only after this one is removed), under **Demo data** on **My sites**. An owner's own further sandbox arrives the same way; a sandbox handed to a developer starts empty, theirs to choose. A referral partner's owner first accepts the iVendNext Developer Terms there. Every developer of your company sees the site on **My sites**, Try on My apps names it, and `ivn sites` lists it: there is no key to paste.
 
 A sandbox handed to you as a developer is yours: it is your default, and **Show its logins** on **My sites** shows its administrator's login once, so keep it then. Press **Demo data** there to load a demo pack; a pack's own logins stay under its **Show its logins**. Your colleagues see it under your name.
 
