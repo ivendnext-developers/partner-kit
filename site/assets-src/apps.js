@@ -294,6 +294,34 @@
       out.appendChild(el("p", {}, el("a", { href: "/sandbox.html", "class": "site-btn", text: S.requestSandbox })));
     return out;
   }
+  // DEMOPACKS: demo data on a sandbox of ours, by the pack. The packs, what each may do on the site now and every
+  // refusal are the hosting's (`/demo`, `/demo/run`, `/demo/status`); the page only draws them.
+  var DM = {
+    open: "Demo data", title: "Demo data on {site}", back: "Back to My sites",
+    why: "Start empty, or load a demo chain: its stores, tills, people, catalogue, stock and a few past sales. Load one pack or several, put one back before a demo, or take it off. Each pack lives in a company of its own: your own companies, items, users and apps are never touched.",
+    reading: "Reading what is on {site}\u2026", first: "Start with this one", loaded: "Loaded", none: "No demo pack is offered yet.",
+    load: "Load", reset: "Reset", refresh: "Refresh", remove: "Remove", logins: "Show its logins",
+    hints: { reset: "Reset puts it back to the start of its demo script.",
+             refresh: "Refresh fills the fields of the vertical apps installed now: press it after you install or remove one.",
+             remove: "Remove takes its company off the site with everything in it, a sale you rang there included." },
+    sure: "Remove {title}? Its company {company} goes with everything in it, a sale you rang there included. This cannot be undone.",
+    yours: "Your own on this site, never touched by a pack: {names}.",
+    wait: "This runs on our side: you can leave the page and come back.",
+    more: "About this pack"
+  };
+  // a pack's buttons, in the order a person meets them: what the hosting says it may do here now
+  function demoCan(pack) { return ["load", "reset", "refresh", "remove"].filter(function (v) { return (pack.can || []).indexOf(v) >= 0; }); }
+  // the packs in the order shown: the one to start with first, then by title
+  function demoOrder(packs) {
+    return (packs || []).slice().sort(function (a, b) {
+      return (b["default"] ? 1 : 0) - (a["default"] ? 1 : 0) || String(a.title).localeCompare(String(b.title));
+    });
+  }
+  function demoRunning(s) { return !!s && s.step === "running"; }
+  // the one press that cannot be undone asks first, naming what goes; every other press runs at once
+  function demoAsk(pack, verb) {
+    return verb === "remove" ? DM.sure.replace("{title}", pack.title || pack.id).replace("{company}", pack.company || pack.title || pack.id) : "";
+  }
   // what Remove from my list did: off the list, or (one of ours, given by its grant) still on it without the added key
   function removedWords(site, r) {
     var kept = ((r && r.company) || []).some(function (x) { return x.site === site; });
@@ -638,6 +666,7 @@
               noSandboxParts: noSandboxParts, U: U, industryWords: industryWords, tryLabel: tryLabel,
               canGoBack: canGoBack, defaultTitle: defaultTitle, versionsShown: versionsShown, logFile: logFile, payWords: payWords, payLabel: payLabel, pubPlan: pubPlan, pubOpensOn: pubOpensOn, pictureType: pictureType, b64: b64, cardBody: cardBody,
               S: S, siteHow: siteHow, trySites: trySites, tickLive: tickLive, instKey: instKey, installState: installState,
+              DM: DM, demoCan: demoCan, demoOrder: demoOrder, demoRunning: demoRunning, demoAsk: demoAsk,
               storedSignIn: storedSignIn, storeSignIn: storeSignIn, LAST: LAST,
               removedWords: removedWords, pointClass: pointClass, triedOn: triedOn, updateList: updateList };
   if (typeof module === "object" && module.exports) {
@@ -2171,6 +2200,7 @@
           r.words = removedWords(x.site, r); done(r);
         }, function (e) { ev.target.disabled = false; fail(e); });
       }, true)));
+      if (x.ours && !x.live && !x.demo) acts.appendChild(el("span", {}, " ", button(DM.open, function () { openDemo(x.site); }, true)));
       if (x.logins) acts.appendChild(el("span", {}, " ", button(S.logins, function (ev) {
         ev.target.disabled = true;
         call("POST", "/sandbox/logins", { site: x.site }).then(function (r) { data.shownLogins = r; done(r); },
@@ -2207,6 +2237,97 @@
     }));
     var out = el("div", {}, box, add);
     out.appendChild(button("Back to My apps", function () { data.shownLogins = null; data.addForm = null; go("home"); }, true));
+    return out;
+  }
+
+  // DEMOPACKS: one sandbox's demo data
+  function openDemo(site) {
+    data.demo = { site: site }; screen = "demo"; say(""); render();
+    return loadDemo();
+  }
+  function loadDemo() {
+    var d = data.demo;
+    return call("POST", "/demo", { site: d.site }).then(function (r) {
+      if (data.demo !== d) return;
+      d.list = r; d.site = r.site || d.site;
+      if (r.running) { d.job = r.running; pollDemo(); }
+      render();
+    }, fail);
+  }
+  function runDemo(pack, verb) {
+    var d = data.demo;
+    d.pressed = true; d.job = null; d.shown = null; say(""); render();
+    return call("POST", "/demo/run", { site: d.site, pack: pack, verb: verb }).then(function (r) {
+      d.pressed = false; d.job = r; render(); pollDemo();
+    }, function (e) { d.pressed = false; fail(e); });
+  }
+  function pollDemo(errors) {
+    var d = data.demo;
+    if (screen !== "demo" || !d || !demoRunning(d.job)) return;
+    root.setTimeout(function () {
+      if (screen !== "demo" || data.demo !== d) return;
+      call("POST", "/demo/status", { site: d.site }).then(function (s) {
+        d.job = s; say(""); render();
+        if (demoRunning(s)) pollDemo(0); else loadDemo();   // done or stopped: the buttons read afresh
+      }, function (e) { if ((errors || 0) >= 3) { fail(e); return; } pollDemo((errors || 0) + 1); });   // a passing error: ask again
+    }, 4000);
+  }
+  function demoLogins(rows, words) {
+    var lg = el("div", {});
+    if (words) lg.appendChild(p(words));
+    var tb = el("tbody", {});
+    (rows || []).forEach(function (x) {
+      tb.appendChild(el("tr", {}, el("td", { text: x.name || "" }), el("td", { text: x.role || "" }), el("td", { text: x.username || "" }),
+        el("td", {}, el("code", { text: x.password || "" })), el("td", { text: x.user || "" })));
+    });
+    lg.appendChild(el("table", {}, el("thead", {}, el("tr", {}, el("th", { text: "Who" }), el("th", { text: "Role" }), el("th", { text: "Till ID" }),
+      el("th", { text: "Password" }), el("th", { text: "User" }))), tb));
+    return lg;
+  }
+  function vDemo() {
+    var d = data.demo || {}, list = d.list, job = d.job, busy = d.pressed || demoRunning(job);
+    var box = card(DM.title.replace("{site}", d.site || ""));
+    box.appendChild(p(DM.why));
+    if (job && job.step) {
+      var run = card(job.title || "");
+      (job.lines || []).forEach(function (l) { run.appendChild(p(l)); });
+      if (demoRunning(job)) run.appendChild(el("p", { "class": "hint", text: DM.wait }));
+      if (job.stop) run.appendChild(el("p", { "class": "hosting-bad", text: job.stop }));
+      if (job.logins) run.appendChild(demoLogins(job.logins, job.logins_words));
+      box.appendChild(run);
+    }
+    if (!list) { box.appendChild(p(DM.reading.replace("{site}", d.site || ""))); }
+    else if (!(list.packs || []).length) box.appendChild(p(DM.none));
+    else demoOrder(list.packs).forEach(function (pk) {
+      var row = el("div", { "class": "hosting-step" });
+      row.appendChild(el("h3", { text: pk.title + (pk.loaded ? " \u00b7 " + DM.loaded : pk["default"] ? " \u00b7 " + DM.first : "") }));
+      if (pk.about) row.appendChild(p(pk.about));
+      if (pk.words) row.appendChild(el("p", { "class": "hint", text: pk.words }));
+      var acts = el("p", {});
+      demoCan(pk).forEach(function (verb) {
+        var b = button(DM[verb], function (ev) {
+          var ask = demoAsk(pk, verb);
+          if (ask && !root.confirm(ask)) return;
+          ev.target.disabled = true; runDemo(pk.id, verb);
+        }, verb !== "load");
+        if (busy) b.disabled = true;
+        if (DM.hints[verb]) b.setAttribute("title", DM.hints[verb]);
+        acts.appendChild(b); acts.appendChild(root.document.createTextNode(" "));
+      });
+      if (pk.loaded && !busy) acts.appendChild(button(DM.logins, function (ev) {
+        ev.target.disabled = true;
+        call("POST", "/demo/logins", { site: d.site, pack: pk.id }).then(function (r) { d.shown = { pack: pk.id, rows: r.logins, words: r.logins_words }; render(); },
+          function (e) { ev.target.disabled = false; fail(e); });
+      }, true));
+      if (pk.page) { acts.appendChild(root.document.createTextNode(" ")); acts.appendChild(el("a", { href: "/" + pk.page, text: DM.more })); }
+      row.appendChild(acts);
+      if (pk.loaded) row.appendChild(el("p", { "class": "hint", text: DM.hints.reset + " " + DM.hints.refresh + " " + DM.hints.remove }));
+      if (d.shown && d.shown.pack === pk.id) row.appendChild(demoLogins(d.shown.rows, d.shown.words));
+      box.appendChild(row);
+    });
+    if (list && (list.yours || []).length) box.appendChild(el("p", { "class": "hint", text: DM.yours.replace("{names}", list.yours.join(", ")) }));
+    var out = el("div", {}, box);
+    out.appendChild(button(DM.back, function () { data.demo = null; go("sites"); }, true));
     return out;
   }
 
@@ -2308,7 +2429,7 @@
     if (lede && lede.tagName === "P") lede.hidden = !!session;
     if (!session) { view.appendChild(vSignIn()); return; }
     if (!who.company) { view.appendChild(screen === "company" ? vCompany() : vJoin()); return; }
-    var v = { people: vPeople, tokens: vTokens, sites: vSites, gallery: g && vGallery, name: g && vName, made: data.made && data.made.words && vMade,
+    var v = { people: vPeople, tokens: vTokens, sites: vSites, demo: data.demo && vDemo, gallery: g && vGallery, name: g && vName, made: data.made && data.made.words && vMade,
               fromsite: g && g.fromSite && vFromSite,
               settings: vSettings, app: vApp, "try": vTry, publish: vPublish, logs: vLogs }[screen];
     view.appendChild((v || vHome)());

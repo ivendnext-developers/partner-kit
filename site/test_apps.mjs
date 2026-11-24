@@ -563,5 +563,32 @@ check("W227 F-HOSP-22: a refusal above the window is scrolled into view", src.in
 check("W227: Download names its file; Add a site says it is checking; Logs says its times are UTC; a redraw waits for a press",
   a.U.downloaded.includes("{file}") && src.includes("r.file ||") && a.S.checking === "Checking your key on {site}\u2026" && a.U.utc === "Times are UTC." &&
   src.includes("if (pressing) { pending = true; return; }"));
+// DEMOPACKS: demo data on a sandbox of ours, by the pack
+check("DEMOPACKS: the button is on the sandboxes we hand out, never on a customer's live site or one of our demo boxes, and opens that site's packs",
+  src.includes('if (x.ours && !x.live && !x.demo) acts.appendChild(el("span", {}, " ", button(DM.open, function () { openDemo(x.site); }, true)));') &&
+  a.DM.open === "Demo data" && a.DM.title === "Demo data on {site}");
+check("DEMOPACKS: a pack shows only the buttons the hosting says it may press here now, Load first",
+  JSON.stringify(a.demoCan({ can: ["remove", "reset", "refresh"] })) === '["reset","refresh","remove"]' && JSON.stringify(a.demoCan({ can: ["load"] })) === '["load"]' &&
+  JSON.stringify(a.demoCan({})) === "[]" && a.DM.load === "Load" && a.DM.reset === "Reset" && a.DM.refresh === "Refresh" && a.DM.remove === "Remove");
+check("DEMOPACKS: Multi-category comes first, marked as the one to start with",
+  a.demoOrder([{ id: "travel-retail", title: "Travel retail" }, { id: "fashion", title: "Fashion" }, { id: "multi-category", title: "Multi-category retail", "default": true }])
+    .map((x) => x.id).join() === "multi-category,fashion,travel-retail" && a.DM.first === "Start with this one" &&
+  src.includes('pk.loaded ? " \\u00b7 " + DM.loaded : pk["default"] ? " \\u00b7 " + DM.first : ""'));
+check("DEMOPACKS: one job at a time, followed until it ends, then the buttons are read afresh",
+  a.demoRunning({ step: "running" }) && !a.demoRunning({ step: "done" }) && !a.demoRunning({ step: "stopped" }) && !a.demoRunning(null) &&
+  src.includes("if (busy) b.disabled = true;") && src.includes("if (demoRunning(s)) pollDemo(0); else loadDemo();") &&
+  src.includes('if (job.stop) run.appendChild(el("p", { "class": "hosting-bad", text: job.stop }));'));
+check("DEMOPACKS: the words say what each press does, that a pack lives in its own company, and that a sale rung there goes with it",
+  /your own companies, items, users and apps are never touched\./.test(a.DM.why) && /after you install or remove one/.test(a.DM.hints.refresh) &&
+  /start of its demo script/.test(a.DM.hints.reset) && /a sale you rang there included/.test(a.DM.hints.remove) &&
+  a.DM.yours === "Your own on this site, never touched by a pack: {names}.");
+check("DEMOPACKS: Remove asks first and names the company that goes; no other press asks",
+  a.demoAsk({ id: "multi-category", title: "Multi-category retail", company: "Demo Retail" }, "remove") ===
+    "Remove Multi-category retail? Its company Demo Retail goes with everything in it, a sale you rang there included. This cannot be undone." &&
+  ["load", "reset", "refresh"].every((v) => a.demoAsk({ id: "x", title: "X", company: "X Co" }, v) === "") &&
+  src.includes("if (ask && !root.confirm(ask)) return;"));
+check("DEMOPACKS: a job that stopped while the developer was away is said on its pack, with the button its words name",
+  src.includes('if (pk.words) row.appendChild(el("p", { "class": "hint", text: pk.words }));') &&
+  JSON.stringify(a.demoCan({ can: ["load", "remove"], loaded: true })) === '["load","remove"]');
 console.log(red ? `${red} FAILED` : "ALL PASS");
 process.exit(red ? 1 : 0);
