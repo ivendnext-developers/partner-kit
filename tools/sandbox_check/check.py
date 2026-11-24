@@ -11,6 +11,10 @@ Each check can fail: the site answers · your key signs in · the POS apps are i
 stores, each with one till profile · the integration user · the extension points' record types · the install screen (for `tools/deploy`) · the request
 collection's first three files. The last line is the verdict; the exit code is 0 only when every check passes.
 
+A hosted sandbox starts empty: you load its demo data yourself (My sites → Demo data, or `ivn demo load multi-category`).
+Where the hosted sandbox's demo company is not on the site (nothing is loaded yet, or another demo pack is), the demo
+company's and the stores' checks pass and say so. A company you name yourself is still asked for.
+
   --connect-to HOST:PORT   send the requests to that address and keep the site's own name (a new site whose name has
                            no DNS entry yet)
   --record FILE            write the answers the checks read (they carry no key or secret) to FILE
@@ -47,6 +51,8 @@ APPS = ["ivendnext_pos", "ivendnext_mpos"]
 # (a test holds the two lists equal)
 POINT_TYPES = ["Retail Extension Subscription", "Retail Desk Action", "Retail Save Rule", "Retail Fiscal Reader",
                "Retail Extension Log"]
+NO_DEMO = "no demo data loaded yet: load Multi-category retail (My sites, Demo data, or ivn demo load multi-category)"
+NO_MULTI = "Multi-category retail is not loaded here, so there is no Demo Retail to read: load it, or name your own company (SANDBOX_COMPANY)"
 COLLECTION = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "api", "collection")
 FIRST_FILES = ["01_list_items.http", "02_get_item.http", "03_list_warehouses.http"]
 
@@ -155,7 +161,16 @@ def run_checks(site, shop=None):
            OLD_RELEASE if _no_v1(status, body) else f"missing {missing}" if missing else "")
 
     status, _ = site.get(resource("Company", shop.company))
-    yield status == 200, "the demo company", f"{shop.company}: HTTP {status}"
+    # a hosted sandbox starts empty, and its developer may load another demo pack or none: the hosted sandbox's own demo
+    # company is not a fault when it is not there. A company you name yourself (SANDBOX_COMPANY) is still asked for.
+    # A hosted sandbox is told from a site you made yourself by the integration user the sandbox template makes.
+    absent, empty = status == 404 and shop.hosted and site.get(resource("User", shop.integration_user))[0] == 200, False
+    if absent:
+        any_status, any_body = site.get(resource("Company", fields=["name"], limit_page_length=1))
+        empty = any_status == 200 and not (any_body or {}).get("data")
+    site.no_demo = empty                       # main reads it: an empty site has no item for the collection to read either
+    why = NO_DEMO if empty else NO_MULTI
+    yield status == 200 or absent, "the demo company", why if absent else f"{shop.company}: HTTP {status}"
 
     status, body = site.get(resource("Warehouse", fields=["name", "warehouse_name", "company"], limit_page_length=100,
                                      filters=[["company", "=", shop.company], ["is_group", "=", 0]]))
@@ -165,8 +180,9 @@ def run_checks(site, shop=None):
                                        filters=[["company", "=", shop.company], ["disabled", "=", 0]]))
     per_store = {s: [p["name"] for p in (pbody or {}).get("data", []) if p.get("warehouse") == s] for s in stores}
     bad = {s: p for s, p in per_store.items() if len(p) != 1}
-    yield (status == 200 and pstatus == 200 and len(stores) == shop.stores and not bad,
-           f"{shop.stores} stores, each with one till profile", f"found {len(stores)}" + (f"; profiles {bad}" if bad else ""))
+    yield ((status == 200 and pstatus == 200 and len(stores) == shop.stores and not bad) or (absent and status == 200 and not stores),
+           f"{shop.stores} stores, each with one till profile",
+           why if absent else f"found {len(stores)}" + (f"; profiles {bad}" if bad else ""))
 
     status, body = site.get(resource("User", shop.integration_user))
     data = (body or {}).get("data") or {}
@@ -218,7 +234,7 @@ def main(argv=None, out=sys.stdout):
               f"integration user {shop.integration_user!r} with role {shop.integration_role!r}", file=out)
     site = Site(base, key, secret, a.connect_to)
     results = list(run_checks(site, shop))
-    ok, detail = run_collection(base, key, secret, a.connect_to)
+    ok, detail = (True, NO_DEMO) if getattr(site, "no_demo", False) else run_collection(base, key, secret, a.connect_to)
     results.append((ok, "the request collection's first three files", detail))
     for ok, label, detail in results:
         print(f"{'PASS' if ok else 'FAIL'}  {label}" + (f" — {detail}" if detail else ""), file=out)

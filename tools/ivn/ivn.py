@@ -12,6 +12,7 @@
     ivn add s11 · ivn take s22                add a sample · take a sample's newer version
     ivn secret NAME · ivn secrets [--site S]  set one of the app's settings · print each point's secret on a site
     ivn sites [add|use|label|remove]          your company's sites (My sites): list, add, make default, label, remove
+    ivn demo [load|reset|refresh|remove PACK] demo data on a sandbox of ours: list the packs, load one, put it back, take it off
     ivn try [--site SITE] [--show-wording]    install the latest draft on a site, free, and test each connection point
     ivn test [--local]                        test each connection point again (--local: on this laptop)
     ivn publish [--to SITE ...] [--public]    send it to a customer's sites, or list it for every retailer
@@ -149,6 +150,22 @@ WORDS = {
     "install_hint": "{name}: your company holds its key, so nothing goes to its administrator. Press Install now on "
                     "My apps (the app's Publish screen) to install it in one press; next time, ivn publish --to \"{to}\" "
                     "--install publishes and installs in one go.",
+    # DEMOPACKS: demo data on a sandbox of ours, by the pack (the doors are My sites' own)
+    "demo_usage": "ivn demo [list | load <pack> | reset <pack> | refresh <pack> | remove <pack> | logins <pack>] [--site <address or label>]",
+    "demo_packs": "The demo packs. Load one on a sandbox of ours with ivn demo load <pack>:",
+    "demo_on": "Demo data on {site}:",
+    "demo_row": "{id}  {title}{mark}",
+    "demo_loaded": " · loaded",
+    "demo_first": " · start with this one",
+    "demo_none": "No demo pack is offered yet.",
+    "demo_which_site": "Name the sandbox: add --site <address or label>. ivn sites lists your company's sites.",
+    "demo_yours": "Your own on this site, never touched by a pack: {names}.",
+    "demo_running": "Running now: {title} ({verb}), started by {by}.",
+    "demo_logins_head": "Its logins, as till ID, password, role and user:",
+    "demo_next": "Next: ivn demo reset {pack} before a demo · ivn demo refresh {pack} after you install or remove a vertical app · "
+                 "ivn demo remove {pack} takes it off.",
+    "demo_gave_up": "This is still going on our side. Run ivn demo to follow it.",
+    "demo_start": "Next: ivn demo load {pack}",
     "sign_in": "Sign in first: ivn login (a build server: a token from My apps > Tokens, in IVN_TOKEN).",
     "bad_token": "This token is not one My apps made. Run ivn login again, or make a new token on My apps > Tokens.",
     "no_reach": "Could not reach iVendNext: no connection. Nothing was changed. Try again.",
@@ -1073,7 +1090,10 @@ PASSED = re.compile(r"^Passed(?:, answered in|: reached, signature accepted, ans
 # the doors speak the page's words; a terminal has no button to press
 PAGE_WORDS = (("press Try again", "run ivn try"), ("Press Try again", "Run ivn try"), ("press Test again", "run ivn test"),
               ("Press Test again", "Run ivn test"), ("Press Publish again", "Run ivn publish again"),
-              ("then press it again", "then run it again"))
+              ("then press it again", "then run it again"),
+              ("Press Load to run it again", "Run ivn demo load again"), ("Press Reset to run it again", "Run ivn demo reset again"),
+              ("Press Refresh to run it again", "Run ivn demo refresh again"), ("Press Remove to run it again", "Run ivn demo remove again"),
+              ("Press Remove again", "Run ivn demo remove again"), ("Its logins are below.", "Its logins:"))
 
 
 def terminal(words: str) -> str:
@@ -1627,6 +1647,101 @@ def cmd_sites(a) -> int:
     return 0
 
 
+def demo_rows(packs: list) -> list[str]:
+    """One pack a line, the one to start with first: its id (what the command takes), its title, and what it is."""
+    out = []
+    for p in sorted(packs, key=lambda x: (not x.get("default"), x.get("title") or "")):
+        mark = WORDS["demo_loaded"] if p.get("loaded") else WORDS["demo_first"] if p.get("default") else ""
+        out.append(WORDS["demo_row"].format(id=p["id"], title=p.get("title") or p["id"], mark=mark))
+        if p.get("about"):
+            out.append("    " + p["about"])
+        if p.get("words"):  # why this one cannot load here now, in the door's words
+            out.append("    " + terminal(p["words"]))
+    return out
+
+
+def demo_logins(out: dict) -> None:
+    rows = out.get("logins") or []
+    if not rows:
+        return
+    print(WORDS["demo_logins_head"])
+    wide = max(len(r.get("username") or "") for r in rows)
+    for r in rows:
+        print(f"  {r.get('username') or '':<{wide}}  {r.get('password') or ''}  {r.get('role') or ''}  {r.get('user') or ''}")
+    if out.get("logins_words"):
+        print(out["logins_words"])
+
+
+def follow_demo(site: str) -> dict:
+    """One demo-pack job, as the page polls it: each new line as it comes, until it is done or stops in the door's words."""
+    said, waited, out = set(), 0, {}
+    while waited < POLL_MAX:
+        try:
+            out = door("/v1/demo/status", {"site": site})
+        except (Offline, KeyboardInterrupt):  # it was accepted: it goes on on our side
+            raise Stop(WORDS["demo_gave_up"]) from None
+        for line in out.get("lines") or []:
+            if line not in said:
+                said.add(line)
+                print(terminal(line), flush=True)
+        if out.get("step") == "stopped":
+            raise Stop(out.get("stop") or "It stopped.")
+        if out.get("done") or out.get("step") == "done":
+            return out
+        try:
+            time.sleep(POLL_SECONDS)
+        except KeyboardInterrupt:
+            raise Stop(WORDS["demo_gave_up"]) from None
+        waited += max(1, POLL_SECONDS)
+    raise Stop(WORDS["demo_gave_up"])
+
+
+def cmd_demo(a) -> int:
+    """Demo data on a sandbox of ours, from the same doors as My sites: the packs, which are on the site, and Load,
+    Reset, Refresh or Remove for one of them. Without --site it is your default site."""
+    act = a.action or "list"
+    if act != "list" and not a.pack:
+        raise Stop(WORDS["demo_usage"])
+    site = a.site or (online(door, "/v1/sites", {}) or {}).get("default")
+    if act == "list":
+        out = None
+        if site:
+            try:
+                out = online(door, "/v1/demo", {"site": site})
+            except Refused as e:
+                if a.site or e.code not in ("demo_not_ours", "demo_box"):  # a default site of your own: the packs alone, no refusal to read
+                    raise
+        if out is None:
+            packs = (online(door, "/v1/demo", {}) or {}).get("packs") or []
+            print(WORDS["demo_packs"] if packs else WORDS["demo_none"])
+            print("\n".join(demo_rows(packs)))
+            return 0
+        print(WORDS["demo_on"].format(site=out.get("site") or site))
+        print("\n".join(demo_rows(out.get("packs") or [])) or WORDS["demo_none"])
+        if out.get("yours"):
+            print(WORDS["demo_yours"].format(names=", ".join(out["yours"])))
+        run = out.get("running")
+        if run:  # followed here to its end, as the command that started it would have
+            print(WORDS["demo_running"].format(title=run.get("title"), verb=run.get("verb"), by=run.get("by") or "someone"))
+            demo_logins(follow_demo(out.get("site") or site))
+        elif not any(p.get("loaded") for p in out.get("packs") or []):
+            first = next((p for p in out.get("packs") or [] if p.get("default") and "load" in (p.get("can") or [])), None)
+            if first:  # an empty sandbox: the one line to type
+                print(WORDS["demo_start"].format(pack=first["id"]))
+        return 0
+    if not site:
+        raise Stop(WORDS["demo_which_site"])
+    if act == "logins":
+        demo_logins(online(door, "/v1/demo/logins", {"site": site, "pack": a.pack}))
+        return 0
+    started = online(door, "/v1/demo/run", {"site": site, "pack": a.pack, "verb": act})
+    done = follow_demo(started.get("site") or site)
+    demo_logins(done)
+    if act == "load":
+        print(WORDS["demo_next"].format(pack=a.pack))
+    return 0
+
+
 def cmd_remove_site(a) -> int:
     folder = app_folder(a)
     app = app_id(folder)
@@ -1899,6 +2014,13 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("label", nargs="?", help="label: the label, such as \"Acme test\" ('' takes it off)")
     p.add_argument("--label", dest="as_label", metavar="LABEL",
                    help="add: its label at once, such as \"Acme live\" (a customer's live site never joins Try's list)")
+    p = cmd("demo", cmd_demo, "demo data on a sandbox of ours: list the packs, load, reset, refresh or remove one", in_app=False)
+    p.add_argument("action", nargs="?", choices=("list", "load", "reset", "refresh", "remove", "logins"),
+                   help="list (the default): the packs and which are on the site; load <pack>; reset <pack>: back to the start of "
+                        "its demo script; refresh <pack>: fill the fields of the vertical apps installed now; remove <pack>: "
+                        "its company and records off the site, yours left alone; logins <pack>")
+    p.add_argument("pack", nargs="?", help="the pack's id, as ivn demo lists it, such as multi-category")
+    p.add_argument("--site", help="a sandbox of ours on your list: its address or its label (default: your default site)")
     p = cmd("test", cmd_test, "test each connection point again")
     p.add_argument("--local", action="store_true", help="on this laptop, with the test secret in .env.local")
     p = cmd("publish", cmd_publish, "send it to a customer's sites, or list it for every retailer")
