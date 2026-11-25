@@ -577,9 +577,13 @@ check("DEMOPACKS: Multi-category comes first, marked as the one to start with",
   src.includes('row.appendChild(el("h3", { text: pk.title + (demoMark(pk) ? " \\u00b7 " + demoMark(pk) : "") }));'));
 check("FIRSTDAY: a pack whose last load stopped is headed Partly loaded, never Loaded, and offers no logins until it is finished",
   a.demoMark({ loaded: true, partly: true, "default": true }) === "Partly loaded" && a.DM.partly === "Partly loaded" &&
-  src.includes("if (pk.loaded && !pk.partly && !busy) acts.appendChild(button(DM.logins,"));
+  !a.demoReady({ loaded: true, partly: true }) && a.demoReady({ loaded: true }) && !a.demoReady({}) &&
+  src.includes("if (demoReady(pk) && !busy) acts.appendChild(button(DM.logins,"));
+check("FIRSTDAY: a pack still loading is headed Loading, never Loaded (its company is on the site from the first stage), and offers no logins yet",
+  a.demoMark({ loaded: true, loading: true, "default": true }) === "Loading" && !a.demoReady({ loaded: true, loading: true }));
 check("FIRSTDAY: a job's lines are the stages the hosting names, and the builder's own notes are folded under Details",
   a.DM.details === "Details" && src.includes('var fold = el("details", {}, el("summary", { text: DM.details }));') &&
+  src.includes('if (d.detailsOpen) fold.setAttribute("open", "");') &&
   src.includes('job.details.forEach(function (l) { fold.appendChild(el("p", { "class": "hint", text: l })); });'));
 check("FIRSTDAY: the label box on My sites says what it is for",
   a.S.labelPlaceholder === 'Label, such as "Demo for Acme"' && src.includes('"aria-label": S.label + ": " + x.site, placeholder: S.labelPlaceholder });'));

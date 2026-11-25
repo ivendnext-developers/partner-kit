@@ -299,7 +299,7 @@
   var DM = {
     open: "Demo data", title: "Demo data on {site}", back: "Back to My sites",
     why: "Start empty, or load a demo chain: its stores, tills, people, catalogue, stock and a few past sales. Load one pack or several, put one back before a demo, or take it off. Each pack lives in a company of its own: your own companies, items, users and apps are never touched.",
-    reading: "Reading what is on {site}\u2026", first: "Start with this one", loaded: "Loaded", partly: "Partly loaded", none: "No demo pack is offered yet.",
+    reading: "Reading what is on {site}\u2026", first: "Start with this one", loaded: "Loaded", partly: "Partly loaded", loading: "Loading", none: "No demo pack is offered yet.",
     load: "Load", reset: "Reset", refresh: "Refresh", remove: "Remove", logins: "Show its logins",
     hints: { reset: "Reset puts it back to the start of its demo script.",
              refresh: "Refresh fills the fields of the vertical apps installed now: press it after you install or remove one.",
@@ -319,8 +319,10 @@
     });
   }
   function demoRunning(s) { return !!s && s.step === "running"; }
-  // a pack's heading: a load that stopped part-way reads Partly loaded, never Loaded (FIRSTDAY)
-  function demoMark(pk) { return pk.partly ? DM.partly : pk.loaded ? DM.loaded : pk["default"] ? DM.first : ""; }
+  // a pack's heading: one still loading reads Loading and a load that stopped part-way Partly loaded, never Loaded (FIRSTDAY)
+  function demoMark(pk) { return pk.loading ? DM.loading : pk.partly ? DM.partly : pk.loaded ? DM.loaded : pk["default"] ? DM.first : ""; }
+  // a pack whose people can sign in: on the site, whole, and not in the middle of its load
+  function demoReady(pk) { return !!pk.loaded && !pk.partly && !pk.loading; }
   // the one press that cannot be undone asks first, naming what goes; every other press runs at once
   function demoAsk(pack, verb) {
     return verb === "remove" ? DM.sure.replace("{title}", pack.title || pack.id).replace("{company}", pack.company || pack.title || pack.id) : "";
@@ -669,7 +671,7 @@
               noSandboxParts: noSandboxParts, U: U, industryWords: industryWords, tryLabel: tryLabel,
               canGoBack: canGoBack, defaultTitle: defaultTitle, versionsShown: versionsShown, logFile: logFile, payWords: payWords, payLabel: payLabel, pubPlan: pubPlan, pubOpensOn: pubOpensOn, pictureType: pictureType, b64: b64, cardBody: cardBody,
               S: S, siteHow: siteHow, trySites: trySites, tickLive: tickLive, instKey: instKey, installState: installState,
-              DM: DM, demoCan: demoCan, demoOrder: demoOrder, demoRunning: demoRunning, demoAsk: demoAsk, demoMark: demoMark,
+              DM: DM, demoCan: demoCan, demoOrder: demoOrder, demoRunning: demoRunning, demoAsk: demoAsk, demoMark: demoMark, demoReady: demoReady,
               storedSignIn: storedSignIn, storeSignIn: storeSignIn, LAST: LAST,
               removedWords: removedWords, pointClass: pointClass, triedOn: triedOn, updateList: updateList };
   if (typeof module === "object" && module.exports) {
@@ -2296,6 +2298,8 @@
       (job.lines || []).forEach(function (l) { run.appendChild(p(l)); });
       if ((job.details || []).length) {   // the builder's own notes (a field not on the site yet, a record kept), folded away
         var fold = el("details", {}, el("summary", { text: DM.details }));
+        if (d.detailsOpen) fold.setAttribute("open", "");   // the screen is drawn again at every poll: Details stays as the reader left it
+        fold.addEventListener("toggle", function () { d.detailsOpen = fold.open; });
         job.details.forEach(function (l) { fold.appendChild(el("p", { "class": "hint", text: l })); });
         run.appendChild(fold);
       }
@@ -2322,14 +2326,14 @@
         if (DM.hints[verb]) b.setAttribute("title", DM.hints[verb]);
         acts.appendChild(b); acts.appendChild(root.document.createTextNode(" "));
       });
-      if (pk.loaded && !pk.partly && !busy) acts.appendChild(button(DM.logins, function (ev) {
+      if (demoReady(pk) && !busy) acts.appendChild(button(DM.logins, function (ev) {
         ev.target.disabled = true;
         call("POST", "/demo/logins", { site: d.site, pack: pk.id }).then(function (r) { d.shown = { pack: pk.id, rows: r.logins, words: r.logins_words }; render(); },
           function (e) { ev.target.disabled = false; fail(e); });
       }, true));
       if (pk.page) { acts.appendChild(root.document.createTextNode(" ")); acts.appendChild(el("a", { href: "/" + pk.page, text: DM.more })); }
       row.appendChild(acts);
-      if (pk.loaded && !pk.partly) row.appendChild(el("p", { "class": "hint", text: DM.hints.reset + " " + DM.hints.refresh + " " + DM.hints.remove }));
+      if (demoReady(pk)) row.appendChild(el("p", { "class": "hint", text: DM.hints.reset + " " + DM.hints.refresh + " " + DM.hints.remove }));
       if (d.shown && d.shown.pack === pk.id) row.appendChild(demoLogins(d.shown.rows, d.shown.words));
       box.appendChild(row);
     });
