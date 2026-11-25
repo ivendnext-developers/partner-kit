@@ -573,7 +573,16 @@ check("DEMOPACKS: a pack shows only the buttons the hosting says it may press he
 check("DEMOPACKS: Multi-category comes first, marked as the one to start with",
   a.demoOrder([{ id: "travel-retail", title: "Travel retail" }, { id: "fashion", title: "Fashion" }, { id: "multi-category", title: "Multi-category retail", "default": true }])
     .map((x) => x.id).join() === "multi-category,fashion,travel-retail" && a.DM.first === "Start with this one" &&
-  src.includes('pk.loaded ? " \\u00b7 " + DM.loaded : pk["default"] ? " \\u00b7 " + DM.first : ""'));
+  a.demoMark({ "default": true }) === "Start with this one" && a.demoMark({ loaded: true, "default": true }) === "Loaded" && a.demoMark({}) === "" &&
+  src.includes('row.appendChild(el("h3", { text: pk.title + (demoMark(pk) ? " \\u00b7 " + demoMark(pk) : "") }));'));
+check("FIRSTDAY: a pack whose last load stopped is headed Partly loaded, never Loaded, and offers no logins until it is finished",
+  a.demoMark({ loaded: true, partly: true, "default": true }) === "Partly loaded" && a.DM.partly === "Partly loaded" &&
+  src.includes("if (pk.loaded && !pk.partly && !busy) acts.appendChild(button(DM.logins,"));
+check("FIRSTDAY: a job's lines are the stages the hosting names, and the builder's own notes are folded under Details",
+  a.DM.details === "Details" && src.includes('var fold = el("details", {}, el("summary", { text: DM.details }));') &&
+  src.includes('job.details.forEach(function (l) { fold.appendChild(el("p", { "class": "hint", text: l })); });'));
+check("FIRSTDAY: the label box on My sites says what it is for",
+  a.S.labelPlaceholder === 'Label, such as "Demo for Acme"' && src.includes('"aria-label": S.label + ": " + x.site, placeholder: S.labelPlaceholder });'));
 check("DEMOPACKS: one job at a time, followed until it ends, then the buttons are read afresh",
   a.demoRunning({ step: "running" }) && !a.demoRunning({ step: "done" }) && !a.demoRunning({ step: "stopped" }) && !a.demoRunning(null) &&
   src.includes("if (busy) b.disabled = true;") && src.includes("if (demoRunning(s)) pollDemo(0); else loadDemo();") &&

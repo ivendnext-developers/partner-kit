@@ -2,13 +2,13 @@
 
 A sandbox handed to a developer starts empty: no company, no store, no item. You choose what goes on it. A **demo pack** is one made-up retail chain, ready to sell: its company, stores, tills, people, catalogue with photos, stock, customers and a few past sales. Load one pack, or several side by side (Electronics and phones is the one that needs a sandbox to itself). Put one back before a demo, or take it off again. Each pack lives in a company of its own: your own companies, items, users and apps are never touched.
 
-**A sandbox a partner's owner receives arrives loaded.** The sandbox an owner receives on the partner portal has Multi-category retail loaded within a few minutes, because an owner works on the portal and has no **Demo data** button there. Its manager's and cashiers' logins are shown to your owners on the portal home, beside the administrator's, until one of them presses **I have saved them**; **Show its logins** on the pack shows them to a developer again. Any developer of the company can reset it, remove it or load another pack (Electronics and phones only after this one is removed) on **My sites**.
+**A sandbox a partner's owner receives arrives loaded.** The sandbox an owner receives on the partner portal has Multi-category retail loaded about three minutes after the approval. The portal home's **Your sandbox** says *Getting your demo chain ready*, then *Ready to sell*, and then shows the manager's and cashiers' logins beside the administrator's, each with its role and till ID, until an owner presses **I have saved them**. **Show its logins** on the pack shows them again, to an owner or a developer. An owner has **Demo data** on that card, and a developer on **My sites**: the same packs and the same buttons, so either can reset the pack before a demo, remove it or load another (Electronics and phones only after this one is removed).
 
 Demo packs are for the sandboxes we hand out. A site you added yourself on **My sites**, such as a customer's test site, is not offered one: made-up sales do not belong in a customer's books.
 
 ## Load, reset, refresh, remove
 
-On **My sites**, press **Demo data** on your sandbox. In a terminal, use `ivn demo`.
+On **My sites**, press **Demo data** on your sandbox. In a terminal, use `ivn demo`. A partner's owner finds the same buttons under **Demo data** on the partner portal home's **Your sandbox**.
 
 | You want to | On My sites · in a terminal |
 |---|---|
@@ -21,13 +21,13 @@ On **My sites**, press **Demo data** on your sandbox. In a terminal, use `ivn de
 
 `ivn demo` acts on your default site; `--site` names another by its address or its label.
 
-**Load** takes a few minutes (about three for Multi-category retail) and runs on our side: you can leave the page and come back, and `ivn demo` follows a load that is still running. The screen shows each step, then the pack's logins: each person's till ID and password. **Then sell:** open the till at your sandbox's address, sign in as `cashier1` with that password, open a day (`Till-1` asks for a counted float) and ring a sale. If a load stops part-way, the pack says so the next time you look, and **Load** runs it again: it makes only what is missing.
+**Load** takes a few minutes (about three for Multi-category retail) and runs on our side: you can leave the page and come back, and `ivn demo` follows a load that is still running. The screen shows the stage it has reached (*Stores*, *Catalogue*, *Stock*, *People*, *Past sales*, *Checking*), with the builder's own notes under **Details**, then the pack's logins: each person's till ID and password. **Then sell:** open the till at your sandbox's address (`/pos`). It opens on *Associate ID + PIN*, and a pack's people have no PIN: tap **Use your password instead**, sign in as `cashier1` with that password, open a day (`Till-1` asks for a counted float) and ring a sale. If a load stops part-way, the pack reads **Partly loaded** and says what to do: **Load** finishes it, making only what is missing, and **Remove** takes it off.
 
 **Reset** closes any till day left open on the pack's tills, tops its stock up, and puts its prices and card balances back. The sales you rang stay in the books.
 
 **Refresh** is for vertical apps, the App library apps made for one industry. See *Trying one vertical app after another* below.
 
-**Remove** deletes the pack's company with everything in it, and cannot be undone: its stores, tills, stock, items, customers and logins, and every sale rung in that company, yours included. The page asks you once before it starts; `ivn demo remove` does not ask. A setting the pack changed is put back to what it was. Your own company, items, users and apps stay as they are.
+**Remove** deletes the pack's company with everything in it, and cannot be undone: its stores, tills, stock, items, customers and logins, and every sale rung in that company, yours included. It takes two to four minutes, and the screen shows nothing new until it ends. The page asks you once before it starts; `ivn demo remove` does not ask. A setting the pack changed is put back to what it was. Your own company, items, users and apps stay as they are.
 
 One pack is worked on at a time on a site. While one runs, the buttons wait.
 
