@@ -27,7 +27,7 @@ On **My sites**, press **Demo data** on your sandbox. In a terminal, use `ivn de
 
 **Refresh** is for vertical apps, the App library apps made for one industry. See *Trying one vertical app after another* below.
 
-**Remove** deletes the pack's company with everything in it, and cannot be undone: its stores, tills, stock, items, customers and logins, and every sale rung in that company, yours included. It takes two to four minutes, and the screen shows nothing new until it ends: wait, it has not stopped. The page asks you once before it starts; `ivn demo remove` does not ask. A setting the pack changed is put back to what it was. Your own company, items, users and apps stay as they are.
+**Remove** deletes the pack's company with everything in it, and cannot be undone: its stores, tills, stock, items, customers and logins, and every sale rung in that company, yours included. It takes two to five minutes, and the screen shows nothing new until it ends: wait, it has not stopped. The page asks you once before it starts; `ivn demo remove` does not ask. A setting the pack changed is put back to what it was. Your own company, items, users and apps stay as they are.
 
 One pack is worked on at a time on a site. While one runs, the buttons wait.
 
