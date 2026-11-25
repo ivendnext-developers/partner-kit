@@ -30,7 +30,15 @@ No GitHub account? Make a free one in two minutes with any e-mail.
 
 ## When access comes
 
-Your company's first sandbox comes when our partner team approves your partner application. It is on your partner portal home: everyone of your company there sees its address, and your owners see its logins (an administrator's, a store manager's and two cashiers') until one of them presses **I have saved them**, so keep them then. It arrives with the demo pack Multi-category retail loading on it, and is ready to sell a few minutes after the approval; until then the manager's and the cashiers' logins will not sign in. When it is ready, open the site's address, sign in at the till as a cashier with the till ID and password shown, open a day and ring a sale. Your developers can reset or remove that pack, or load another (Electronics and phones only after this one is removed), under **Demo data** on **My sites**. An owner's own further sandbox arrives the same way; a sandbox handed to a developer starts empty, theirs to choose. A referral partner's owner first accepts the iVendNext Developer Terms there. Every developer of your company sees the site on **My sites**, Try on My apps names it, and `ivn sites` lists it: there is no key to paste.
+Your company's first sandbox comes when our partner team approves your partner application. It is on your partner portal home: everyone of your company there sees its address, and your owners see its logins (an administrator's, a store manager's and two cashiers') until one of them presses **I have saved it**, so keep the administrator's then; the manager's and the cashiers' stay under **Show its logins**. A referral partner's owner first accepts the iVendNext Developer Terms there.
+
+**It arrives with a demo chain loading.** The demo chain Multi-category retail is ready to sell about three minutes after the approval: the card says *Getting your demo chain ready*, then *Ready to sell*, and shows the manager's and the cashiers' logins, each with its role and till ID, once they work.
+
+**To sell,** open the till: the site's address followed by `/pos`. Tap **Use your password instead** on its first screen, sign in as a cashier with the till ID and password shown, open the day (the till asks for the cash in the drawer) and ring a sale.
+
+**To change the demo chain,** an owner resets or removes it, or loads another (Electronics and phones only after this one is removed), under **Demo data** on the same card; your developers do the same under **Demo data** on **My sites**. An owner's own further sandbox arrives the same way; a sandbox handed to a developer starts empty, theirs to choose.
+
+Every developer of your company sees the site on **My sites**, named after your company. Try on My apps installs on it, and `ivn sites` lists it. There is no key to paste.
 
 A sandbox handed to you as a developer is yours: it is your default, and **Show its logins** on **My sites** shows its administrator's login once, so keep it then. Press **Demo data** there to load a demo pack; a pack's own logins stay under its **Show its logins**. Your colleagues see it under your name.
 

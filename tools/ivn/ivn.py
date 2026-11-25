@@ -156,6 +156,8 @@ WORDS = {
     "demo_on": "Demo data on {site}:",
     "demo_row": "{id}  {title}{mark}",
     "demo_loaded": " · loaded",
+    "demo_partly": " · partly loaded",  # its last load stopped part-way: load finishes it, remove takes it off
+    "demo_loading": " · loading",
     "demo_first": " · start with this one",
     "demo_none": "No demo pack is offered yet.",
     "demo_which_site": "Name the sandbox: add --site <address or label>. ivn sites lists your company's sites.",
@@ -1651,7 +1653,8 @@ def demo_rows(packs: list) -> list[str]:
     """One pack a line, the one to start with first: its id (what the command takes), its title, and what it is."""
     out = []
     for p in sorted(packs, key=lambda x: (not x.get("default"), x.get("title") or "")):
-        mark = WORDS["demo_loaded"] if p.get("loaded") else WORDS["demo_first"] if p.get("default") else ""
+        mark = (WORDS["demo_loading"] if p.get("loading") else WORDS["demo_partly"] if p.get("partly") else WORDS["demo_loaded"] if p.get("loaded")
+                else WORDS["demo_first"] if p.get("default") else "")
         out.append(WORDS["demo_row"].format(id=p["id"], title=p.get("title") or p["id"], mark=mark))
         if p.get("about"):
             out.append("    " + p["about"])
@@ -1685,6 +1688,8 @@ def follow_demo(site: str) -> dict:
                 said.add(line)
                 print(terminal(line), flush=True)
         if out.get("step") == "stopped":
+            for line in out.get("details") or []:  # the builder's own notes, which the page folds under Details
+                print("  " + terminal(line), flush=True)
             raise Stop(out.get("stop") or "It stopped.")
         if out.get("done") or out.get("step") == "done":
             return out
