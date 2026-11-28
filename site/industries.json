@@ -80,7 +80,8 @@
       "s14_approvals_stores",
       "s44_lucky_draw",
       "s57_donation_intake",
-      "s61_consignment_payouts"
+      "s61_consignment_payouts",
+      "s64_production_station"
     ],
     "Travel retail": [
       "s36_duty_free",

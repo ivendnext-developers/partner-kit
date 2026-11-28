@@ -23,7 +23,7 @@ ivn new acme_store_rules                    # a blank app, or: ivn new acme_po_a
 | You want | Look in |
 |---|---|
 | To go from a customer's list of needs to what to build | [`needs/`](needs/README.md) |
-| A working app to start from | [`samples/`](samples/): 61 of them, each with its tests |
+| A working app to start from | [`samples/`](samples/): 63 of them, each with its tests |
 | The steps for one job | [`recipes/`](recipes/) |
 | Everything an app can plug into | [What you can use](site/pages/map.md) · [`contracts/`](contracts/README.md), the extension points' pages and schemas |
 | Every call and every record type | [`api/`](api/README.md) |

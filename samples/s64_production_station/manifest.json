@@ -1,0 +1,1146 @@
+{
+ "manifest_version": 2,
+ "app": "pp_pst",
+ "prefix": "PP PST",
+ "title": "Production station",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "A thrift processing room's station screen, opened by a link on the station's own browser (no sign-in): a worker taps their name, a category and a price point, and a tag prints with the price inside its barcode, in this week's colour. The colours turn each week from a date in PP PST Settings (a lead may set a colour for one day); a field on Item, Tag colour, names each category item's colour, so the station finds the item and nobody picks a colour. The barcode is the engine's own label encoder's (get_item_barcode_for_label); before a price is printed the first time, the engine's own reader (resolve_barcode) must read it back as the same item and price, else the tag is refused. Each tag is a PP PST Tag record; Undo last tag takes the last one of the cart back. Cart full posts, as the app's own user, a Material Receipt of the cart's tags into the processing room at no value (Allow Zero Valuation Rate), then a Material Transfer of the same lines to the place chosen; both name the cart (Stock Entry field Production cart), and a cart is posted once. A production report's Work out writes rows by day, station and worker (pieces, hours, pieces per hour) and by colour week (tagged, sold from the retailer's own POS Sale Report, sell-through). Four reports list them. The install makes the roles PP PST Manager and PP PST Integration and the app's own user; from role_rights it gives PP PST Integration read on Item, Warehouse and System Settings (the site's time zone, for today's colour), read, write, create and submit on Stock Entry, select on the stock entry's lookups, and, for sell-through, the retailer's own POS Sale Report with Read and Report on POS Invoice (the till's sales) and its lookups; PP PST Manager select on Warehouse, Item Group and Company. It reads no customer and sends nothing elsewhere. allowed_urls is the programme bench's address; a partner writes their own service's.",
+ "allowed_urls": [
+  "https://host.docker.internal:8125/pst/link",
+  "https://host.docker.internal:8125/pst/work"
+ ],
+ "doctypes": [
+  {
+   "name": "PP PST Colour",
+   "istable": 1,
+   "permissions": [],
+   "fields": [
+    {
+     "fieldname": "colour",
+     "fieldtype": "Data",
+     "label": "Colour",
+     "reqd": 1,
+     "in_list_view": 1,
+     "length": 40,
+     "description": "A tag colour, in the rotation's order (Blue, Green, Orange, Pink, Yellow)."
+    }
+   ]
+  },
+  {
+   "name": "PP PST Worker",
+   "istable": 1,
+   "permissions": [],
+   "fields": [
+    {
+     "fieldname": "worker_name",
+     "fieldtype": "Data",
+     "label": "Name",
+     "reqd": 1,
+     "in_list_view": 1,
+     "length": 80,
+     "description": "As the worker taps it at the station: a first name and an initial is enough."
+    },
+    {
+     "fieldname": "active",
+     "fieldtype": "Check",
+     "label": "Active",
+     "default": "1",
+     "in_list_view": 1,
+     "description": "Untick when the worker leaves: their tags stay counted."
+    }
+   ]
+  },
+  {
+   "name": "PP PST Price Point",
+   "istable": 1,
+   "permissions": [],
+   "fields": [
+    {
+     "fieldname": "category",
+     "fieldtype": "Link",
+     "label": "Category",
+     "options": "Item Group",
+     "reqd": 1,
+     "in_list_view": 1,
+     "description": "An item group whose items carry a tag colour, one item per colour."
+    },
+    {
+     "fieldname": "price",
+     "fieldtype": "Currency",
+     "label": "Price",
+     "reqd": 1,
+     "in_list_view": 1,
+     "options": "currency",
+     "description": "One price a worker taps for this category. Add a row for each price point."
+    }
+   ]
+  },
+  {
+   "name": "PP PST Destination",
+   "istable": 1,
+   "permissions": [],
+   "fields": [
+    {
+     "fieldname": "warehouse",
+     "fieldtype": "Link",
+     "label": "Warehouse",
+     "options": "Warehouse",
+     "reqd": 1,
+     "in_list_view": 1,
+     "description": "A store, the outlet, salvage or the online department: where a full cart can go."
+    },
+    {
+     "fieldname": "label",
+     "fieldtype": "Data",
+     "label": "Shown as",
+     "in_list_view": 1,
+     "length": 60,
+     "description": "The tile's words at the station (blank: the warehouse's name)."
+    }
+   ]
+  },
+  {
+   "name": "PP PST Settings",
+   "autoname": "field:company",
+   "fields": [
+    {
+     "fieldname": "company",
+     "fieldtype": "Link",
+     "label": "Company",
+     "options": "Company",
+     "reqd": 1,
+     "unique": 1,
+     "in_list_view": 1,
+     "description": "One settings record per company."
+    },
+    {
+     "fieldname": "currency",
+     "fieldtype": "Link",
+     "label": "Currency",
+     "options": "Currency",
+     "read_only": 1,
+     "fetch_from": "company.default_currency",
+     "description": "The company's currency: the tags' prices are in it."
+    },
+    {
+     "fieldname": "room",
+     "fieldtype": "Link",
+     "label": "Processing room",
+     "options": "Warehouse",
+     "reqd": 1,
+     "description": "The warehouse a full cart is received into, at no value, before it moves on."
+    },
+    {
+     "fieldname": "tag_width_mm",
+     "fieldtype": "Int",
+     "label": "Tag width (mm)",
+     "default": "50",
+     "description": "The label's width in millimetres (blank: 50)."
+    },
+    {
+     "fieldname": "tag_height_mm",
+     "fieldtype": "Int",
+     "label": "Tag height (mm)",
+     "default": "30",
+     "description": "The label's height in millimetres (blank: 30)."
+    },
+    {
+     "fieldname": "section_colours",
+     "fieldtype": "Section Break",
+     "label": "Colour of the week"
+    },
+    {
+     "fieldname": "first_week",
+     "fieldtype": "Date",
+     "label": "First colour week starts",
+     "description": "The day the first colour of the list starts. The colours then turn every seven days, in the list's order, and start again."
+    },
+    {
+     "fieldname": "colours",
+     "fieldtype": "Table",
+     "label": "Colours",
+     "options": "PP PST Colour",
+     "description": "The tag colours, in rotation order. Each category item names its colour in Tag colour."
+    },
+    {
+     "fieldname": "day_colour",
+     "fieldtype": "Data",
+     "label": "Colour for one day",
+     "length": 40,
+     "description": "A lead's override: this colour on the On date only (blank: the rotation's)."
+    },
+    {
+     "fieldname": "day_colour_on",
+     "fieldtype": "Date",
+     "label": "On",
+     "description": "The one day the colour above is used."
+    },
+    {
+     "fieldname": "section_people",
+     "fieldtype": "Section Break",
+     "label": "Workers and price points"
+    },
+    {
+     "fieldname": "workers",
+     "fieldtype": "Table",
+     "label": "Workers",
+     "options": "PP PST Worker",
+     "description": "The names a worker taps at the start of a shift."
+    },
+    {
+     "fieldname": "price_points",
+     "fieldtype": "Table",
+     "label": "Price points",
+     "options": "PP PST Price Point",
+     "description": "The prices a worker may tap, by category: the only prices a tag carries."
+    },
+    {
+     "fieldname": "places",
+     "fieldtype": "Table",
+     "label": "Places a cart can go",
+     "options": "PP PST Destination",
+     "description": "Where Cart full may send a cart. The processing room itself keeps a cart there."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP PST Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP PST Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP PST Station",
+   "autoname": "format:PST-S-{#####}",
+   "title_field": "title",
+   "search_fields": "title",
+   "fields": [
+    {
+     "fieldname": "title",
+     "fieldtype": "Data",
+     "label": "Station name",
+     "reqd": 1,
+     "in_list_view": 1,
+     "length": 80,
+     "description": "Shown at the top of the station's screen (Station 3, Hard goods)."
+    },
+    {
+     "fieldname": "settings",
+     "fieldtype": "Link",
+     "label": "Settings",
+     "options": "PP PST Settings",
+     "reqd": 1,
+     "in_list_view": 1,
+     "description": "The company settings this station works under: its workers, price points, colours and places."
+    },
+    {
+     "fieldname": "link_section",
+     "fieldtype": "Section Break",
+     "label": "The station's link"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP PST Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP PST Integration",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP PST Tag",
+   "autoname": "format:PST-T-{########}",
+   "fields": [
+    {
+     "fieldname": "station",
+     "fieldtype": "Link",
+     "label": "Station",
+     "options": "PP PST Station",
+     "read_only": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "worker",
+     "fieldtype": "Data",
+     "label": "Worker",
+     "read_only": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1,
+     "length": 80
+    },
+    {
+     "fieldname": "category",
+     "fieldtype": "Link",
+     "label": "Category",
+     "options": "Item Group",
+     "read_only": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "item",
+     "fieldtype": "Link",
+     "label": "Item",
+     "options": "Item",
+     "read_only": 1
+    },
+    {
+     "fieldname": "colour",
+     "fieldtype": "Data",
+     "label": "Colour",
+     "read_only": 1,
+     "in_list_view": 1,
+     "length": 40
+    },
+    {
+     "fieldname": "week_start",
+     "fieldtype": "Date",
+     "label": "Colour week starts",
+     "read_only": 1
+    },
+    {
+     "fieldname": "price",
+     "fieldtype": "Currency",
+     "label": "Price",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "quantity",
+     "fieldtype": "Int",
+     "label": "Quantity",
+     "read_only": 1,
+     "default": "1"
+    },
+    {
+     "fieldname": "barcode",
+     "fieldtype": "Data",
+     "label": "Barcode",
+     "read_only": 1,
+     "length": 60
+    },
+    {
+     "fieldname": "tagged_on",
+     "fieldtype": "Date",
+     "label": "Tagged on",
+     "read_only": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "hour",
+     "fieldtype": "Int",
+     "label": "Hour",
+     "read_only": 1,
+     "description": "The site's clock hour the tag was printed in (0 to 23)."
+    },
+    {
+     "fieldname": "cart",
+     "fieldtype": "Link",
+     "label": "Cart",
+     "options": "PP PST Cart",
+     "read_only": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "void",
+     "fieldtype": "Check",
+     "label": "Taken back",
+     "read_only": 1,
+     "description": "Taken back with Undo last tag before its cart was sent: never received."
+    },
+    {
+     "fieldname": "req",
+     "fieldtype": "Data",
+     "label": "Tap",
+     "read_only": 1,
+     "hidden": 1,
+     "unique": 1,
+     "length": 40,
+     "description": "The tap that made this tag: the same tap sent again after a lost answer finds this tag instead of making a second."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP PST Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP PST Integration",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP PST Cart",
+   "autoname": "format:PST-C-{#####}",
+   "fields": [
+    {
+     "fieldname": "station",
+     "fieldtype": "Link",
+     "label": "Station",
+     "options": "PP PST Station",
+     "read_only": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "closed_on",
+     "fieldtype": "Date",
+     "label": "Closed on",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "pieces",
+     "fieldtype": "Int",
+     "label": "Pieces",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "pounds",
+     "fieldtype": "Float",
+     "label": "Pounds",
+     "description": "The cart's weight, for a chain that weighs its carts (typed here, by the lead)."
+    },
+    {
+     "fieldname": "destination",
+     "fieldtype": "Link",
+     "label": "Sent to",
+     "options": "Warehouse",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "state",
+     "fieldtype": "Select",
+     "label": "State",
+     "options": "Open\nReceived\nSent",
+     "default": "Open",
+     "read_only": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1,
+     "description": "Open: being posted. Received: in the processing room at no value. Sent: moved to its place."
+    },
+    {
+     "fieldname": "receipt",
+     "fieldtype": "Link",
+     "label": "Material Receipt",
+     "options": "Stock Entry",
+     "read_only": 1
+    },
+    {
+     "fieldname": "transfer",
+     "fieldtype": "Link",
+     "label": "Material Transfer",
+     "options": "Stock Entry",
+     "read_only": 1
+    },
+    {
+     "fieldname": "open_for",
+     "fieldtype": "Data",
+     "label": "Open for",
+     "read_only": 1,
+     "hidden": 1,
+     "unique": 1,
+     "length": 140,
+     "description": "The station while this cart is being posted: a station has one open cart at a time."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP PST Manager",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP PST Integration",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP PST Worker Row",
+   "istable": 1,
+   "permissions": [],
+   "fields": [
+    {
+     "fieldname": "day",
+     "fieldtype": "Date",
+     "label": "Day",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 2
+    },
+    {
+     "fieldname": "station",
+     "fieldtype": "Link",
+     "label": "Station",
+     "options": "PP PST Station",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 2
+    },
+    {
+     "fieldname": "worker",
+     "fieldtype": "Data",
+     "label": "Worker",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 2
+    },
+    {
+     "fieldname": "pieces",
+     "fieldtype": "Int",
+     "label": "Pieces",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 1
+    },
+    {
+     "fieldname": "hours",
+     "fieldtype": "Int",
+     "label": "Hours",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 1,
+     "description": "The clock hours in which the worker tagged."
+    },
+    {
+     "fieldname": "per_hour",
+     "fieldtype": "Float",
+     "label": "Pieces per active hour",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 1,
+     "precision": "1"
+    }
+   ]
+  },
+  {
+   "name": "PP PST Colour Row",
+   "istable": 1,
+   "permissions": [],
+   "fields": [
+    {
+     "fieldname": "colour",
+     "fieldtype": "Data",
+     "label": "Colour",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 2
+    },
+    {
+     "fieldname": "week_start",
+     "fieldtype": "Date",
+     "label": "Week starts",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 2
+    },
+    {
+     "fieldname": "tagged",
+     "fieldtype": "Int",
+     "label": "Tagged",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 1
+    },
+    {
+     "fieldname": "sold",
+     "fieldtype": "Float",
+     "label": "Sold",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 1,
+     "precision": "0"
+    },
+    {
+     "fieldname": "sell_through",
+     "fieldtype": "Percent",
+     "label": "Sell-through %",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 1
+    }
+   ]
+  },
+  {
+   "name": "PP PST Report",
+   "autoname": "format:PST-R-{#####}",
+   "fields": [
+    {
+     "fieldname": "from_date",
+     "fieldtype": "Date",
+     "label": "From",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "to_date",
+     "fieldtype": "Date",
+     "label": "To",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "settings",
+     "fieldtype": "Link",
+     "label": "Settings",
+     "options": "PP PST Settings",
+     "description": "The company to read (blank: the only settings record)."
+    },
+    {
+     "fieldname": "section_result",
+     "fieldtype": "Section Break",
+     "label": "Worked out"
+    },
+    {
+     "fieldname": "summary",
+     "fieldtype": "Small Text",
+     "label": "Summary",
+     "read_only": 1
+    },
+    {
+     "fieldname": "worker_rows",
+     "fieldtype": "Table",
+     "label": "By worker",
+     "options": "PP PST Worker Row",
+     "read_only": 1
+    },
+    {
+     "fieldname": "colour_rows",
+     "fieldtype": "Table",
+     "label": "By colour week",
+     "options": "PP PST Colour Row",
+     "read_only": 1
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP PST Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP PST Integration",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "custom_fields": [
+  {
+   "dt": "PP PST Station",
+   "fieldname": "number",
+   "fieldtype": "Int",
+   "label": "Link number",
+   "insert_after": "link_section",
+   "in_list_view": 1,
+   "write_roles": [
+    "PP PST Integration",
+    "System Manager"
+   ],
+   "description": "Raised by one each time Make link is pressed; a station opened with an earlier number stops within 15 seconds."
+  },
+  {
+   "dt": "PP PST Station",
+   "fieldname": "link",
+   "fieldtype": "Data",
+   "label": "Link",
+   "insert_after": "number",
+   "length": 240,
+   "write_roles": [
+    "PP PST Integration",
+    "System Manager"
+   ],
+   "description": "Open this address on the station's browser (full screen, with its print switch). Anyone with it can tag and send carts at this station: press Make link again if it leaked. Changing the station's settings stops it until Make link is pressed again."
+  },
+  {
+   "dt": "PP PST Station",
+   "fieldname": "made_for",
+   "fieldtype": "Data",
+   "label": "Made for",
+   "insert_after": "link",
+   "hidden": 1,
+   "write_roles": [
+    "PP PST Integration",
+    "System Manager"
+   ]
+  },
+  {
+   "dt": "Item",
+   "fieldname": "pp_pst_tag_colour",
+   "fieldtype": "Small Text",
+   "label": "Tag colour",
+   "insert_after": "item_group",
+   "description": "A category item's tag colour (Blue): the production station tags this item in that colour's week."
+  },
+  {
+   "dt": "Stock Entry",
+   "fieldname": "pp_pst_cart",
+   "fieldtype": "Link",
+   "options": "PP PST Cart",
+   "label": "Production cart",
+   "insert_after": "stock_entry_type",
+   "read_only": 1,
+   "no_copy": 1,
+   "description": "The production station's cart this entry received or moved."
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP PST Settings",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/production_station.html#settings"
+  },
+  {
+   "doc_type": "PP PST Station",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/production_station.html#stations"
+  },
+  {
+   "doc_type": "PP PST Cart",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/production_station.html#carts"
+  },
+  {
+   "doc_type": "PP PST Report",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/production_station.html#reports"
+  },
+  {
+   "doc_type": "PP PST Tag",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/production_station.html#tags"
+  }
+ ],
+ "reports": [
+  {
+   "name": "PP PST Production by worker",
+   "ref_doctype": "PP PST Report",
+   "report_type": "Report Builder",
+   "columns": [
+    "from_date",
+    "to_date",
+    "worker_rows.day",
+    "worker_rows.station",
+    "worker_rows.worker",
+    "worker_rows.pieces",
+    "worker_rows.hours",
+    "worker_rows.per_hour"
+   ],
+   "filters": [
+    [
+     "worker_rows.worker",
+     "is",
+     "set"
+    ]
+   ],
+   "order_by": "modified desc"
+  },
+  {
+   "name": "PP PST Sell-through by colour",
+   "ref_doctype": "PP PST Report",
+   "report_type": "Report Builder",
+   "columns": [
+    "from_date",
+    "to_date",
+    "colour_rows.colour",
+    "colour_rows.week_start",
+    "colour_rows.tagged",
+    "colour_rows.sold",
+    "colour_rows.sell_through"
+   ],
+   "filters": [
+    [
+     "colour_rows.colour",
+     "is",
+     "set"
+    ]
+   ],
+   "order_by": "modified desc"
+  },
+  {
+   "name": "PP PST Carts",
+   "ref_doctype": "PP PST Cart",
+   "report_type": "Report Builder",
+   "columns": [
+    "name",
+    "station",
+    "closed_on",
+    "pieces",
+    "pounds",
+    "destination",
+    "state",
+    "receipt",
+    "transfer"
+   ],
+   "order_by": "creation desc"
+  },
+  {
+   "name": "PP PST Tags",
+   "ref_doctype": "PP PST Tag",
+   "report_type": "Report Builder",
+   "columns": [
+    "name",
+    "tagged_on",
+    "hour",
+    "station",
+    "worker",
+    "category",
+    "colour",
+    "price",
+    "cart",
+    "void"
+   ],
+   "order_by": "creation desc"
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP PST Production station feed",
+   "description": "the production station service reads the settings and items and writes the tags, carts, stock entries and report rows as this user",
+   "events": [
+    "PP PST Station"
+   ],
+   "reads_events": false
+  }
+ ],
+ "extension_subscriptions": [
+  {
+   "key": "link",
+   "point": "desk_action",
+   "label": "Make link service",
+   "endpoint_url": "https://host.docker.internal:8125/pst/link",
+   "timeout_seconds": 10
+  },
+  {
+   "key": "work",
+   "point": "desk_action",
+   "label": "Work out service",
+   "endpoint_url": "https://host.docker.internal:8125/pst/work",
+   "timeout_seconds": 10
+  }
+ ],
+ "desk_actions": [
+  {
+   "record_type": "PP PST Station",
+   "label": "Make link",
+   "placement": "both",
+   "service": "link",
+   "roles": [
+    "PP PST Manager",
+    "System Manager"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name",
+   "confirm_text": "Make a new link? A station open with the old link stops within 15 seconds: open the new link on it."
+  },
+  {
+   "record_type": "PP PST Report",
+   "label": "Work out",
+   "placement": "form",
+   "service": "work",
+   "roles": [
+    "PP PST Manager",
+    "System Manager"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name"
+  }
+ ],
+ "role_rights": [
+  {
+   "doctype": "Item",
+   "role": "PP PST Integration",
+   "rights": [
+    "read"
+   ]
+  },
+  {
+   "doctype": "Item Group",
+   "role": "PP PST Integration",
+   "rights": [
+    "select"
+   ]
+  },
+  {
+   "doctype": "Warehouse",
+   "role": "PP PST Integration",
+   "rights": [
+    "read"
+   ]
+  },
+  {
+   "doctype": "System Settings",
+   "role": "PP PST Integration",
+   "rights": [
+    "read"
+   ]
+  },
+  {
+   "doctype": "Stock Entry",
+   "role": "PP PST Integration",
+   "rights": [
+    "read",
+    "write",
+    "create",
+    "submit"
+   ]
+  },
+  {
+   "doctype": "Stock Entry Type",
+   "role": "PP PST Integration",
+   "rights": [
+    "select"
+   ]
+  },
+  {
+   "doctype": "Company",
+   "role": "PP PST Integration",
+   "rights": [
+    "select"
+   ]
+  },
+  {
+   "doctype": "UOM",
+   "role": "PP PST Integration",
+   "rights": [
+    "select"
+   ]
+  },
+  {
+   "doctype": "POS Invoice",
+   "role": "PP PST Integration",
+   "rights": [
+    "read",
+    "report"
+   ]
+  },
+  {
+   "doctype": "POS Profile",
+   "role": "PP PST Integration",
+   "rights": [
+    "select"
+   ]
+  },
+  {
+   "doctype": "Customer",
+   "role": "PP PST Integration",
+   "rights": [
+    "select"
+   ]
+  },
+  {
+   "doctype": "Customer Group",
+   "role": "PP PST Integration",
+   "rights": [
+    "select"
+   ]
+  },
+  {
+   "report": "POS Sale Report",
+   "role": "PP PST Integration"
+  },
+  {
+   "doctype": "Warehouse",
+   "role": "PP PST Manager",
+   "rights": [
+    "select"
+   ]
+  },
+  {
+   "doctype": "Item Group",
+   "role": "PP PST Manager",
+   "rights": [
+    "select"
+   ]
+  },
+  {
+   "doctype": "Company",
+   "role": "PP PST Manager",
+   "rights": [
+    "select"
+   ]
+  }
+ ],
+ "translations": [
+  {
+   "language": "en",
+   "words": {
+    "PP PST Settings": "Production station settings",
+    "PP PST Station": "Production station",
+    "PP PST Tag": "Production tag",
+    "PP PST Cart": "Production cart",
+    "PP PST Report": "Production report",
+    "PP PST Colour": "Tag colour",
+    "PP PST Worker": "Production worker",
+    "PP PST Price Point": "Price point",
+    "PP PST Destination": "Cart destination",
+    "PP PST Worker Row": "Production by worker row",
+    "PP PST Colour Row": "Sell-through by colour row",
+    "PP PST Manager": "Production lead",
+    "PP PST Production by worker": "Production by worker",
+    "PP PST Sell-through by colour": "Sell-through by colour",
+    "PP PST Carts": "Production carts",
+    "PP PST Tags": "Production tags",
+    "PP PST Production station feed": "Production station feed"
+   }
+  }
+ ]
+}

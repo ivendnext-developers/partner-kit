@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>Production station</title>
+<link rel="stylesheet" href="ivn-kit.css">
+<link rel="stylesheet" href="page.css">
+</head>
+<body class="ivn pst">
+<header class="pst-head">
+  <h1 id="title" class="pst-title" dir="auto"></h1>
+  <p id="colour" class="pst-colour" dir="auto"></p>
+  <p id="who" class="pst-who" dir="auto" hidden></p>
+  <button id="change" type="button" class="ivn-btn pst-change" hidden></button>
+</header>
+<p id="note" class="ivn-banner pst-note" role="status" dir="auto" hidden></p>
+<main class="pst-main">
+  <h2 id="workers-title" class="pst-ask" hidden></h2>
+  <div id="workers" class="pst-tiles" hidden></div>
+  <div id="work" hidden>
+    <div id="cats" class="pst-tiles pst-cats"></div>
+    <div id="prices" class="pst-tiles pst-prices"></div>
+  </div>
+</main>
+<footer id="foot" class="pst-foot" hidden>
+  <p id="count" class="pst-count"></p>
+  <button id="undo" type="button" class="ivn-btn pst-act"></button>
+  <button id="full" type="button" class="ivn-btn ivn-btn-primary pst-act"></button>
+</footer>
+<dialog id="places-dialog" class="ivn-dialog pst-dialog">
+  <div class="ivn-dialog-head"><h2 id="places-title" class="ivn-dialog-title"></h2></div>
+  <div id="places" class="ivn-dialog-body pst-tiles"></div>
+  <div class="ivn-dialog-foot"><button id="places-close" type="button" class="ivn-btn" data-ivn-close="close"></button></div>
+</dialog>
+<div id="tag" class="pst-tag" aria-hidden="true">
+  <p id="tag-price" class="pst-tag-price"></p>
+  <p id="tag-what" class="pst-tag-what" dir="auto"></p>
+  <div id="tag-bars" class="pst-tag-bars"></div>
+  <p id="tag-digits" class="pst-tag-digits"></p>
+</div>
+<script src="ivn-kit.js"></script>
+<script src="code128.js"></script>
+<script src="page.js"></script>
+</body>
+</html>
