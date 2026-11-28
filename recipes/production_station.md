@@ -11,6 +11,9 @@ A thrift chain's processing room sorts donated goods, prices each piece from a s
 ## Steps
 
 <a id="settings"></a>
+
+![A station's screen: the categories, the chosen category's price points and the tag just printed](../samples/s64_production_station/screenshots/01_station.png)
+
 ### Settings
 
 1. Install the manifest, and give the production lead the role **PP PST Manager** first (the install makes it with no user, with *Select* on Company, Warehouse and Item Group): the lead makes the settings and the stations. The manifest adds the settings (one per company), the station record, the tag, the cart and the production report record types, two fields (*Tag colour*, one small field on Item; *Production cart* on Stock Entry), four reports, the roles **PP PST Manager** and **PP PST Integration**, the buttons *Make link* and *Work out* and their services, and the feed registration that makes the app's own user. The manifest's `role_rights` give the app's role read on Item, Warehouse and System Settings (the site's time zone: today's colour is the site's own date), read, write, create and submit on Stock Entry, the lookups those need, and, for sell-through, the retailer's own *POS Sale Report* with Read and Report on POS Invoice (the till's sales). It reads no customer and sends nothing elsewhere.
@@ -25,12 +28,18 @@ A thrift chain's processing room sorts donated goods, prices each piece from a s
 6. **The label printer.** The tag is sized in millimetres from the settings, and the page prints it on a page of that size with no margin: set the same width and height in the printer's driver, and print one tag on your own printer and tag stock before the first shift.
 
 <a id="tags"></a>
+
+![A station's screen when it opens: the worker taps their own name](../samples/s64_production_station/screenshots/02_names.png)
+
 ### Tags
 
 7. The worker taps their name (kept on the station's browser until **Change worker**), a category and a price. The service checks the worker, the category and that the price is one of the category's price points, finds today's colour and the category's item of that colour, and has the engine make the barcode with the price inside (`get_item_barcode_for_label`). **The first time a price is printed, the engine reads the barcode back** (`resolve_barcode`): the tag prints only when it reads as the same item at the same price, which is what the till will charge. Then one **PP PST Tag** is written (station, worker, category, item, colour and the colour week's first day, price, barcode, day and hour) and the page prints it: the price large, the category and the colour, the Code 128 barcode drawn by the page itself, and its digits.
 8. **Undo last tag** takes back the last tag printed at this station, before its cart is sent. A tag taken back is never received. A tap or an undo whose answer did not come back is tapped again: the same tap counts once.
 
 <a id="carts"></a>
+
+![A tag: the price, the category and the colour's name, and the barcode with the price inside](../samples/s64_production_station/screenshots/03_tag.png)
+
 ### Carts
 
 9. **Cart full** shows the places; a tap sends the cart. The service gathers the station's tags since the last cart, makes a **PP PST Cart** and posts, as the app's own user, a **Material Receipt** of the tags into the processing room, one line per item at rate 0 with *Allow Zero Valuation Rate*, then a **Material Transfer** of the same lines to the place chosen. Both name the cart in *Production cart*. A cart kept in the processing room gets the receipt only, and moves later with the engine's own transfer or on the Handheld.
@@ -38,6 +47,9 @@ A thrift chain's processing room sorts donated goods, prices each piece from a s
 11. The lead may type the cart's **Pounds** in Desk. After a cart is sent, a correction is the lead's own stock entry.
 
 <a id="reports"></a>
+
+![Cart full: the worker taps where the cart goes](../samples/s64_production_station/screenshots/04_cart.png)
+
 ### Reports
 
 12. The lead makes a **PP PST Report**, names two dates (and the settings, if the site has more than one company's) and presses **Work out**. It writes a row per day, station and worker (pieces, the clock hours in which the worker tagged, pieces per active hour) and a row per colour week that overlaps the dates: *tagged* (the week's non-void pieces), *sold* (that colour's units in the retailer's own *POS Sale Report* at the places that are stores, from the week's first day until the colour's next turn, or today) and *sell-through* (sold ÷ tagged; blank when nothing was tagged). Each press replaces the rows.
