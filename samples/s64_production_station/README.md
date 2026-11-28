@@ -2,6 +2,8 @@
 
 A thrift chain's processing room sorts and prices donated goods all day. At a station's screen a worker taps their name once, then a category and a price point: one tag prints, with the price inside its barcode, in this week's colour. The category stays chosen, so the next piece of the same kind is one tap. **Cart full** puts the cart's pieces into stock at no value in the processing room and moves them to the store, the outlet or wherever the cart goes, in one tap. The production lead reads who tagged how much, by station, day and hour; the head of retail reads sell-through by tag colour.
 
+![A station's screen: the categories, the chosen category's price points and the tag just printed](screenshots/01_station.png)
+
 **Industries:** Thrift and resale
 
 **When to use it:** a processing room tags priced goods from fixed price points by category, with a tag colour that turns each week, and its workers are not iVendNext users (many are in job-training programmes: the screen is learned in one shift).
