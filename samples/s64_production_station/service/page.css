@@ -1,0 +1,44 @@
+/* S64 — the station's own parts on ivn-kit 0.1.0's tokens (no colour or font of its own): large tiles a worker learns in
+ * one shift, and the tag, which only the printer sees. The tag's size comes from the settings: page.js adds the @page rule
+ * (its millimetres, no margin) and sizes the tag. Logical properties only, so the page mirrors right-to-left. */
+.pst { min-block-size: 100vh; display: flex; flex-direction: column; background: var(--ivn-bg); }
+.pst [hidden] { display: none !important; }
+.pst-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ivn-s3); padding: var(--ivn-s3) var(--ivn-s4);
+  background: var(--ivn-surface); border-block-end: 1px solid var(--ivn-border); }
+.pst-title { margin: 0; font-size: 1.5rem; font-weight: 700; }
+.pst-colour { margin: 0; padding: var(--ivn-s2) var(--ivn-s4); border-radius: var(--ivn-radius-pill); font-size: 1.35rem;
+  font-weight: 800; background: var(--ivn-primary-tint); color: var(--ivn-text); }
+.pst-who { margin: 0; margin-inline-start: auto; font-size: 1.2rem; font-weight: 600; }
+.pst-change { min-block-size: 3rem; font-size: 1.05rem; }
+.pst-note { margin: var(--ivn-s3) var(--ivn-s4) 0; font-size: 1.15rem; font-weight: 600; }
+.pst-note.is-good { background: var(--ivn-pill-green-bg); color: var(--ivn-pill-green-ink); }
+.pst-main { flex: 1 1 auto; padding: var(--ivn-s4); overflow-wrap: anywhere; }
+.pst-ask { margin: 0 0 var(--ivn-s4); font-size: 1.4rem; }
+.pst-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr)); gap: var(--ivn-s3); }
+.pst-cats { margin-block-end: var(--ivn-s5); }
+.pst-tile.ivn-btn { min-block-size: 5.5rem; padding: var(--ivn-s3); white-space: normal; font-size: 1.35rem; font-weight: 700;
+  text-align: center; line-height: 1.2; }
+.pst-tile.is-on { background: var(--ivn-primary-strong); border-color: var(--ivn-primary-strong); color: var(--ivn-on-primary); }
+.pst-prices { grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); }
+.pst-prices .pst-tile.ivn-btn { min-block-size: 7rem; font-size: 2.2rem; font-weight: 800; white-space: nowrap; overflow-wrap: normal; }
+.pst-tile:disabled, .pst-act:disabled { opacity: .55; cursor: wait; }
+.pst-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ivn-s3); padding: var(--ivn-s3) var(--ivn-s4);
+  background: var(--ivn-surface); border-block-start: 1px solid var(--ivn-border); }
+.pst-count { margin: 0; margin-inline-end: auto; font-size: 1.3rem; font-weight: 700; }
+.pst-act.ivn-btn { min-block-size: 3.6rem; padding: 0 var(--ivn-s5); font-size: 1.2rem; font-weight: 700; }
+.pst-dialog .pst-tiles { padding: var(--ivn-s4); }
+
+/* the tag: never on the screen; alone on the printed page */
+.pst-tag { display: none; }
+@media print {
+  .pst { min-block-size: 0; background: none; }
+  .pst > :not(.pst-tag) { display: none !important; }
+  .pst-tag { display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box;
+    overflow: hidden; padding: 1.5mm 2mm; color: var(--ivn-text); background: none; break-after: avoid; }
+  .pst-tag p { margin: 0; line-height: 1.1; text-align: center; }
+  .pst-tag-price { font-size: 7mm; font-weight: 800; }
+  .pst-tag-what { font-size: 2.6mm; font-weight: 600; }
+  .pst-tag-bars { inline-size: 100%; display: flex; justify-content: center; }
+  .pst-tag-bars svg { inline-size: 100%; display: block; }
+  .pst-tag-digits { font-size: 2.4mm; letter-spacing: .3mm; }
+}

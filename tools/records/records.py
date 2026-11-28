@@ -313,6 +313,10 @@ SKIP = {
     "Retail Kitchen Station": "a station of a restaurant's kitchen (Kitchen Stations in Desk), which the kitchen screen's manager role selects "
                               "to make a screen; not yet fetched into this reference",
     "Role Permission for Page and Report": "a Desk tool that gives a role a report; a setup step, not a business record",
+    "Stock Entry Type": "the kind of a stock entry (Material Receipt, Material Transfer), which a sample's role selects to post "
+                        "one; configuration the site's setup makes, not yet fetched into this reference",
+    "System Settings": "the site's own settings, which a sample's role reads for the site's time zone; configuration, not a "
+                       "business record",
 }
 
 # Record types an app reads but never writes over the record API, and how each is written instead: its page says so in
