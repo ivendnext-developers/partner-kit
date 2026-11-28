@@ -32,8 +32,8 @@ def stamp(t: float, zone: str) -> str:
 
 
 class Shop:
-    def __init__(self, clock, zone="UTC"):
-        self.clock, self.zone = clock, zone
+    def __init__(self, clock, zone="UTC", bars=("70102", "70103", "70302", "70303")):
+        self.clock, self.zone, self.bars = clock, zone, bars
         self.db: dict = {}
         self.seq: dict = {}
         self.calls: list = []
@@ -44,6 +44,7 @@ class Shop:
         self.fail: dict = {}             # op -> (after how many more calls, "refuse" | "lose" | "slow")
         self.no_grouping = False         # the record API refuses a grouped read
         self.settings_rights = True
+        self.hooks: dict = {}            # name -> a function run once at that point (another call's write in between)
         self.seed()
 
     # ── the shop's records ──
@@ -57,10 +58,9 @@ class Shop:
     def seed(self):
         self.put("System Settings", "System Settings", time_zone=self.zone)
         self.put("Barcode Mask", "Thrift label", start_sentinel=SENTINEL)
-        for code, group, colour, bar in (("TOPS-BLU", "Women's tops", "Blue", "70102"),
-                                         ("TOPS-GRN", "Women's tops", "Green", "70103"),
-                                         ("SHIRT-BLU", "Men's shirts", "Blue", "70302"),
-                                         ("SHIRT-GRN", "Men's shirts", "Green", "70303")):
+        for (code, group, colour), bar in zip((("TOPS-BLU", "Women's tops", "Blue"), ("TOPS-GRN", "Women's tops", "Green"),
+                                               ("SHIRT-BLU", "Men's shirts", "Blue"), ("SHIRT-GRN", "Men's shirts", "Green")),
+                                              self.bars):
             self.put("Item", code, item_group=group, pp_pst_tag_colour=colour, custom_barcode_mask="Thrift label",
                      disabled=0, stock_uom="Nos", barcodes=[{"barcode": bar}])
         for wh, store in ((ROOM, 0), (STORE, 1), (OUTLET, 1)):
@@ -77,6 +77,7 @@ class Shop:
                  places=[{"warehouse": STORE, "label": "Store 12", "idx": 1}, {"warehouse": OUTLET, "label": "Outlet", "idx": 2},
                          {"warehouse": ROOM, "label": "Keep here", "idx": 3}])
         self.put("PP PST Station", "PST-S-00001", title="Station 3", settings=COMPANY, number=0, link="", made_for="")
+        self.put("PP PST Station", "PST-S-00002", title="Station 4", settings=COMPANY, number=0, link="", made_for="")
 
     def next_name(self, doctype):
         prefix = {"PP PST Tag": "PST-T-", "PP PST Cart": "PST-C-", "PP PST Report": "PST-R-", "Stock Entry": "MAT-STE-",
@@ -96,8 +97,11 @@ class Shop:
         return kind
 
     def _before(self, op):
-        if self._fault(op) == "refuse":
+        kind = self._fault(op)
+        if kind == "refuse":
             raise app.TenantError(f"{op} -> HTTP 417", 417, "ValidationError")
+        if kind == "down":
+            raise app.TenantError(f"{op} -> TimeoutError")     # no answer, nothing written
 
     def _after(self, op):
         if self._fault(op + ":lose") == "lose":
@@ -141,6 +145,9 @@ class Shop:
         if limit == 20 and doctype != "PP PST Cart":
             raise AssertionError("a read with the record API's default page of 20")
         recs = [r for r in self.db.get(doctype, {}).values() if self._match(r, filters)]
+        hook = self.hooks.pop("rows:" + doctype, None)
+        if hook:
+            hook()
         key, rev = (order_by.split() + ["asc"])[:2] if order_by else ("_order", "asc")
         key = "_order" if key in ("creation", "_order") else key
         recs.sort(key=lambda r: (r.get(key) is None, r.get(key)), reverse=rev == "desc")
@@ -169,6 +176,11 @@ class Shop:
         if doctype == "PP PST Cart" and body.get("open_for") and any(
                 r.get("open_for") == body["open_for"] for r in self.db.get(doctype, {}).values()):
             raise app.TenantError("POST PP PST Cart -> HTTP 409", 409, "DuplicateEntryError")
+        if doctype == "PP PST Tag" and body.get("req") and any(
+                r.get("req") == body["req"] for r in self.db.get(doctype, {}).values()):
+            raise app.TenantError("POST PP PST Tag -> HTTP 417", 417, "UniqueValidationError")   # as the bench answered
+        if self._fault("refuse:" + (body.get("purpose") or "")) == "refuse":
+            raise app.TenantError("POST Stock Entry -> HTTP 417", 417, "ValidationError")
         name = self.next_name(doctype)
         rec = self.put(doctype, name, **body)
         if doctype == "Stock Entry" and body.get("docstatus") == 1:
@@ -190,6 +202,9 @@ class Shop:
     def update(self, doctype, name, body):
         self.calls.append(("update", doctype, name, sorted(body)))
         self._before("update:" + doctype)
+        hook = self.hooks.pop("update:" + doctype, None)
+        if hook:
+            hook()
         rec = self.db.get(doctype, {}).get(name)
         if rec is None:
             raise app.TenantError(f"PUT {doctype} -> HTTP 404", 404, "DoesNotExistError")
@@ -251,6 +266,11 @@ class Shop:
                             "result": [[i, q] for i, q in sorted(by.items())]}}
 
     # ── what a test reads back ──
+    def touch(self, doctype, name):
+        """Another call's write of the record: a new ``modified``."""
+        self.clock.t += 0.5
+        self.db[doctype][name]["modified"] = stamp(self.clock(), self.zone)
+
     def tags(self, **match):
         return [r for r in self.db.get("PP PST Tag", {}).values() if all(r.get(k) == v for k, v in match.items())]
 

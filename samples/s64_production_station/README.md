@@ -26,13 +26,14 @@ More: the [recipe](../../recipes/production_station.md).
 
 **The customer sets, in this order:**
 
-1. **Tag colour** on each category item: one item per category and colour (an item group *Women's tops* with an item for Blue, Green, Pink …), each on the site's price-in-barcode mask (*Barcode Mask* on the item) with its own barcode.
-2. **PP PST Settings**, one for the company: the processing room; the tag's width and height (50 by 30 mm unless changed); the colours in rotation order and the day the first one starts (*Colour for one day* and *On* when the lead needs to override one day); the workers' names; the price points of each category; the places a cart can go (each a warehouse; the stores among them are counted for sell-through when they are marked *Is Retail Store*).
-3. A **PP PST Station** for each station, with **Make link** pressed and the link opened on the station's browser.
-4. **The station's browser.** Chrome or Edge opened with its print-without-asking switch, `--kiosk-printing`, and the label printer as its default printer: each tap then prints with no window. On a tablet the system's print sheet opens on each tag: one more tap.
-5. The role **PP PST Manager** for the production lead (the install makes it with no user; a System Manager can do everything it does). It keeps the settings, the stations, the carts' *Pounds* and the production reports.
+1. The role **PP PST Manager** for the production lead (the install makes it with no user; a System Manager can do everything it does). The lead keeps the settings, the stations, the carts' *Pounds* and the production reports, and picks the company on the settings (the install gives the role *Select* on Company, Warehouse and Item Group).
+2. **Tag colour** on each category item: one item per category and colour (an item group *Women's tops* with an item for Blue, Green, Pink …), each on the site's price-in-barcode mask (*Barcode Mask* on the item) with its own barcode. The install adds this one small field to Item.
+3. **PP PST Settings**, one for the company: the processing room; the tag's width and height (50 by 30 mm unless changed); the colours in rotation order and the day the first one starts (*Colour for one day* and *On* when the lead needs to override one day); the workers' names; the price points of each category; the places a cart can go (each a warehouse; the stores among them are counted for sell-through when they are marked *Is Retail Store*).
+4. A **PP PST Station** for each station, with **Make link** pressed and the link opened on the station's browser.
+5. **The station's browser.** In the shortcut that opens Chrome on the station, add `--kiosk-printing` after the program's name in the shortcut's *Target* box (for example `"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk-printing`); the same switch goes after `msedge.exe` for Edge. Make the label printer the station's default printer. Each tap then prints with no window. On a tablet the system's print sheet opens on each tag: one more tap.
+6. **The label printer.** The tag is sized in millimetres from the settings: set the same width and height in the printer's driver, and print one tag on your own printer and tag stock before the first shift.
 
-The manifest's `role_rights` give the app's own role what its service needs and no more: read on Item, Warehouse and System Settings (the site's time zone, for today's colour), read, write, create and submit on Stock Entry (the carts' two entries), the lookups those need, and *POS Sale Report* (sold units for sell-through) with its lookups.
+The manifest's `role_rights` give the app's own role what its service needs and no more: read on Item, Warehouse and System Settings (the site's time zone, for today's colour), read, write, create and submit on Stock Entry (the carts' two entries), the lookups those need, and, for sell-through, the retailer's own *POS Sale Report* with Read and Report on POS Invoice (the till's sales). It reads no customer and sends nothing elsewhere.
 
 **The engine it needs.** A site whose price labels carry the price their scan reads back: the engine's label fix of 12 October 2026. The app checks every price before it prints it the first time: the engine reads back the barcode it made, and the tag prints only when it reads as the same item at the same price. On an older site a price it cannot carry is refused with *This price cannot be printed on a tag yet. Tell your lead: iVendNext needs an update.*, and prices it can carry still print.
 
@@ -43,7 +44,7 @@ ivn check
 ivn try
 ```
 
-The tests: `python3 -m unittest discover -s samples/s64_production_station/tests -p 'test_*.py'` (97 laptop tests) and `python3 samples/s64_production_station/tests/canaries.py` (each check that can fail, removed one at a time).
+The tests: `python3 -m unittest discover -s samples/s64_production_station/tests -p 'test_*.py'` (118 laptop tests) and `python3 samples/s64_production_station/tests/canaries.py` (each check that can fail, removed one at a time).
 
 ## Try it at the till
 

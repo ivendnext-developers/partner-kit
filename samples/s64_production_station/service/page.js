@@ -29,6 +29,9 @@
           unknown: "This station's link does not work, or it was replaced. Ask your lead for the station's new link.",
           not_set_up: "This station cannot reach iVendNext. Ask your lead to check the app's user and its key.",
           unavailable: "That did not go through. Tap again.", loading: "Reading the station...",
+          lostTag: "That tag did not come back. Tap the same price again: it prints and counts once.",
+          cannotReach: "Cannot reach iVendNext. Trying again.",
+          no_move: "This cart could not go to {place}. Pick another place, or tell your lead.",
           noWorkers: "No workers are set up for this station. Tell your lead.",
           noPrices: "No price points are set up. Tell your lead.", noColour: "No colour this week. Tell your lead." },
     es: { pickWorker: "Toque su nombre", changeWorker: "Cambiar de persona", thisWeek: "Esta semana: {colour}", today: "Hoy: {colour}",
@@ -49,6 +52,9 @@
           unknown: "El enlace de esta estación no funciona o fue sustituido. Pida el nuevo enlace a su responsable.",
           not_set_up: "Esta estación no llega a iVendNext. Pida a su responsable que revise el usuario de la app y su clave.",
           unavailable: "No se aplicó. Toque otra vez.", loading: "Leyendo la estación...",
+          lostTag: "Esa etiqueta no volvió. Toque el mismo precio otra vez: se imprime y se cuenta una sola vez.",
+          cannotReach: "No se llega a iVendNext. Se intenta otra vez.",
+          no_move: "Este carro no pudo ir a {place}. Elija otro destino o avise a su responsable.",
           noWorkers: "No hay personas configuradas para esta estación. Avise a su responsable.",
           noPrices: "No hay precios configurados. Avise a su responsable.", noColour: "Sin color esta semana. Avise a su responsable." }
   };
@@ -68,6 +74,7 @@
   var KEY = "pst.worker." + LINK.s + "." + LINK.t.split(".")[0];
   var $ = function (id) { return document.getElementById(id); };
   var last = null, worker = "", category = "", busy = false, printed = 0, count = 0, timer = null, noteUntil = 0, sized = "";
+  var noteKey = "", pending = null, lastTag = "";   // pending: a tap whose answer was lost ({key, req}); lastTag: the tag Undo takes back
 
   function kept() { try { return window.localStorage.getItem(KEY) || ""; } catch (e) { return ""; } }
   function keep(v) {
@@ -77,7 +84,8 @@
   function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
   function money(p) {
     var n = Number(p);
-    try { if (last && last.currency) return new Intl.NumberFormat(lang, { style: "currency", currency: last.currency }).format(n); }
+    // one fixed locale on every tile and tag, never the worker's browser language (a Spanish tablet wrote 19,99 US$)
+    try { if (last && last.currency) return new Intl.NumberFormat("en", { style: "currency", currency: last.currency, currencyDisplay: "narrowSymbol" }).format(n); }
     catch (e) { /* an unknown currency code: the figure alone */ }
     return n.toFixed(2);
   }
@@ -88,12 +96,18 @@
       .then(function (r) { return r.json().catch(function () { return { state: "unavailable" }; }); })
       .catch(function () { return { state: "unavailable" }; });
   }
-  function note(key, args, good) {
+  function note(key, args, good, lasting) {
     var n = $("note");
-    if (!key) { if (performance.now() >= noteUntil) { n.hidden = true; n.textContent = ""; } return; }
-    n.textContent = w(key, args); n.hidden = false;
+    if (!key) { if (performance.now() >= noteUntil) { n.hidden = true; n.textContent = ""; } noteKey = ""; return; }
+    n.textContent = w(key, args); n.hidden = false; noteKey = key;
     n.classList.toggle("is-good", !!good);
-    noteUntil = good ? 0 : performance.now() + NOTE_MS;
+    noteUntil = good || lasting ? 0 : performance.now() + NOTE_MS;
+  }
+  function reqId() {               // a tap's own id: the same tap sent again after a lost answer is found, never made twice
+    var b = new Uint8Array(12), s = "";
+    try { window.crypto.getRandomValues(b); } catch (e) { for (var i = 0; i < 12; i++) b[i] = Math.floor(Math.random() * 256); }
+    for (var j = 0; j < b.length; j++) s += ("0" + b[j].toString(16)).slice(-2);
+    return s;
   }
   function tile(label, on, fn) {
     var b = document.createElement("button");
@@ -154,10 +168,12 @@
     clearTimeout(timer);
     return call("/pst/board").then(function (a) {
       if (a.state === "open") {
-        last = a; count = a.cart || 0; size(); draw();
+        last = a; count = a.cart || 0; size();
+        if (noteKey === "cannotReach") note("");
+        draw();
         timer = setTimeout(function () { if (!busy) read(); else timer = setTimeout(read, RETRY_MS); }, READ_MS);
       } else {
-        note(WORDS.en[a.state] ? a.state : "unavailable");
+        note(a.state === "unavailable" ? "cannotReach" : (WORDS.en[a.state] ? a.state : "cannotReach"), null, false, true);
         if (a.state !== "unknown") timer = setTimeout(read, RETRY_MS);
       }
     });
@@ -178,7 +194,7 @@
 
   function refused(a) {
     if (a.state === "refused" && WORDS.en[a.why]) {
-      note(a.why, { colour: a.colour || "", category: a.category || "" });
+      note(a.why, { colour: a.colour || "", category: a.category || "", place: a.place || "" });
       if (a.why === "no_price" || a.why === "no_place" || a.why === "no_worker") read();
     } else note(WORDS.en[a.state] ? a.state : "unavailable");
   }
@@ -186,22 +202,28 @@
   function tap(cat, price) {
     if (busy) return;
     setBusy(true);
-    call("/pst/tag", { worker: worker, category: cat, price: price }).then(function (a) {
+    var key = worker + "|" + cat + "|" + price, req = pending && pending.key === key ? pending.req : reqId();
+    call("/pst/tag", { worker: worker, category: cat, price: price, req: req }).then(function (a) {
       setBusy(false);
       if (a.state === "tagged") {
+        pending = null; lastTag = a.tag.name || "";
         printTag(a.tag); count += 1;
         note("printed", { price: money(a.tag.price), category: a.tag.category }, true);
         draw();
-      } else refused(a);
+      } else if (a.state === "unavailable") {
+        pending = { key: key, req: req };          // the next tap of the same price is this tap again
+        note("lostTag");
+      } else { pending = null; refused(a); }
     });
   }
 
   $("undo").addEventListener("click", function () {
     if (busy) return;
     setBusy(true);
-    call("/pst/undo").then(function (a) {
+    call("/pst/undo", lastTag ? { tag: lastTag } : {}).then(function (a) {
       setBusy(false);
       if (a.state === "undone") {
+        lastTag = "";
         count = Math.max(0, count - 1);
         note("undone", { price: money(a.tag.price), category: a.tag.category || "" }, true);
         draw();
@@ -222,7 +244,7 @@
     call("/pst/cart", { warehouse: where }).then(function (a) {
       setBusy(false);
       if (a.state === "sent") {
-        count = 0;
+        count = 0; lastTag = ""; pending = null;
         note(a.kept ? "kept" : "sent", { cart: a.cart, n: a.pieces, place: a.place }, true);
         draw();
       } else refused(a);

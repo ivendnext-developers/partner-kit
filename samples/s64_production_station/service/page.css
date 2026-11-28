@@ -37,7 +37,8 @@
     overflow: hidden; padding: 1.5mm 2mm; color: var(--ivn-text); background: none; break-after: avoid; }
   .pst-tag p { margin: 0; line-height: 1.1; text-align: center; }
   .pst-tag-price { font-size: 7mm; font-weight: 800; }
-  .pst-tag-what { font-size: 2.6mm; font-weight: 600; }
+  .pst-tag-what { font-size: 2.6mm; font-weight: 600; max-inline-size: 100%; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; }
   .pst-tag-bars { inline-size: 100%; display: flex; justify-content: center; }
   .pst-tag-bars svg { inline-size: 100%; display: block; }
   .pst-tag-digits { font-size: 2.4mm; letter-spacing: .3mm; }

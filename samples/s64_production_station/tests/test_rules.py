@@ -119,10 +119,15 @@ class Carts(unittest.TestCase):
         self.assertEqual((t["items"][0]["s_warehouse"], t["items"][0]["t_warehouse"], t["items"][0]["qty"]), ("Room", "Store", 2))
 
     def test_a_cart_is_done_when_sent_or_kept_in_the_room(self):
-        self.assertTrue(pst.finished({"state": "Sent", "destination": "S"}, "R"))
-        self.assertTrue(pst.finished({"state": "Received", "destination": "R"}, "R"))
-        self.assertFalse(pst.finished({"state": "Received", "destination": "S"}, "R"))
-        self.assertFalse(pst.finished({"state": "Open", "destination": "R"}, "R"))
+        self.assertTrue(pst.finished({"state": "Sent", "destination": "S", "open_for": None}))
+        self.assertTrue(pst.finished({"state": "Received", "destination": "R", "open_for": None}))   # kept: done
+        self.assertFalse(pst.finished({"state": "Received", "destination": "S", "open_for": "ST1"}))
+        self.assertFalse(pst.finished({"state": "Open", "destination": "R", "open_for": "ST1"}))
+
+    def test_a_taps_own_id(self):
+        self.assertEqual(pst.req_of("a1b2c3d4e5f6"), "a1b2c3d4e5f6")
+        for bad in ("short", "x" * 41, "has space here", None, 12345678, "semi;colon12"):
+            self.assertIsNone(pst.req_of(bad), bad)
 
 
 class Report(unittest.TestCase):
@@ -139,7 +144,7 @@ class Report(unittest.TestCase):
         rows = pst.colour_rows([("Blue", D(2026, 11, 2)), ("Green", D(2026, 11, 9))],
                                {("Blue", "2026-11-02"): 40}, {("Blue", "2026-11-02"): 10.0, ("Green", "2026-11-09"): 3.0})
         self.assertEqual(rows, [{"colour": "Blue", "week_start": "2026-11-02", "tagged": 40, "sold": 10.0, "sell_through": 25.0},
-                                {"colour": "Green", "week_start": "2026-11-09", "tagged": 0, "sold": 3.0, "sell_through": 0.0}])
+                                {"colour": "Green", "week_start": "2026-11-09", "tagged": 0, "sold": 3.0, "sell_through": None}])
 
     def test_the_summary_says_the_whole_count(self):
         s = pst.summary_of([{"pieces": 75, "worker": "Ana"}, {"pieces": 7, "worker": "Ben"}],

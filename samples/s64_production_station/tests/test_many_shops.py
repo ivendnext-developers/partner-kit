@@ -54,7 +54,8 @@ class ManyRetailers(unittest.TestCase):
 
     def door(self, url, key):
         if url not in self.doors:
-            shop = F.Shop(self.clock)
+            bars = ("81102", "81103", "81302", "81303") if "shop-b" in url else ("70102", "70103", "70302", "70303")
+            shop = F.Shop(self.clock, bars=bars)
             st = shop.db.pop("PP PST Station")["PST-S-00001"]
             shop.db["IVENDNEXT PST Station"] = {"PST-S-00001": st}
             shop.key = key
@@ -83,6 +84,21 @@ class ManyRetailers(unittest.TestCase):
         token = link.split("&t=")[1]
         _, body, _ = self.svc.handle("POST", "/pst/board", {}, json.dumps({"s": "shop-b.ivendnext.com", "t": token}).encode())
         self.assertEqual(json.loads(body), {"state": "unknown"})       # another retailer's link reads nothing
+
+    def test_two_retailers_with_the_same_item_and_price_each_get_their_own_engines_barcode(self):
+        got = {}
+        for site, n in (("shop-a.ivendnext.com", "a"), ("shop-b.ivendnext.com", "b")):
+            self.press("/pst/link", "IVENDNEXT PST Station", f"link-{n}", site)
+            door = self.doors[f"https://{site}"]
+            door.db["IVENDNEXT PST Settings"] = door.db.pop("PP PST Settings")
+            door.db["IVENDNEXT PST Tag"] = {}
+            for it in door.db["Item"].values():
+                it["ivendnext_pst_tag_colour"] = it.pop("pp_pst_tag_colour")
+            token = door.db["IVENDNEXT PST Station"]["PST-S-00001"]["link"].split("&t=")[1]
+            _, body, _ = self.svc.handle("POST", "/pst/tag", {}, json.dumps({"s": site, "t": token, "worker": "Ana",
+                                         "category": "Women's tops", "price": 19.99}).encode())
+            got[n] = json.loads(body)["tag"]["barcode"]
+        self.assertEqual(got, {"a": "2970102019990", "b": "2981102019990"})
 
     def test_a_press_before_the_key_arrives_is_answered_in_words_and_reads_nothing(self):
         code, out = self.press("/pst/link", "IVENDNEXT PST Station", "link-c", "shop-c.ivendnext.com")

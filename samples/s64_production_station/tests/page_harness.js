@@ -56,7 +56,7 @@ async function run(opts) {
     stack[stack.length - 1].appendChild(e);
     if (!VOID.has(tag)) stack.push(e);
   }
-  const calls = [], prints = [], rules = [], answers = opts.answers || {}, timers = [];
+  const calls = [], prints = [], rules = [], answers = opts.answers || {}, timers = [], pendingTimers = [];
   const store = opts.storage === "throws" ? null : Object.assign({}, opts.storage || {});
   const doc = {
     body, documentElement: html, title: "Production station",
@@ -70,7 +70,7 @@ async function run(opts) {
     navigator: { languages: opts.languages || ["en-US"], language: (opts.languages || ["en-US"])[0] },
     document: doc, URLSearchParams, Intl, console, Promise, JSON, Math, Number, String, Object, Array,
     performance: { now: () => clock.t },
-    setTimeout: (fn, ms) => { timers.push(ms); return timers.length; }, clearTimeout() {},
+    setTimeout: (fn, ms) => { timers.push(ms); pendingTimers.push({ ms, fn }); return timers.length; }, clearTimeout() {},
     addEventListener() {},
     fetch: (url, init) => {
       const b = JSON.parse(init.body); calls.push(Object.assign({ path: url }, b));
@@ -113,6 +113,7 @@ async function run(opts) {
       t.click(); t.click();
     } else if (kind === "click") byId[what].click();
     else if (kind === "advance") clock.t += Number(what);
+    else if (kind === "timer") { const i = pendingTimers.findIndex((t) => t.ms === Number(what)); if (i >= 0) pendingTimers.splice(i, 1)[0].fn(); }
     await settle();
     steps.push({ step: s, note: byId.note.hidden ? "" : byId.note.textContent });
   }

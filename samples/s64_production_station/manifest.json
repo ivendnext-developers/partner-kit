@@ -5,7 +5,7 @@
  "title": "Production station",
  "version": "0.1.0",
  "publisher": "Partner Programme sample",
- "description": "A thrift processing room's station screen, opened by a link on the station's own browser (no sign-in): a worker taps their name, a category and a price point, and a tag prints with the price inside its barcode, in this week's colour. The colours turn each week from a date in PP PST Settings (a lead may set a colour for one day); a field on Item, Tag colour, names each category item's colour, so the station finds the item and nobody picks a colour. The barcode is the engine's own label encoder's (get_item_barcode_for_label); before a price is printed the first time, the engine's own reader (resolve_barcode) must read it back as the same item and price, else the tag is refused. Each tag is a PP PST Tag record; Undo last tag takes the last one of the cart back. Cart full posts, as the app's own user, a Material Receipt of the cart's tags into the processing room at no value (Allow Zero Valuation Rate), then a Material Transfer of the same lines to the place chosen; both name the cart (Stock Entry field Production cart), and a cart is posted once. A production report's Work out writes rows by day, station and worker (pieces, hours, pieces per hour) and by colour week (tagged, sold from the retailer's own POS Sale Report, sell-through). Four reports list them. The install makes the roles PP PST Manager and PP PST Integration and the app's own user; from role_rights it gives PP PST Integration read on Item, Warehouse and System Settings (the site's time zone, for today's colour), read, write, create and submit on Stock Entry, select on the stock entry's lookups, and POS Sale Report with its lookups; PP PST Manager select on Warehouse and Item Group. allowed_urls is the programme bench's address; a partner writes their own service's.",
+ "description": "A thrift processing room's station screen, opened by a link on the station's own browser (no sign-in): a worker taps their name, a category and a price point, and a tag prints with the price inside its barcode, in this week's colour. The colours turn each week from a date in PP PST Settings (a lead may set a colour for one day); a field on Item, Tag colour, names each category item's colour, so the station finds the item and nobody picks a colour. The barcode is the engine's own label encoder's (get_item_barcode_for_label); before a price is printed the first time, the engine's own reader (resolve_barcode) must read it back as the same item and price, else the tag is refused. Each tag is a PP PST Tag record; Undo last tag takes the last one of the cart back. Cart full posts, as the app's own user, a Material Receipt of the cart's tags into the processing room at no value (Allow Zero Valuation Rate), then a Material Transfer of the same lines to the place chosen; both name the cart (Stock Entry field Production cart), and a cart is posted once. A production report's Work out writes rows by day, station and worker (pieces, hours, pieces per hour) and by colour week (tagged, sold from the retailer's own POS Sale Report, sell-through). Four reports list them. The install makes the roles PP PST Manager and PP PST Integration and the app's own user; from role_rights it gives PP PST Integration read on Item, Warehouse and System Settings (the site's time zone, for today's colour), read, write, create and submit on Stock Entry, select on the stock entry's lookups, and, for sell-through, the retailer's own POS Sale Report with Read and Report on POS Invoice (the till's sales) and its lookups; PP PST Manager select on Warehouse, Item Group and Company. It reads no customer and sends nothing elsewhere. allowed_urls is the programme bench's address; a partner writes their own service's.",
  "allowed_urls": [
   "https://host.docker.internal:8125/pst/link",
   "https://host.docker.internal:8125/pst/work"
@@ -412,6 +412,16 @@
      "label": "Taken back",
      "read_only": 1,
      "description": "Taken back with Undo last tag before its cart was sent: never received."
+    },
+    {
+     "fieldname": "req",
+     "fieldtype": "Data",
+     "label": "Tap",
+     "read_only": 1,
+     "hidden": 1,
+     "unique": 1,
+     "length": 40,
+     "description": "The tap that made this tag: the same tap sent again after a lost answer finds this tag instead of making a second."
     }
    ],
    "permissions": [
@@ -619,7 +629,7 @@
     {
      "fieldname": "per_hour",
      "fieldtype": "Float",
-     "label": "Per hour",
+     "label": "Pieces per active hour",
      "read_only": 1,
      "in_list_view": 1,
      "columns": 1,
@@ -791,7 +801,7 @@
     "PP PST Integration",
     "System Manager"
    ],
-   "description": "Open this address on the station's browser (full screen, with its print switch). Anyone with it can print tags at this station: press Make link again if it leaked."
+   "description": "Open this address on the station's browser (full screen, with its print switch). Anyone with it can tag and send carts at this station: press Make link again if it leaked. Changing the station's settings stops it until Make link is pressed again."
   },
   {
    "dt": "PP PST Station",
@@ -808,10 +818,9 @@
   {
    "dt": "Item",
    "fieldname": "pp_pst_tag_colour",
-   "fieldtype": "Data",
+   "fieldtype": "Small Text",
    "label": "Tag colour",
    "insert_after": "item_group",
-   "length": 40,
    "description": "A category item's tag colour (Blue): the production station tags this item in that colour's week."
   },
   {
@@ -1097,6 +1106,13 @@
   },
   {
    "doctype": "Item Group",
+   "role": "PP PST Manager",
+   "rights": [
+    "select"
+   ]
+  },
+  {
+   "doctype": "Company",
    "role": "PP PST Manager",
    "rights": [
     "select"

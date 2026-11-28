@@ -259,7 +259,7 @@ class Carts(Base):
 
     def test_a_tap_while_another_posts_this_stations_cart_is_told_busy(self):
         self.fill()
-        self.shop.fail["insert:Stock Entry"] = (0, "refuse")        # the first call stops after making the cart
+        self.shop.fail["insert:Stock Entry"] = (0, "down")          # the first call stops after making the cart
         self.assertEqual(self.call("/pst/cart", warehouse=F.STORE)[0], 503)
         self.assertEqual(self.call("/pst/cart", warehouse=F.STORE)[1], {"state": "busy"})
         self.assertEqual(self.shop.entries(), [])
@@ -278,7 +278,7 @@ class Carts(Base):
         self.assertEqual(self.call("/pst/cart", warehouse=F.STORE)[1], {"state": "busy"})   # within the minute: wait
         self.tag(4.99)                              # a tag made meanwhile goes on the next cart, not this one
         self.later(app.LEASE_S + 1)
-        a = self.call("/pst/cart", warehouse=F.OUTLET)[1]           # the cart keeps its own place
+        a = self.call("/pst/cart", warehouse=F.STORE)[1]
         self.assertEqual((a["state"], a["pieces"], a["place"]), ("sent", 5, "Store 12"))
         self.assertEqual((len(self.shop.entries("Material Receipt")), len(self.shop.entries("Material Transfer"))), (1, 1))
         self.assertEqual((self.stock("TOPS-BLU", F.STORE), self.stock("TOPS-BLU", F.ROOM)), (4, 0))
@@ -287,7 +287,7 @@ class Carts(Base):
 
     def test_a_failure_between_the_two_entries_leaves_the_cart_received_and_a_repeat_finishes_it(self):
         self.fill()
-        self.shop.fail["insert:Stock Entry"] = (1, "refuse")        # the receipt posts, the transfer is refused
+        self.shop.fail["insert:Stock Entry"] = (1, "down")          # the receipt posts, the transfer gets no answer
         self.assertEqual(self.call("/pst/cart", warehouse=F.STORE)[0], 503)
         (cart,) = self.shop.db["PP PST Cart"].values()
         self.assertEqual((cart["state"], self.stock("TOPS-BLU", F.ROOM)), ("Received", 4))
@@ -332,6 +332,138 @@ class Carts(Base):
         self.later(app.LEASE_S + 1)
         self.assertEqual(self.call("/pst/cart", warehouse=F.STORE)[1], {"state": "refused", "why": "empty"})
         self.assertEqual(self.shop.entries(), [])
+
+
+class Folds(Base):
+    """The review's folds: a kept cart never moves when the room changes, a tap or an undo whose answer was lost counts
+    once, a place refused for good is swapped for another, the read-back is asked again when the item changes, and a
+    second station is left alone."""
+    stock, fill = Carts.stock, Carts.fill
+
+    def test_a_kept_cart_never_moves_when_the_settings_room_changes(self):
+        self.fill()
+        kept = self.call("/pst/cart", warehouse=F.ROOM)[1]
+        self.assertTrue(kept["kept"])
+        self.shop.db["PP PST Settings"][F.COMPANY]["room"] = F.OUTLET            # the lead moves the processing room
+        self.shop.db["PP PST Settings"][F.COMPANY]["places"].append({"warehouse": F.OUTLET, "label": "Outlet room", "idx": 4})
+        self.later(app.LEASE_S + 1)
+        self.tag()
+        b = self.call("/pst/cart", warehouse=F.STORE)[1]
+        self.assertEqual((b["state"], b["pieces"]), ("sent", 1))
+        self.assertNotEqual(b["cart"], kept["cart"])
+        moves = self.shop.entries("Material Transfer")
+        self.assertEqual([m["pp_pst_cart"] for m in moves], [b["cart"]])           # the kept cart moved nowhere
+        self.assertEqual((self.stock("TOPS-BLU", F.ROOM), self.stock("SHIRT-BLU", F.ROOM)), (4, 1))
+        self.assertEqual(self.shop.db["PP PST Cart"][kept["cart"]]["state"], "Received")
+
+    def test_a_tap_whose_answer_was_lost_counts_once_when_tapped_again(self):
+        self.shop.fail["insert:PP PST Tag:lose"] = (0, "lose")      # the tag is made; its answer never arrives
+        req = "a1b2c3d4e5f60708"
+        self.assertEqual(self.call("/pst/tag", worker="Ana", category="Women's tops", price=4.99, req=req)[0], 503)
+        code, a = self.call("/pst/tag", worker="Ana", category="Women's tops", price=4.99, req=req)
+        self.assertEqual((code, a["state"]), (200, "tagged"))
+        (t,) = self.shop.tags()
+        self.assertEqual((a["tag"]["name"], a["tag"]["barcode"], a["tag"]["price"]), (t["name"], t["barcode"], 4.99))
+        self.assertEqual(self.call("/pst/board")[1]["cart"], 1)
+
+    def test_an_undo_whose_answer_was_lost_takes_back_one_tag(self):
+        self.tag(4.99)
+        last = self.tag(6.99)["tag"]["name"]
+        self.shop.fail["update:PP PST Tag:lose"] = (0, "lose")
+        self.assertEqual(self.call("/pst/undo", tag=last)[0], 503)
+        writes = sum(1 for c in self.shop.calls if c[:2] == ("update", "PP PST Tag"))
+        a = self.call("/pst/undo", tag=last)[1]
+        self.assertEqual((a["state"], a["tag"]["name"]), ("undone", last))
+        self.assertEqual(sum(1 for c in self.shop.calls if c[:2] == ("update", "PP PST Tag")), writes)   # nothing written again
+        self.assertEqual(sorted((t["price"], t["void"]) for t in self.shop.tags()), [(4.99, 0), (6.99, 1)])
+
+    def test_an_undo_of_a_tag_written_since_it_was_read_takes_nothing_back(self):
+        last = self.tag()["tag"]["name"]
+        self.shop.hooks["update:PP PST Tag"] = lambda: self.shop.touch("PP PST Tag", last)
+        self.assertEqual(self.call("/pst/undo", tag=last)[1], {"state": "refused", "why": "no_undo"})
+        self.assertEqual([t["void"] for t in self.shop.tags()], [0])
+
+    def test_a_place_refused_for_good_is_swapped_and_the_receipt_is_not_posted_again(self):
+        self.fill()
+        self.shop.fail["refuse:Material Transfer"] = (0, "refuse")
+        a = self.call("/pst/cart", warehouse=F.STORE)[1]
+        self.assertEqual(a, {"state": "refused", "why": "no_move", "place": "Store 12"})
+        self.later(app.LEASE_S + 1)
+        b = self.call("/pst/cart", warehouse=F.OUTLET)[1]
+        self.assertEqual((b["state"], b["place"]), ("sent", "Outlet"))
+        self.assertEqual((len(self.shop.entries("Material Receipt")), len(self.shop.entries("Material Transfer"))), (1, 1))
+        self.assertEqual((self.stock("TOPS-BLU", F.OUTLET), self.stock("TOPS-BLU", F.STORE), self.stock("TOPS-BLU", F.ROOM)),
+                         (4, 0, 0))
+
+    def test_a_refused_place_then_keep_in_the_room_keeps_it_there(self):
+        self.fill()
+        self.shop.fail["refuse:Material Transfer"] = (0, "refuse")
+        self.assertEqual(self.call("/pst/cart", warehouse=F.STORE)[1]["why"], "no_move")
+        self.later(app.LEASE_S + 1)
+        b = self.call("/pst/cart", warehouse=F.ROOM)[1]
+        self.assertEqual((b["state"], b["kept"]), ("sent", True))
+        self.assertEqual(self.shop.entries("Material Transfer"), [])
+        self.assertEqual(self.shop.db["PP PST Cart"][b["cart"]]["open_for"], None)
+
+    def test_a_cart_written_by_another_call_between_the_read_and_the_hold_posts_nothing(self):
+        self.fill()
+        self.shop.fail["insert:Stock Entry"] = (0, "down")         # the first call stops after making the cart
+        self.call("/pst/cart", warehouse=F.STORE)
+        (cart,) = self.shop.db["PP PST Cart"]
+        self.later(app.LEASE_S + 1)
+        self.shop.hooks["update:PP PST Cart"] = lambda: self.shop.touch("PP PST Cart", cart)   # just before this call's hold
+        self.assertEqual(self.call("/pst/cart", warehouse=F.STORE)[1], {"state": "busy"})
+        self.assertEqual(self.shop.entries(), [])
+        self.later(app.LEASE_S + 1)
+        self.assertEqual(self.call("/pst/cart", warehouse=F.STORE)[1]["state"], "sent")
+        self.assertEqual(len(self.shop.entries("Material Receipt")), 1)
+
+    def test_the_engine_is_asked_again_when_the_items_mask_changes(self):
+        self.tag()
+        asked = sum(1 for c in self.shop.calls if c[0] == "engine")
+        self.shop.db["Item"]["TOPS-BLU"]["custom_barcode_mask"] = "Another label"
+        self.later(app.ITEM_KEEP_S + 1)
+        self.tag()
+        self.assertEqual(sum(1 for c in self.shop.calls if c[0] == "engine"), asked + 2)
+
+    def test_a_second_station_is_left_alone(self):
+        signed(self.svc, "/pst/link", "PP PST Station", ["PST-S-00002"], F.SECRET, self.clock())
+        other = self.shop.db["PP PST Station"]["PST-S-00002"]["link"].split("&t=")[1]
+        mine = self.token
+        self.token = other
+        b_tag = self.tag(19.99)["tag"]["name"]
+        self.token = mine
+        self.tag(4.99)
+        self.call("/pst/undo")
+        self.tag(6.99)
+        self.assertEqual(self.call("/pst/cart", warehouse=F.STORE)[1]["pieces"], 1)
+        self.token = other
+        self.assertEqual(self.call("/pst/board")[1]["cart"], 1)
+        b = self.shop.db["PP PST Tag"][b_tag]
+        self.assertEqual((b["void"], b.get("cart")), (0, None))
+        self.token = mine
+        c = self.tag(19.99)["tag"]["name"]                                   # A's tag, not sent
+        self.token = other
+        self.assertEqual(self.call("/pst/undo", tag=c)[1], {"state": "refused", "why": "no_undo"})
+        self.assertEqual(self.shop.db["PP PST Tag"][c]["void"], 0)
+
+    def test_a_station_moved_to_other_settings_stops_its_link(self):
+        self.shop.put("PP PST Settings", "Other Co", company="Other Co")
+        self.shop.db["PP PST Station"]["PST-S-00001"]["settings"] = "Other Co"
+        self.later(app.STATION_KEEP_S + 1)
+        self.assertEqual(self.call("/pst/board"), (404, {"state": "unknown"}))
+
+    def test_health_says_whether_this_runtime_has_zone_data(self):
+        code, body, _ = self.svc.handle("GET", "/health", {}, b"")
+        self.assertEqual((code, json.loads(body)), (200, {"ok": 1, "zones": True}))
+
+    def test_an_unknown_zone_name_is_the_sites_own_default_not_utc(self):
+        self.clock.t = datetime.datetime(2026, 11, 8, 20, 0, tzinfo=UTC).timestamp()   # 01:30 on the 9th in the default
+        self.shop.db["System Settings"]["System Settings"]["time_zone"] = "Mars/Olympus"
+        self.svc = service(self.shop, self.clock)
+        self.tag()
+        (t,) = self.shop.tags()
+        self.assertEqual((t["tagged_on"], t["hour"]), ("2026-11-09", 1))
 
 
 class WorkOut(Base):

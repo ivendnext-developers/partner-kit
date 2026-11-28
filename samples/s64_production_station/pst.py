@@ -310,10 +310,16 @@ def transfer(company: str, room: str, to: str, cart: str, lines: list, uoms: dic
                        "s_warehouse": room, "t_warehouse": to, "allow_zero_valuation_rate": 1} for i, q in lines]}
 
 
-def finished(cart: dict, room: str) -> bool:
-    """A cart is done when it was sent, or received and kept in the processing room (it has no move to make)."""
+def finished(cart: dict) -> bool:
+    """A cart is done when it was sent, or received and kept where it was received (its *Open for* cleared). It never
+    reads today's settings, so a room changed later never moves a kept cart."""
     state = cart.get("state")
-    return state == "Sent" or (state == "Received" and cart.get("destination") == room)
+    return state == "Sent" or (state == "Received" and not cart.get("open_for"))
+
+
+def req_of(v) -> str | None:
+    """A tap's own request id (the page makes one per tap and sends the same one again after a lost answer), or None."""
+    return v if isinstance(v, str) and 8 <= len(v) <= 40 and all(c.isalnum() or c == "-" for c in v) else None
 
 
 # ── the production report ────────────────────────────────────────────────────────────────────────────────────────────
@@ -341,13 +347,13 @@ def worker_rows(groups: list) -> list[dict]:
 
 def colour_rows(weeks: list, tagged: dict, sold: dict) -> list[dict]:
     """One row per colour week: tagged (non-void pieces of that week), sold (that colour's units the till sold in the
-    week's window) and sell-through (sold ÷ tagged, as a percent to one place; nothing tagged reads 0)."""
+    week's window) and sell-through (sold ÷ tagged, as a percent to one place; blank when nothing was tagged)."""
     rows = []
     for colour, start in weeks:
         key = (colour, start.isoformat())
         t, s = tagged.get(key, 0), sold.get(key, 0.0)
         rows.append({"colour": colour, "week_start": start.isoformat(), "tagged": t, "sold": round(s, 3),
-                     "sell_through": round(100.0 * s / t, 1) if t > 0 else 0.0})
+                     "sell_through": round(100.0 * s / t, 1) if t > 0 else None})
     return rows
 
 

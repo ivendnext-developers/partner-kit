@@ -67,6 +67,14 @@ class Barcode(unittest.TestCase):
                  ' s.k[0].a.x, s.k.every(r => r.a.fill === "currentColor")]; })()')
         self.assertEqual(svg, ["0 0 " + str(11 * 9 + 13 + 20) + " 10", "11mm", 3 * 9 + 4, "10", True])   # 9 symbols and the stop
 
+    def test_the_whole_table_is_the_standards(self):
+        # the 107 patterns, joined by commas, hashed: the table a real decoder (zbarimg) read back on the bench and the
+        # laptop; a changed width anywhere changes it
+        got = subprocess.run([NODE, "-e", f'const c = require({json.dumps(CODE)}); process.stdout.write(require("crypto")'
+                              '.createHash("sha256").update(c.PATTERNS.join(",")).digest("hex"))'],
+                             capture_output=True, text=True, check=True).stdout
+        self.assertEqual(got, "e7c485b7f79b124f215d4e34973742632bd63edace80b79bcae8c605f9f4cdab")
+
     def test_a_character_code_128_b_does_not_carry_is_refused(self):
         out = subprocess.run([NODE, "-e", f'require({json.dumps(CODE)}).values("caf\\u00e9")'], capture_output=True, text=True)
         self.assertNotEqual(out.returncode, 0)
@@ -121,7 +129,7 @@ class Station(unittest.TestCase):
         cases = [({"state": "refused", "why": "too_old"}, TOO_OLD),
                  ({"state": "refused", "why": "no_item", "colour": "Blue", "category": "Women's tops"},
                   "No Women's tops item has this week's colour (Blue). Tell your lead."),
-                 ({"state": "unavailable"}, "That did not go through. Tap again.")]
+                 ({"state": "unavailable"}, "That tag did not come back. Tap the same price again: it prints and counts once.")]
         for answer, words in cases:
             a = page(answers={"/pst/board": [BOARD], "/pst/tag": [answer]}, storage={KEY: "Ana"},
                      steps=["tap:Women's tops", "tap:$19.99"])
@@ -148,6 +156,42 @@ class Station(unittest.TestCase):
         c = page(answers={"/pst/board": [BOARD], "/pst/cart": [{"state": "busy"}]}, storage={KEY: "Ana"},
                  steps=["click:full", "tap:Store 12"])
         self.assertEqual((c["count"], c["note"]), ("In this cart: 4", "This cart is being sent. Wait a minute, then tap Cart full again."))
+
+    def test_a_tap_whose_answer_was_lost_is_sent_again_as_the_same_tap(self):
+        a = page(answers={"/pst/board": [BOARD], "/pst/tag": [{"state": "unavailable"}, TAG]}, storage={KEY: "Ana"},
+                 steps=["tap:Women's tops", "tap:$19.99", "tap:$19.99", "tap:$19.99"])
+        reqs = [c["req"] for c in a["calls"] if c["path"] == "/pst/tag"]
+        self.assertEqual(reqs[0], reqs[1])                       # the lost tap, sent again
+        self.assertNotEqual(reqs[1], reqs[2])                    # a new tap after the answer came
+        self.assertEqual(len(a["prints"]), 2)
+        self.assertEqual(a["steps"][1]["note"], "That tag did not come back. Tap the same price again: it prints and counts once.")
+
+    def test_undo_names_the_last_tag_printed(self):
+        undone = {"state": "undone", "tag": {"name": "PST-T-00000042", "price": 19.99, "category": "Women's tops"}}
+        a = page(answers={"/pst/board": [BOARD], "/pst/tag": [TAG], "/pst/undo": [{"state": "unavailable"}, undone, {"state": "refused", "why": "no_undo"}]},
+                 storage={KEY: "Ana"}, steps=["tap:Women's tops", "tap:$19.99", "click:undo", "click:undo", "click:undo"])
+        tags = [c.get("tag") for c in a["calls"] if c["path"] == "/pst/undo"]
+        self.assertEqual(tags, ["PST-T-00000042", "PST-T-00000042", None])   # the same tag after a lost answer; then none named
+        self.assertEqual(a["count"], "In this cart: 4")                      # 4 + 1 printed - 1 taken back
+
+    def test_prices_read_the_same_on_every_device(self):
+        a = page(answers={"/pst/board": [BOARD], "/pst/tag": [TAG]}, languages=["es-MX"], storage={KEY: "Ana"},
+                 steps=["tap:Women's tops", "tap:$19.99"])
+        self.assertEqual(a["prints"][0]["price"], "$19.99")
+
+    def test_a_half_filled_settings_says_what_is_missing(self):
+        a = page(answers={"/pst/board": [dict(BOARD, workers=[])]})
+        self.assertEqual(a["workersTitle"], "No workers are set up for this station. Tell your lead.")
+        b = page(answers={"/pst/board": [dict(BOARD, categories=[])]}, storage={KEY: "Ana"})
+        self.assertEqual(b["note"], "No price points are set up. Tell your lead.")
+        c = page(answers={"/pst/board": [dict(BOARD, colour="")]})
+        self.assertEqual(c["colour"], "No colour this week. Tell your lead.")
+
+    def test_a_board_read_that_fails_says_so_and_clears_when_one_succeeds(self):
+        a = page(answers={"/pst/board": [{"state": "unavailable"}]})
+        self.assertEqual(a["note"], "Cannot reach iVendNext. Trying again.")
+        b = page(answers={"/pst/board": [{"state": "unavailable"}, BOARD]}, steps=["timer:5000"])
+        self.assertEqual(b["note"], "")
 
     def test_the_retailers_words_keep_their_own_direction(self):
         a = page(answers={"/pst/board": [dict(BOARD, workers=["علي"])]})

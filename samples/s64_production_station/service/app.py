@@ -75,7 +75,8 @@ LABEL = "/api/method/ivendnext_pos.api.label_printing.get_item_barcode_for_label
 RESOLVE = "/api/method/ivendnext_pos.api.barcode_mask.resolve_barcode"              # the engine's own barcode reader
 POS_SALE_REPORT = "POS Sale Report"
 STALE = "TimestampMismatchError"     # the shop's refusal of a write whose ``modified`` is not the row's own
-TWICE = "DuplicateEntryError"        # the shop's refusal of a second open cart for one station
+TWICE = ("UniqueValidationError", "DuplicateEntryError")   # the shop's refusal of a second value of a unique field
+                                     # (a second open cart for one station, a second tag for one tap)
 BUDGET_S = 7.0                       # a press: the shop waits 10 seconds for it
 READ_S = 4.0                         # one read
 POST_S = 20.0                        # a stock entry's submit (a long cart's lines)
@@ -240,6 +241,25 @@ class _Answer(Exception):
         self.code, self.body = code, body
 
 
+def zone_of(name: str):
+    """The zone of a name; a blank or unknown one is the site's own default zone, as the site itself reads it."""
+    for n in (name, SITE_DEFAULT_ZONE):
+        try:
+            return zoneinfo.ZoneInfo(n)
+        except (zoneinfo.ZoneInfoNotFoundError, ValueError, TypeError):
+            continue
+    return datetime.timezone.utc       # no zone data at all in this runtime: /health says so (``zones``)
+
+
+def zones_ok() -> bool:
+    """Whether this runtime carries zone data (the hosting's /health shows it)."""
+    try:
+        zoneinfo.ZoneInfo("America/New_York")
+        return True
+    except (zoneinfo.ZoneInfoNotFoundError, ValueError):
+        return False
+
+
 def _refused(why: str, **more) -> dict:
     return dict({"state": "refused", "why": why}, **more)
 
@@ -298,10 +318,7 @@ class Service:
         zone = self._kept(self._zones, site, ZONE_KEEP_S)
         if zone is None:
             name = (door.doc("System Settings", "System Settings") or {}).get("time_zone") or SITE_DEFAULT_ZONE
-            try:
-                zone = zoneinfo.ZoneInfo(name)
-            except (zoneinfo.ZoneInfoNotFoundError, ValueError):
-                zone = datetime.timezone.utc
+            zone = zone_of(name)
             self._keep(self._zones, site, zone)
         return datetime.datetime.fromtimestamp(self.now(), zone)
 
@@ -435,7 +452,7 @@ class Service:
     def barcode(self, door, site: str, item: dict, price: float) -> tuple[str, str]:
         """(the tag's barcode, "") or ("", why not): the engine's own encoder, read back by the engine's own reader as
         the same item at the same price before it is printed the first time."""
-        key = (site, item["name"], price)
+        key = (site, item["name"], item["mask"], tuple(item["barcodes"]), price)
         kept = self._kept(self._barcodes, key, BARCODE_KEEP_S)
         if kept:
             return kept, ""
@@ -467,20 +484,46 @@ class Service:
         code, why = self.barcode(door, site, item, price)
         if why:
             return _refused(why, item=item["name"])
-        row = door.insert(pst.dt("Tag"), {"station": s["name"], "worker": worker, "category": category,
-                                          "item": item["name"], "colour": colour[0], "week_start": colour[1].isoformat(),
-                                          "price": price, "quantity": 1, "barcode": code,
-                                          "tagged_on": now.date().isoformat(), "hour": now.hour, "void": 0})
+        req = pst.req_of(body.get("req"))
+        try:
+            row = door.insert(pst.dt("Tag"), {"station": s["name"], "worker": worker, "category": category,
+                                              "item": item["name"], "colour": colour[0],
+                                              "week_start": colour[1].isoformat(), "price": price, "quantity": 1,
+                                              "barcode": code, "tagged_on": now.date().isoformat(), "hour": now.hour,
+                                              "void": 0, "req": req})
+        except TenantError as e:
+            if e.kind not in TWICE or not req:
+                raise
+            # the same tap again (its answer was lost): the tag it made is the answer, printed once and counted once
+            got = door.rows(pst.dt("Tag"), ["name", "station", "price", "category", "colour", "barcode"],
+                            [["req", "=", req]], limit=1)
+            if not got or got[0].get("station") != s["name"]:
+                raise
+            row = got[0]
+            price, category, code = float(row.get("price") or 0), row.get("category"), row.get("barcode")
+            colour = (row.get("colour"), colour[1])
         return {"state": "tagged", "tag": {"name": row.get("name"), "price": price, "category": category,
                                            "colour": colour[0], "barcode": code}}
 
-    def undo(self, door, s: dict) -> dict:
-        rows = door.rows(pst.dt("Tag"), ["name", "price", "category", "colour"], self.unsent(s["name"]), limit=1,
-                         order_by="creation desc")
-        if not rows:
+    def undo(self, door, s: dict, body: dict) -> dict:
+        """The tag the page names (its last tag), else the station's last unsent one, taken back. A tag already taken
+        back answers as taken back (an earlier answer was lost); a tag written since it was read is not taken back."""
+        fields = ["name", "price", "category", "colour", "void", "cart", "station", "modified"]
+        named = pst.text(body.get("tag"))
+        if named:
+            rows = door.rows(pst.dt("Tag"), fields, [["name", "=", named], ["station", "=", s["name"]]], limit=1)
+        else:
+            rows = door.rows(pst.dt("Tag"), fields, self.unsent(s["name"]), limit=1, order_by="creation desc")
+        if not rows or rows[0].get("cart"):
             return _refused("no_undo")
-        door.update(pst.dt("Tag"), rows[0]["name"], {"void": 1})
         r = rows[0]
+        if not pst.num(r.get("void")):
+            try:
+                door.update(pst.dt("Tag"), r["name"], {"void": 1, "modified": r.get("modified")})
+            except TenantError as e:
+                if e.kind == STALE:
+                    return _refused("no_undo")
+                raise
         return {"state": "undone", "tag": {"name": r["name"], "price": r.get("price"), "category": r.get("category"),
                                            "colour": r.get("colour")}}
 
@@ -515,22 +558,26 @@ class Service:
         named = {p["warehouse"]: p["label"] for p in pst.places(settings)}
         if not room or not company:
             return _refused("no_room")
-        carts = door.rows(pst.dt("Cart"), ["name", "state", "destination", "modified"], [["station", "=", s["name"]]],
-                          limit=20, order_by="creation desc")
-        mine = [c for c in carts if not pst.finished(c, room)]
+        carts = door.rows(pst.dt("Cart"), ["name", "state", "destination", "modified", "open_for", "transfer"],
+                          [["station", "=", s["name"]]], limit=20, order_by="creation desc")
+        mine = [c for c in carts if not pst.finished(c)]
+        to = pst.text(body.get("warehouse"))
         if mine:                        # a station's unfinished cart is continued, never a second one
-            if self._fresh(door, site, mine[-1]):
+            c = mine[-1]
+            if self._fresh(door, site, c):
                 return {"state": "busy"}
-            cart = self._written(door, mine[-1]["name"], {"modified": mine[-1]["modified"]})   # this call holds it now
+            change = {"modified": c["modified"]}            # this call holds it now
+            if not c.get("transfer") and to in named and to != c.get("destination"):
+                change["destination"] = to                  # another place picked (the first one refused the cart)
+            cart = self._written(door, c["name"], change)
             if cart is None:
                 return {"state": "busy"}
         else:
-            to = pst.text(body.get("warehouse"))
             if to not in named:
                 return _refused("no_place")
             if not pst.num(door.call("get_count", query={"doctype": pst.dt("Tag"),
                                                           "filters": json.dumps(self.unsent(s["name"]))})):
-                if carts and self._fresh(door, site, carts[0]) and pst.finished(carts[0], room):
+                if carts and self._fresh(door, site, carts[0]) and pst.finished(carts[0]):
                     cart = door.doc(pst.dt("Cart"), carts[0]["name"])    # a second tap of a cart just sent: its answer
                     return self._answer(cart, named, room)
                 return _refused("empty")
@@ -539,23 +586,24 @@ class Service:
                                                     "closed_on": self.site_now(door, site).date().isoformat(),
                                                     "pieces": 0, "open_for": s["name"]})
             except TenantError as e:
-                if e.kind == TWICE:     # another tap made this station's cart a moment ago: it is posting now
+                if e.kind in TWICE:     # another tap made this station's cart a moment ago: it is posting now
                     return {"state": "busy"}
                 raise
         if cart.get("state") == "Open":
             cart = self._receive(door, s, cart, room, company)
             if "name" not in cart:
                 return cart
-        if cart.get("state") == "Received" and cart.get("destination") != room:
-            cart = self._send(door, cart, room, company)
+        if cart.get("state") == "Received" and not pst.finished(cart):
+            cart = self._send(door, cart, company, named)
             if "name" not in cart:
                 return cart
         return self._answer(cart, named, room)
 
     def _answer(self, cart: dict, named: dict, room: str) -> dict:
         to = cart.get("destination") or ""
+        kept = cart.get("state") == "Received" and not cart.get("transfer")
         return {"state": "sent", "cart": cart["name"], "pieces": pst.num(cart.get("pieces")), "place": named.get(to, to),
-                "kept": to == room, "receipt": cart.get("receipt") or "", "transfer": cart.get("transfer") or ""}
+                "kept": kept, "receipt": cart.get("receipt") or "", "transfer": cart.get("transfer") or ""}
 
     def _receive(self, door, s: dict, cart: dict, room: str, company: str) -> dict:
         """The cart's tags stamped with it, then its one Material Receipt into the processing room at no value. A receipt
@@ -587,16 +635,25 @@ class Service:
             done["open_for"] = None     # kept in the room: the cart is done, and the station may start another
         return self._written(door, name, done) or {"state": "busy"}
 
-    def _send(self, door, cart: dict, room: str, company: str) -> dict:
-        """The receipt's own lines moved from the processing room to the cart's place: its one Material Transfer."""
-        name = cart["name"]
+    def _send(self, door, cart: dict, company: str, named: dict) -> dict:
+        """The receipt's own lines moved from where the receipt put them (never today's settings) to the cart's place: its
+        one Material Transfer. The place being where the lines already are keeps the cart there. A place the engine
+        refuses for good tells the worker to pick another."""
+        name, to = cart["name"], cart.get("destination")
         se = self._posted(door, name, "Material Transfer")
         if not se:
             items = door.doc("Stock Entry", cart["receipt"]).get("items") or []
+            src = next((r.get("t_warehouse") for r in items if r.get("t_warehouse")), "")
+            if to == src:               # kept where it was received: done, nothing moves
+                return self._written(door, name, {"open_for": None, "modified": cart.get("modified")}) or {"state": "busy"}
             lines = [(r["item_code"], r["qty"]) for r in items]
             uoms = {r["item_code"]: r.get("stock_uom") or r.get("uom") for r in items}
-            se = door.insert("Stock Entry", pst.transfer(company, room, cart["destination"], name, lines, uoms),
-                             timeout=POST_S)["name"]
+            try:
+                se = door.insert("Stock Entry", pst.transfer(company, src, to, name, lines, uoms), timeout=POST_S)["name"]
+            except TenantError as e:
+                if e.refused and e.code not in (401, 403):
+                    return _refused("no_move", place=named.get(to, to))
+                raise
         return self._written(door, name, {"state": "Sent", "transfer": se, "open_for": None,
                                           "modified": cart.get("modified")}) or {"state": "busy"}
 
@@ -727,7 +784,7 @@ class Service:
             if path == "/pst/tag":
                 return 200, self.tag(door, site, s, settings, body)
             if path == "/pst/undo":
-                return 200, self.undo(door, s)
+                return 200, self.undo(door, s, body)
             return 200, self.cart(door, site, s, settings, body)
         except _Answer as a:
             return a.code, a.body
@@ -748,7 +805,7 @@ class Service:
         path = path.split("?", 1)[0]
         if method == "GET":
             if path == "/health":
-                return _json(200, {"ok": 1})
+                return _json(200, {"ok": 1, "zones": zones_ok()})
             if path in STATIC:
                 fname, ctype = STATIC[path]
                 with open(os.path.join(HERE, fname), "rb") as f:

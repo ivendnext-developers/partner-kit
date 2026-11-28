@@ -52,7 +52,8 @@ class ManifestTest(unittest.TestCase):
     def test_a_tag_holds_every_field_the_service_writes_and_none_a_person_types(self):
         t = self.fields["PP PST Tag"]
         self.assertEqual(set(t), {"station", "worker", "category", "item", "colour", "week_start", "price", "quantity",
-                                  "barcode", "tagged_on", "hour", "cart", "void"})
+                                  "barcode", "tagged_on", "hour", "cart", "void", "req"})
+        self.assertTrue(t["req"].get("unique") and t["req"].get("hidden"))   # one tag a tap, a lost answer's too
         self.assertTrue(all(f.get("read_only") for f in t.values()))
         self.assertEqual(self.types["PP PST Tag"]["autoname"], "format:PST-T-{########}")
 
@@ -82,7 +83,9 @@ class ManifestTest(unittest.TestCase):
     def test_the_two_fields_on_the_retailers_records(self):
         cf = {(f["dt"], f["fieldname"]): f for f in self.m["custom_fields"]}
         colour, cart = cf[("Item", pst.FIELD_COLOUR)], cf[("Stock Entry", pst.FIELD_CART)]
-        self.assertEqual((colour["fieldtype"], colour["label"]), ("Data", "Tag colour"))
+        # Small Text: a short text field takes 562 bytes of the shop's Item row, Small Text 10 (guide 07)
+        self.assertEqual((colour["fieldtype"], colour["label"]), ("Small Text", "Tag colour"))
+        self.assertNotIn("length", colour)
         self.assertEqual((cart["fieldtype"], cart["options"], cart["read_only"], cart["no_copy"]), ("Link", "PP PST Cart", 1, 1))
         self.assertEqual(sorted(k for k in cf if k[0] not in ("PP PST Station",)), [("Item", "pp_pst_tag_colour"),
                                                                                   ("Stock Entry", "pp_pst_cart")])
@@ -121,7 +124,9 @@ class ManifestTest(unittest.TestCase):
                             if r == INT and d not in ("Item", "Warehouse", "System Settings", "Stock Entry", "POS Invoice")))
         self.assertEqual(rights[("POS Invoice", INT)], ["read", "report"])
         self.assertEqual([e["report"] for e in self.m["role_rights"] if "report" in e], ["POS Sale Report"])
-        self.assertEqual({d for (d, r) in rights if r == MGR}, {"Warehouse", "Item Group"})
+        self.assertEqual({d for (d, r) in rights if r == MGR}, {"Warehouse", "Item Group", "Company"})
+        self.assertIn("reads no customer and sends nothing elsewhere", self.m["description"])
+        self.assertIn("Read and Report on POS Invoice", self.m["description"])
         self.assertFalse(any("delete" in x or "cancel" in x for x in rights.values()))
 
     def test_the_apps_role_writes_tags_and_carts_and_the_lead_keeps_the_rest(self):
@@ -134,6 +139,13 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(on(perms["PP PST Report"][INT]), ["read", "write"])
         self.assertEqual(on(perms["PP PST Tag"][MGR]), ["export", "read", "report"])
         self.assertIn("write", on(perms["PP PST Cart"][MGR]))     # Pounds
+
+    def test_the_links_words_say_who_may_use_it_and_what_stops_it(self):
+        cf = {(f["dt"], f["fieldname"]): f for f in self.m["custom_fields"]}
+        d = cf[("PP PST Station", "link")]["description"]
+        self.assertIn("Anyone with it can tag and send carts at this station", d)
+        self.assertIn("Changing the station's settings stops it until Make link is pressed again.", d)
+        self.assertEqual(self.fields["PP PST Worker Row"]["per_hour"]["label"], "Pieces per active hour")
 
     def test_the_feed_registration_is_frozen(self):
         (f,) = self.m["registered_applications"]
