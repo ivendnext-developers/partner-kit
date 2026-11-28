@@ -1,4 +1,4 @@
-# Production station: price and tag donated goods at a station, count by worker, send carts to stores — the recipe
+# Production station: price and tag donated goods, count by worker — the recipe
 
 A thrift chain's processing room sorts donated goods, prices each piece from a short list of price points, tags it and puts it on a cart for a store. The tag carries the price inside its barcode, so the till charges it; its colour says which week it was made, so a store can mark down a colour that has stayed too long. This recipe gives each station a screen a worker learns in one shift: their name once, then a category and a price, one tag a tap. *Cart full* puts the cart into stock at no value and moves it to the store. A Desk report counts who tagged how much, by day and hour, and what each colour week sold.
 

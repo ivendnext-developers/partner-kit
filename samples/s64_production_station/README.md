@@ -1,4 +1,4 @@
-# S64 — Production station (`pp_pst`): price and tag donated goods at a station, count by worker, send carts to stores
+# S64 — Production station (`pp_pst`): price and tag donated goods, count by worker
 
 A thrift chain's processing room sorts and prices donated goods all day. At a station's screen a worker taps their name once, then a category and a price point: one tag prints, with the price inside its barcode, in this week's colour. The category stays chosen, so the next piece of the same kind is one tap. **Cart full** puts the cart's pieces into stock at no value in the processing room and moves them to the store, the outlet or wherever the cart goes, in one tap. The production lead reads who tagged how much, by station, day and hour; the head of retail reads sell-through by tag colour.
 
